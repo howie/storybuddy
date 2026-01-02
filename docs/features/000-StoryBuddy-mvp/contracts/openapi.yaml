@@ -1,0 +1,860 @@
+openapi: 3.1.0
+info:
+  title: StoryBuddy API
+  description: 親子說故事 App 的後端 API - 支援聲音克隆、故事管理、問答互動
+  version: 1.0.0
+  contact:
+    name: StoryBuddy Team
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+  - url: https://api.storybuddy.app
+    description: Production
+
+tags:
+  - name: voice
+    description: 聲音模型管理
+  - name: stories
+    description: 故事管理
+  - name: qa
+    description: 問答互動
+  - name: questions
+    description: 待回答問題管理
+
+paths:
+  # ========== Voice Profile ==========
+  /api/v1/voice-profiles:
+    post:
+      tags: [voice]
+      summary: 建立新的聲音模型
+      operationId: createVoiceProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoiceProfileCreate'
+      responses:
+        '201':
+          description: 聲音模型建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    get:
+      tags: [voice]
+      summary: 取得所有聲音模型
+      operationId: listVoiceProfiles
+      parameters:
+        - name: parent_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VoiceProfile'
+
+  /api/v1/voice-profiles/{voice_profile_id}:
+    get:
+      tags: [voice]
+      summary: 取得聲音模型詳情
+      operationId: getVoiceProfile
+      parameters:
+        - $ref: '#/components/parameters/VoiceProfileId'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [voice]
+      summary: 刪除聲音模型
+      operationId: deleteVoiceProfile
+      parameters:
+        - $ref: '#/components/parameters/VoiceProfileId'
+      responses:
+        '204':
+          description: 刪除成功
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/voice-profiles/{voice_profile_id}/upload:
+    post:
+      tags: [voice]
+      summary: 上傳語音樣本
+      description: 上傳家長錄製的語音樣本，用於建立聲音模型。錄音需 30-180 秒。
+      operationId: uploadVoiceSample
+      parameters:
+        - $ref: '#/components/parameters/VoiceProfileId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [audio]
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                  description: 音訊檔案 (wav, mp3, m4a)
+      responses:
+        '202':
+          description: 上傳成功，處理中
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceProfile'
+        '400':
+          description: 錄音時間不符要求
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/voice-profiles/{voice_profile_id}/preview:
+    post:
+      tags: [voice]
+      summary: 預覽聲音模型
+      description: 使用聲音模型生成一段測試語音
+      operationId: previewVoice
+      parameters:
+        - $ref: '#/components/parameters/VoiceProfileId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  description: 要轉換成語音的文字
+                  maxLength: 500
+                  example: 今天我們來聽一個有趣的故事
+      responses:
+        '200':
+          description: 生成的語音檔案
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ========== Stories ==========
+  /api/v1/stories:
+    post:
+      tags: [stories]
+      summary: 建立新故事
+      operationId: createStory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoryCreate'
+      responses:
+        '201':
+          description: 故事建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    get:
+      tags: [stories]
+      summary: 取得故事列表
+      operationId: listStories
+      parameters:
+        - name: parent_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: source
+          in: query
+          schema:
+            $ref: '#/components/schemas/StorySource'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Story'
+                  total:
+                    type: integer
+
+  /api/v1/stories/generate:
+    post:
+      tags: [stories]
+      summary: AI 生成故事
+      description: 根據關鍵字讓 AI 生成適合兒童的故事
+      operationId: generateStory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [parent_id, keywords]
+              properties:
+                parent_id:
+                  type: string
+                  format: uuid
+                keywords:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 1
+                  maxItems: 5
+                  description: 故事關鍵字
+                  example: ["小兔子", "森林", "勇敢"]
+                age_group:
+                  type: string
+                  enum: [4-6, 7-10]
+                  default: "4-6"
+                  description: 目標年齡層
+                word_count:
+                  type: integer
+                  minimum: 200
+                  maximum: 2000
+                  default: 500
+                  description: 目標字數
+      responses:
+        '201':
+          description: 故事生成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/stories/{story_id}:
+    get:
+      tags: [stories]
+      summary: 取得故事詳情
+      operationId: getStory
+      parameters:
+        - $ref: '#/components/parameters/StoryId'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [stories]
+      summary: 更新故事
+      operationId: updateStory
+      parameters:
+        - $ref: '#/components/parameters/StoryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoryUpdate'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [stories]
+      summary: 刪除故事
+      operationId: deleteStory
+      parameters:
+        - $ref: '#/components/parameters/StoryId'
+      responses:
+        '204':
+          description: 刪除成功
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/stories/{story_id}/audio:
+    post:
+      tags: [stories]
+      summary: 生成故事語音
+      description: 使用指定的聲音模型將故事轉換成語音
+      operationId: generateStoryAudio
+      parameters:
+        - $ref: '#/components/parameters/StoryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [voice_profile_id]
+              properties:
+                voice_profile_id:
+                  type: string
+                  format: uuid
+                  description: 要使用的聲音模型
+      responses:
+        '202':
+          description: 語音生成開始
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  story_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [processing]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      tags: [stories]
+      summary: 取得故事語音
+      operationId: getStoryAudio
+      parameters:
+        - $ref: '#/components/parameters/StoryId'
+      responses:
+        '200':
+          description: 故事語音檔案
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ========== Q&A Sessions ==========
+  /api/v1/qa/sessions:
+    post:
+      tags: [qa]
+      summary: 開始問答對話
+      operationId: startQASession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [story_id]
+              properties:
+                story_id:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: 問答對話開始
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QASession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/qa/sessions/{session_id}:
+    get:
+      tags: [qa]
+      summary: 取得問答對話詳情
+      operationId: getQASession
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/QASession'
+                  - type: object
+                    properties:
+                      messages:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/QAMessage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [qa]
+      summary: 結束問答對話
+      operationId: endQASession
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [completed, timeout]
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QASession'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/qa/sessions/{session_id}/messages:
+    post:
+      tags: [qa]
+      summary: 發送問答訊息
+      description: 小朋友發送問題，AI 回覆答案
+      operationId: sendQAMessage
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  description: 問題內容
+                  maxLength: 500
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                  description: 語音輸入（可選，會轉成文字）
+      responses:
+        '200':
+          description: 問答回應
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_message:
+                    $ref: '#/components/schemas/QAMessage'
+                  assistant_message:
+                    $ref: '#/components/schemas/QAMessage'
+                  is_in_scope:
+                    type: boolean
+                    description: 問題是否在故事範圍內
+                  audio_url:
+                    type: string
+                    format: uri
+                    description: AI 回應的語音 URL
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ========== Pending Questions ==========
+  /api/v1/questions:
+    get:
+      tags: [questions]
+      summary: 取得待回答問題列表
+      operationId: listPendingQuestions
+      parameters:
+        - name: parent_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/PendingQuestionStatus'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PendingQuestion'
+
+  /api/v1/questions/{question_id}:
+    get:
+      tags: [questions]
+      summary: 取得問題詳情
+      operationId: getPendingQuestion
+      parameters:
+        - $ref: '#/components/parameters/QuestionId'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingQuestion'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/questions/{question_id}/answer:
+    post:
+      tags: [questions]
+      summary: 回答問題
+      description: 家長回答小朋友的問題（文字或語音）
+      operationId: answerQuestion
+      parameters:
+        - $ref: '#/components/parameters/QuestionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [answer]
+              properties:
+                answer:
+                  type: string
+                  description: 文字回答
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                  description: 語音回答
+      responses:
+        '200':
+          description: 回答成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingQuestion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    VoiceProfileId:
+      name: voice_profile_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    StoryId:
+      name: story_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    SessionId:
+      name: session_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    QuestionId:
+      name: question_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # ===== Voice Profile =====
+    VoiceProfileStatus:
+      type: string
+      enum: [pending, processing, ready, failed]
+
+    VoiceProfileCreate:
+      type: object
+      required: [parent_id, name]
+      properties:
+        parent_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+          example: 爸爸
+
+    VoiceProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        parent_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        status:
+          $ref: '#/components/schemas/VoiceProfileStatus'
+        sample_duration_seconds:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # ===== Story =====
+    StorySource:
+      type: string
+      enum: [imported, ai_generated]
+
+    StoryCreate:
+      type: object
+      required: [parent_id, title, content, source]
+      properties:
+        parent_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+          maxLength: 20000
+        source:
+          $ref: '#/components/schemas/StorySource'
+
+    StoryUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+          maxLength: 20000
+
+    Story:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        parent_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        content:
+          type: string
+        source:
+          $ref: '#/components/schemas/StorySource'
+        keywords:
+          type: array
+          items:
+            type: string
+          nullable: true
+        word_count:
+          type: integer
+        estimated_duration_minutes:
+          type: integer
+          nullable: true
+        audio_file_path:
+          type: string
+          nullable: true
+        audio_generated_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # ===== QA Session =====
+    QASessionStatus:
+      type: string
+      enum: [active, completed, timeout]
+
+    QASession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        story_id:
+          type: string
+          format: uuid
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        message_count:
+          type: integer
+        status:
+          $ref: '#/components/schemas/QASessionStatus'
+
+    MessageRole:
+      type: string
+      enum: [child, assistant]
+
+    QAMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        role:
+          $ref: '#/components/schemas/MessageRole'
+        content:
+          type: string
+        is_in_scope:
+          type: boolean
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        sequence:
+          type: integer
+
+    # ===== Pending Question =====
+    PendingQuestionStatus:
+      type: string
+      enum: [pending, answered]
+
+    PendingQuestion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        parent_id:
+          type: string
+          format: uuid
+        story_id:
+          type: string
+          format: uuid
+          nullable: true
+        question:
+          type: string
+        asked_at:
+          type: string
+          format: date-time
+        answer:
+          type: string
+          nullable: true
+        answered_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/PendingQuestionStatus'
+
+    # ===== Error =====
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: 錯誤代碼
+        message:
+          type: string
+          description: 錯誤訊息
+        details:
+          type: object
+          additionalProperties: true
+          description: 額外錯誤資訊
+
+  responses:
+    BadRequest:
+      description: 請求參數錯誤
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "VALIDATION_ERROR"
+            message: "錄音時間必須在 30-180 秒之間"
+
+    NotFound:
+      description: 資源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "NOT_FOUND"
+            message: "找不到指定的資源"

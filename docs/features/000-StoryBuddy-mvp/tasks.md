@@ -25,12 +25,12 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create backend project structure per plan.md in src/
-- [ ] T002 Initialize Python project with pyproject.toml and dependencies (fastapi, uvicorn, pydantic, aiosqlite, anthropic, elevenlabs, azure-cognitiveservices-speech)
-- [ ] T003 [P] Configure ruff for linting in pyproject.toml
-- [ ] T004 [P] Configure mypy for type checking in pyproject.toml
-- [ ] T005 [P] Create .env.example with required environment variables (ELEVENLABS_API_KEY, AZURE_SPEECH_KEY, ANTHROPIC_API_KEY)
-- [ ] T006 Create data directories structure (data/db/, data/audio/voice_samples/, data/audio/stories/, data/audio/qa_responses/, data/audio/parent_answers/)
+- [x] T001 Create backend project structure per plan.md in src/
+- [x] T002 Initialize Python project with pyproject.toml and dependencies (fastapi, uvicorn, pydantic, aiosqlite, anthropic, elevenlabs, azure-cognitiveservices-speech)
+- [x] T003 [P] Configure ruff for linting in pyproject.toml
+- [x] T004 [P] Configure mypy for type checking in pyproject.toml
+- [x] T005 [P] Create .env.example with required environment variables (ELEVENLABS_API_KEY, AZURE_SPEECH_KEY, ANTHROPIC_API_KEY)
+- [x] T006 Create data directories structure (data/db/, data/audio/voice_samples/, data/audio/stories/, data/audio/qa_responses/, data/audio/parent_answers/)
 
 ---
 
@@ -40,16 +40,16 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Create SQLite database schema in src/db/init.py (all tables from data-model.md)
-- [ ] T008 [P] Implement config management in src/config.py (Settings class with pydantic-settings)
-- [ ] T009 [P] Create FastAPI application entry point in src/main.py
-- [ ] T010 [P] Implement base Pydantic models (enums) in src/models/__init__.py
-- [ ] T011 Create Parent model in src/models/parent.py (shared by all stories)
-- [ ] T012 Implement database repository base in src/db/repository.py (CRUD operations for Parent)
-- [ ] T013 [P] Configure structured logging in src/main.py (JSON format per Constitution)
-- [ ] T014 [P] Setup error handling middleware in src/main.py
+- [x] T007 Create SQLite database schema in src/db/init.py (all tables from data-model.md)
+- [x] T008 [P] Implement config management in src/config.py (Settings class with pydantic-settings)
+- [x] T009 [P] Create FastAPI application entry point in src/main.py
+- [x] T010 [P] Implement base Pydantic models (enums) in src/models/__init__.py
+- [x] T011 Create Parent model in src/models/parent.py (shared by all stories)
+- [x] T012 Implement database repository base in src/db/repository.py (CRUD operations for Parent)
+- [x] T013 [P] Configure structured logging in src/main.py (JSON format per Constitution)
+- [x] T014 [P] Setup error handling middleware in src/main.py
 
-**Checkpoint**: Foundation ready - user story implementation can now begin
+**Checkpoint**: Foundation ready - user story implementation can now begin ✅
 
 ---
 
@@ -61,24 +61,24 @@
 
 ### Tests for User Story 1
 
-- [ ] T015 [P] [US1] Contract test for POST /api/v1/voice-profiles in tests/contract/test_voice_api.py
-- [ ] T016 [P] [US1] Contract test for POST /api/v1/voice-profiles/{id}/upload in tests/contract/test_voice_api.py
-- [ ] T017 [P] [US1] Contract test for POST /api/v1/voice-profiles/{id}/preview in tests/contract/test_voice_api.py
+- [x] T015 [P] [US1] Contract test for POST /api/v1/voice-profiles in tests/contract/test_voice_api.py
+- [x] T016 [P] [US1] Contract test for POST /api/v1/voice-profiles/{id}/upload in tests/contract/test_voice_api.py
+- [x] T017 [P] [US1] Contract test for POST /api/v1/voice-profiles/{id}/preview in tests/contract/test_voice_api.py
 - [ ] T018 [P] [US1] Integration test for voice recording flow in tests/integration/test_voice_flow.py
 
 ### Implementation for User Story 1
 
-- [ ] T019 [P] [US1] Create VoiceProfile model in src/models/voice.py
-- [ ] T020 [P] [US1] Create VoiceAudio model in src/models/voice.py
-- [ ] T021 [US1] Implement VoiceProfile repository in src/db/repository.py
+- [x] T019 [P] [US1] Create VoiceProfile model in src/models/voice.py
+- [x] T020 [P] [US1] Create VoiceAudio model in src/models/voice.py
+- [x] T021 [US1] Implement VoiceProfile repository in src/db/repository.py
 - [ ] T022 [US1] Implement ElevenLabs voice cloning service in src/services/voice_cloning.py
-- [ ] T023 [US1] Implement voice API routes in src/api/voice.py (create, list, get, delete profile)
-- [ ] T024 [US1] Implement voice sample upload endpoint in src/api/voice.py (POST /upload)
-- [ ] T025 [US1] Implement voice preview endpoint in src/api/voice.py (POST /preview)
-- [ ] T026 [US1] Add audio file validation (duration 30-180 sec, format wav/mp3/m4a) in src/api/voice.py
+- [x] T023 [US1] Implement voice API routes in src/api/voice.py (create, list, get, delete profile)
+- [x] T024 [US1] Implement voice sample upload endpoint in src/api/voice.py (POST /upload)
+- [x] T025 [US1] Implement voice preview endpoint in src/api/voice.py (POST /preview)
+- [x] T026 [US1] Add audio file validation (duration 30-180 sec, format wav/mp3/m4a) in src/api/voice.py
 - [ ] T027 [US1] Add voice cloning status polling mechanism in src/services/voice_cloning.py
 
-**Checkpoint**: Voice recording and cloning functional - can demo independently
+**Checkpoint**: Voice recording and cloning functional - can demo independently (API ready, ElevenLabs integration pending)
 
 ---
 

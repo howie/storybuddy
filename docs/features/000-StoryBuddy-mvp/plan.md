@@ -38,15 +38,23 @@ StoryBuddy 是一個親子說故事 App，核心功能包括：
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-**Note**: 專案 constitution 尚未具體定義，使用預設軟體工程最佳實踐：
+**Reference**: [Constitution v1.0.0](../../../.specify/memory/constitution.md)
 
-| 原則 | 狀態 | 說明 |
-|------|------|------|
-| 測試優先 | PASS | 將採用 pytest + TDD |
-| 模組化設計 | PASS | 後端分離 API 層、服務層、資料層 |
-| 安全性 | 需注意 | 聲音資料涉及隱私，需加密儲存 |
-| 可觀察性 | PASS | 結構化日誌 |
-| 簡單性 | PASS | MVP 優先核心功能 |
+| Principle | Status | Notes |
+|-----------|--------|-------|
+| I. Test-First | PASS | pytest + TDD enforced |
+| II. Modular Design | PASS | API / Service / Data layers separated |
+| III. Security & Privacy | PASS | Voice encryption, env vars for keys, consent flow planned |
+| IV. Observability | PASS | Structured JSON logging |
+| V. Simplicity | PASS | MVP scope maintained, single-family use |
+
+**Additional Standards**:
+
+| Standard | Status | Notes |
+|----------|--------|-------|
+| Children's Safety | PASS | Claude content filtering, parental oversight, question boundaries |
+| Privacy Requirements | PASS | Local-first storage, consent before cloning, deletion rights |
+| Quality Gates | PASS | CI with tests, ruff, mypy configured |
 
 ## Project Structure
 

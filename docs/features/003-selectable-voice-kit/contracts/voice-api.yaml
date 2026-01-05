@@ -1,0 +1,461 @@
+openapi: 3.1.0
+info:
+  title: StoryBuddy Voice Kit API
+  description: API for managing voice kits and generating story audio
+  version: 1.0.0
+  contact:
+    name: StoryBuddy Team
+
+servers:
+  - url: /api
+    description: Base API path
+
+paths:
+  /voices:
+    get:
+      summary: List available voices
+      description: Returns all available voice characters, including built-in and downloaded voices
+      operationId: listVoices
+      tags:
+        - Voices
+      parameters:
+        - name: kit_id
+          in: query
+          description: Filter by voice kit ID
+          schema:
+            type: string
+        - name: gender
+          in: query
+          description: Filter by gender
+          schema:
+            $ref: '#/components/schemas/Gender'
+        - name: age_group
+          in: query
+          description: Filter by age group
+          schema:
+            $ref: '#/components/schemas/AgeGroup'
+        - name: style
+          in: query
+          description: Filter by voice style
+          schema:
+            $ref: '#/components/schemas/VoiceStyle'
+      responses:
+        '200':
+          description: List of voices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  voices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VoiceCharacter'
+                  total:
+                    type: integer
+
+  /voices/{voice_id}:
+    get:
+      summary: Get voice details
+      description: Returns detailed information about a specific voice
+      operationId: getVoice
+      tags:
+        - Voices
+      parameters:
+        - name: voice_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Voice details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceCharacter'
+        '404':
+          description: Voice not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /voices/{voice_id}/preview:
+    get:
+      summary: Get voice preview audio
+      description: Returns a short audio preview of the voice
+      operationId: getVoicePreview
+      tags:
+        - Voices
+      parameters:
+        - name: voice_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Audio preview
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Voice not found
+
+  /voice-kits:
+    get:
+      summary: List voice kits
+      description: Returns all available voice kits
+      operationId: listVoiceKits
+      tags:
+        - Voice Kits
+      parameters:
+        - name: include_available
+          in: query
+          description: Include kits available for download
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of voice kits
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kits:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VoiceKit'
+
+  /voice-kits/{kit_id}/download:
+    post:
+      summary: Download a voice kit
+      description: Initiates download of a voice kit
+      operationId: downloadVoiceKit
+      tags:
+        - Voice Kits
+      parameters:
+        - name: kit_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Download initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  download_id:
+                    type: string
+                  status:
+                    type: string
+                    enum: [pending, downloading]
+        '404':
+          description: Kit not found
+
+  /voice-kits/{kit_id}:
+    delete:
+      summary: Delete a downloaded voice kit
+      description: Removes a downloaded voice kit from local storage
+      operationId: deleteVoiceKit
+      tags:
+        - Voice Kits
+      parameters:
+        - name: kit_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Kit deleted
+        '400':
+          description: Cannot delete built-in kit
+
+  /stories/{story_id}/generate-audio:
+    post:
+      summary: Generate story audio
+      description: Generates audio for a story using the specified voice
+      operationId: generateStoryAudio
+      tags:
+        - Story Audio
+      parameters:
+        - name: story_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                voice_id:
+                  type: string
+                  description: Voice to use for narration
+                voice_mappings:
+                  type: object
+                  description: Optional per-role voice mappings
+                  additionalProperties:
+                    type: string
+                stream:
+                  type: boolean
+                  default: false
+                  description: Whether to stream the audio
+              required:
+                - voice_id
+      responses:
+        '200':
+          description: Generated audio (non-streaming)
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        '202':
+          description: Audio generation started (streaming)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  generation_id:
+                    type: string
+                  stream_url:
+                    type: string
+        '404':
+          description: Story or voice not found
+
+  /users/{user_id}/voice-preference:
+    get:
+      summary: Get user's voice preference
+      description: Returns the user's default voice selection
+      operationId: getVoicePreference
+      tags:
+        - User Preferences
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Voice preference
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoicePreference'
+        '404':
+          description: User not found
+
+    put:
+      summary: Set user's voice preference
+      description: Updates the user's default voice selection
+      operationId: setVoicePreference
+      tags:
+        - User Preferences
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                default_voice_id:
+                  type: string
+              required:
+                - default_voice_id
+      responses:
+        '200':
+          description: Preference updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoicePreference'
+        '400':
+          description: Invalid voice ID
+        '404':
+          description: User not found
+
+components:
+  schemas:
+    VoiceKit:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier
+        name:
+          type: string
+          description: Display name
+          example: "內建角色"
+        description:
+          type: string
+          description: Kit description
+        provider:
+          $ref: '#/components/schemas/TTSProvider'
+        version:
+          type: string
+          description: Semantic version
+          example: "1.0.0"
+        download_size:
+          type: integer
+          description: Size in bytes
+        is_builtin:
+          type: boolean
+          description: Whether kit is included by default
+        is_downloaded:
+          type: boolean
+          description: Whether kit is downloaded locally
+        voices:
+          type: array
+          items:
+            $ref: '#/components/schemas/VoiceCharacter'
+      required:
+        - id
+        - name
+        - provider
+        - version
+
+    VoiceCharacter:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier
+        kit_id:
+          type: string
+          description: Parent kit ID
+        name:
+          type: string
+          description: Character name
+          example: "故事姐姐"
+        provider_voice_id:
+          type: string
+          description: Provider's voice ID
+          example: "zh-TW-HsiaoChenNeural"
+        ssml_options:
+          type: object
+          description: SSML customization options
+          properties:
+            role:
+              type: string
+              enum: [Girl, Boy, YoungAdultFemale, YoungAdultMale, OlderAdultFemale, OlderAdultMale, SeniorFemale, SeniorMale]
+            style:
+              type: string
+            pitch:
+              type: string
+            rate:
+              type: string
+        gender:
+          $ref: '#/components/schemas/Gender'
+        age_group:
+          $ref: '#/components/schemas/AgeGroup'
+        style:
+          $ref: '#/components/schemas/VoiceStyle'
+        preview_url:
+          type: string
+          format: uri
+          description: URL to preview audio
+        preview_text:
+          type: string
+          description: Text used for preview
+      required:
+        - id
+        - name
+        - provider_voice_id
+        - gender
+        - age_group
+        - style
+
+    VoicePreference:
+      type: object
+      properties:
+        user_id:
+          type: string
+        default_voice_id:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - user_id
+        - default_voice_id
+
+    Gender:
+      type: string
+      enum:
+        - male
+        - female
+        - neutral
+
+    AgeGroup:
+      type: string
+      enum:
+        - child
+        - adult
+        - senior
+
+    VoiceStyle:
+      type: string
+      enum:
+        - narrator
+        - character
+        - both
+
+    TTSProvider:
+      type: string
+      enum:
+        - azure
+        - google
+        - elevenlabs
+        - amazon
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+      required:
+        - code
+        - message
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Voices
+    description: Voice character management
+  - name: Voice Kits
+    description: Voice kit management
+  - name: Story Audio
+    description: Story audio generation
+  - name: User Preferences
+    description: User voice preferences

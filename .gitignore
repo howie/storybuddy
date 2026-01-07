@@ -245,3 +245,5 @@ mobile/android/**/*.keystore
 .DS_Store
 *.swp
 *.swo
+
+.claude/settings.local.json

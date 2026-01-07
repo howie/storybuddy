@@ -2,7 +2,32 @@
   "permissions": {
     "allow": [
       "Bash(/Users/howie/Workspace/github/storybuddy/.specify/scripts/bash/update-agent-context.sh:*)",
-      "Bash(/Users/howie/Workspace/github/storybuddy/.specify/scripts/bash/check-prerequisites.sh:*)"
+      "Bash(/Users/howie/Workspace/github/storybuddy/.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(source venv/bin/activate)",
+      "Bash(pytest:*)",
+      "Bash(uvicorn:*)",
+      "Bash(flutter create:*)",
+      "Bash(cat:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(flutter pub run build_runner:*)",
+      "Bash(chmod:*)",
+      "Bash(pip install:*)",
+      "Bash(ls:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter clean:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(dart run build_runner:*)",
+      "Bash(find:*)",
+      "Bash(flutter build:*)",
+      "Bash(pod install)",
+      "Bash(dart compile kernel:*)",
+      "Bash(flutter run:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(flutter devices:*)",
+      "Bash(python3:*)",
+      "Bash(gh pr create:*)"
     ]
   }
 }

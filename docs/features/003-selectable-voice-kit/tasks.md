@@ -5,6 +5,22 @@
 
 **Tests**: Following constitution principle I (Test-First), tests are included for TDD compliance.
 
+## Progress Summary
+
+| Phase | Status | Completed | Total |
+|-------|--------|-----------|-------|
+| Phase 1: Setup | ⏳ Pending | 0/4 | 0% |
+| Phase 2: Foundational | ⏳ Pending | 0/9 | 0% |
+| Phase 3: US1 (Voice Selection) | ⏳ Pending | 0/24 | 0% |
+| Phase 4: US2 (Voice Packs) | ⏳ Pending | 0/14 | 0% |
+| Phase 5: US3 (Multi-Voice) | ⏳ Pending | 0/14 | 0% |
+| Phase 6: Polish | ⏳ Pending | 0/7 | 0% |
+| **Total** | | **0/72** | **0%** |
+
+**Last Updated**: 2026-01-07
+
+**Note**: Research phase complete (TTS provider selection: Google Cloud TTS). Implementation not yet started.
+
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
 ## Format: `[ID] [P?] [Story] Description`
@@ -23,10 +39,10 @@
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Project initialization and Azure TTS integration setup
+**Purpose**: Project initialization and Google Cloud TTS integration setup
 
-- [ ] T001 Add Azure Cognitive Services Speech SDK to requirements.txt
-- [ ] T002 [P] Add voice-related environment variables to .env.example (AZURE_SPEECH_KEY, AZURE_SPEECH_REGION)
+- [ ] T001 Add google-cloud-texttospeech to requirements.txt
+- [ ] T002 [P] Add Google credentials handling to config (GOOGLE_APPLICATION_CREDENTIALS)
 - [ ] T003 [P] Create src/services/tts/ directory structure with __init__.py
 - [ ] T004 [P] Add Flutter dependencies to pubspec.yaml (just_audio, provider)
 
@@ -43,8 +59,8 @@
 - [ ] T007 [P] Create database migration for voice_kits table in src/migrations/
 - [ ] T008 [P] Create database migration for voice_characters table in src/migrations/
 - [ ] T009 [P] Create database migration for voice_preferences table in src/migrations/
-- [ ] T010 Implement AzureTTSProvider in src/services/tts/azure_tts.py
-- [ ] T011 Create SSML generation utility in src/services/tts/ssml_utils.py
+- [ ] T010 Implement GoogleTTSProvider in src/services/tts/google_tts.py
+- [ ] T011 Create SSML generation utility (for pitch/rate) in src/services/tts/ssml_utils.py
 - [ ] T012 [P] Create VoiceCharacter Dart model in lib/models/voice_kit.dart
 - [ ] T013 [P] Create VoiceKit Dart model in lib/models/voice_kit.dart
 
@@ -66,16 +82,16 @@
 - [ ] T015 [P] [US1] Contract test for GET /api/voices/{voice_id}/preview in tests/contract/test_voice_api.py
 - [ ] T016 [P] [US1] Contract test for POST /api/stories/{story_id}/generate-audio in tests/contract/test_voice_api.py
 - [ ] T017 [P] [US1] Unit test for VoiceKitService in tests/unit/services/test_voice_kit_service.py
-- [ ] T018 [P] [US1] Integration test for Azure TTS in tests/integration/test_azure_tts.py
+- [ ] T018 [P] [US1] Integration test for Google TTS in tests/integration/test_google_tts.py
 
 ### Implementation for User Story 1
 
 - [ ] T019 [P] [US1] Create VoiceKit model in src/models/voice.py
 - [ ] T020 [P] [US1] Create VoiceCharacter model in src/models/voice.py
-- [ ] T021 [US1] Create VoiceKitService with built-in voices in src/services/voice_kit_service.py
+- [ ] T021 [US1] Create VoiceKitService with built-in voices (Google simulated) in src/services/voice_kit_service.py
 - [ ] T022 [US1] Implement list_voices() in VoiceKitService
 - [ ] T023 [US1] Implement get_voice() in VoiceKitService
-- [ ] T024 [US1] Implement get_voice_preview() in VoiceKitService using Azure TTS
+- [ ] T024 [US1] Implement get_voice_preview() in VoiceKitService using Google TTS
 - [ ] T025 [US1] Implement generate_story_audio() in VoiceKitService
 - [ ] T026 [P] [US1] Create voice routes in src/api/voice_routes.py
 - [ ] T027 [US1] Implement GET /api/voices endpoint
@@ -211,7 +227,7 @@ Task: "Contract test for GET /api/voices in tests/contract/test_voice_api.py"
 Task: "Contract test for GET /api/voices/{voice_id}/preview in tests/contract/test_voice_api.py"
 Task: "Contract test for POST /api/stories/{story_id}/generate-audio in tests/contract/test_voice_api.py"
 Task: "Unit test for VoiceKitService in tests/unit/services/test_voice_kit_service.py"
-Task: "Integration test for Azure TTS in tests/integration/test_azure_tts.py"
+Task: "Integration test for Google TTS in tests/integration/test_google_tts.py"
 
 # Launch backend and Flutter models together:
 Task: "Create VoiceKit model in src/models/voice.py"

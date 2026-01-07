@@ -2,7 +2,8 @@
 
 **Feature Branch**: `000-StoryBuddy-mvp`
 **Created**: 2026-01-01
-**Status**: Draft
+**Status**: In Progress (~60% complete)
+**Progress**: Phase 1-2 ✅ | US1 (Voice) ~80% | US2-US6 Pending
 **Input**: User description: "設計一個說故事app，可以讓家長先錄製一段自己的聲音(中文)，然後讓 AI 模仿父母的聲音講故事，然後這個故事app 可以匯入外部故事或者是請AI 編寫故事，然後講完故事後可以開始對話問答模式，小朋友可以跟AI 詢問故事範圍以內的問題，如果有超過範圍的，AI 可以回答我們先記錄起來，晚點問爸爸媽媽"
 
 ## User Scenarios & Testing *(mandatory)*

@@ -5,6 +5,23 @@
 
 **Tests**: Tests follow TDD per Constitution v1.0.0 - write tests first, ensure they fail, then implement.
 
+## Progress Summary
+
+| Phase | Status | Completed | Total |
+|-------|--------|-----------|-------|
+| Phase 1: Setup | ✅ Complete | 6/6 | 100% |
+| Phase 2: Foundational | ✅ Complete | 8/8 | 100% |
+| Phase 3: US1 (Voice) | 🔄 In Progress | 10/13 | 77% |
+| Phase 4: US2 (Playback) | ⏳ Pending | 0/9 | 0% |
+| Phase 5: US3 (Import) | ⏳ Pending | 0/7 | 0% |
+| Phase 6: US4 (Generate) | ⏳ Pending | 0/7 | 0% |
+| Phase 7: US5 (Q&A) | ⏳ Pending | 0/13 | 0% |
+| Phase 8: US6 (Pending Q) | ⏳ Pending | 0/9 | 0% |
+| Phase 9: Polish | ⏳ Pending | 0/6 | 0% |
+| **Total** | | **24/78** | **31%** |
+
+**Last Updated**: 2026-01-07
+
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing.
 
 ## Format: `[ID] [P?] [Story] Description`

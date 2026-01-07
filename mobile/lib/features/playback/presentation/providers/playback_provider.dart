@@ -1,8 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/audio/audio_cache_manager.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/network/connectivity_service.dart';
-import '../../../stories/data/datasources/story_local_datasource.dart';
 import '../../../stories/presentation/providers/story_provider.dart';
 import '../../data/datasources/playback_local_datasource.dart';
 import '../../data/datasources/playback_remote_datasource.dart';
@@ -11,8 +11,6 @@ import '../../domain/entities/story_playback.dart';
 import '../../domain/repositories/playback_repository.dart';
 import '../../domain/usecases/generate_audio.dart';
 import '../../domain/usecases/play_story.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../shared/providers/database_provider.dart';
 
 part 'playback_provider.g.dart';
 

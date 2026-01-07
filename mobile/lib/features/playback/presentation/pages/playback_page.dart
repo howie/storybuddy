@@ -6,7 +6,6 @@ import '../../../../app/theme.dart';
 import '../../../../shared/widgets/error_widget.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../stories/presentation/providers/story_provider.dart';
-import '../../domain/entities/story_playback.dart';
 import '../providers/playback_provider.dart';
 import '../widgets/playback_controls.dart';
 import '../widgets/playback_progress.dart';

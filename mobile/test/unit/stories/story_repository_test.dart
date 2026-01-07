@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:storybuddy/core/database/enums.dart';
-import 'package:storybuddy/features/stories/domain/entities/story.dart';
 
 // Mock classes
 class MockStoryRemoteDataSource extends Mock {}

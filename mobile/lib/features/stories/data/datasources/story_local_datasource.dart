@@ -5,7 +5,6 @@ import 'package:drift/drift.dart';
 import '../../../../core/database/database.dart';
 import '../../../../core/database/enums.dart';
 import '../../domain/entities/story.dart' as entity;
-import '../models/story_model.dart';
 
 /// Local data source for Story operations using Drift.
 abstract class StoryLocalDataSource {

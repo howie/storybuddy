@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme.dart';
-import '../../../../core/database/enums.dart';
 import '../../domain/entities/qa_message.dart';
 
 /// Chat bubble widget for displaying Q&A messages.

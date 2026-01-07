@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme.dart';
 import '../../../../shared/widgets/permission_request.dart';
-import '../../data/services/audio_recording_service.dart';
 import '../../domain/entities/voice_profile.dart';
 import '../providers/voice_profile_provider.dart';
 import '../widgets/recording_timer.dart';

@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:storybuddy/core/database/enums.dart';
-import 'package:storybuddy/features/voice_profile/domain/entities/voice_profile.dart';
 import 'package:storybuddy/features/voice_profile/presentation/pages/voice_recording_page.dart';
 
 class MockVoiceProfileRepository extends Mock {}

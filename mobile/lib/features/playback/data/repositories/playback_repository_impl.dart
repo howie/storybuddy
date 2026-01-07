@@ -1,10 +1,7 @@
 import 'dart:async';
 
-import 'package:audio_service/audio_service.dart' as audio_service;
-
 import '../../../../core/network/connectivity_service.dart';
 import '../../../stories/data/datasources/story_local_datasource.dart';
-import '../../../stories/domain/entities/story.dart';
 import '../../domain/entities/story_playback.dart';
 import '../../domain/repositories/playback_repository.dart';
 import '../datasources/playback_local_datasource.dart';
@@ -67,20 +64,19 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
     _currentStoryId = storyId;
     _currentStoryTitle = story.title;
 
-    String audioSource;
     bool isOffline = false;
 
     // Try local cache first
     final localPath = await localDataSource.getLocalAudioPath(storyId);
     if (localPath != null) {
-      audioSource = localPath;
+      // Audio available offline
       isOffline = true;
     } else if (story.audioUrl != null) {
       // Stream from remote
       if (!await connectivityService.isConnected) {
         throw Exception('沒有網路且無離線音訊');
       }
-      audioSource = story.audioUrl!;
+      // Audio available from URL
     } else {
       throw Exception('此故事沒有可播放的語音');
     }

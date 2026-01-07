@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:storybuddy/core/database/enums.dart';
 import 'package:storybuddy/features/stories/domain/entities/story.dart';
 import 'package:storybuddy/features/stories/presentation/pages/story_list_page.dart';
-import 'package:storybuddy/features/stories/presentation/providers/story_provider.dart';
 
 class MockStoryRepository extends Mock implements StoryRepository {}
 

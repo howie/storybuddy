@@ -68,9 +68,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     redirect: (context, state) async {
       // Check if parent exists, create one if not (for development)
-      final parentAsync = await ref.read(
-        _parentSetupProvider.future,
-      );
+      await ref.read(_parentSetupProvider.future);
       return null; // Continue to requested route
     },
     routes: [
@@ -165,40 +163,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     errorBuilder: (context, state) => _ErrorPage(error: state.error),
   );
 });
-
-/// Placeholder page for routes not yet implemented.
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.construction, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Coming soon...',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey,
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 /// Error page for invalid routes.
 class _ErrorPage extends StatelessWidget {

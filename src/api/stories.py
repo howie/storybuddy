@@ -3,9 +3,9 @@
 from pathlib import Path
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Header, HTTPException, Query, status
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.config import get_settings
 from src.db.repository import ParentRepository, StoryRepository, VoiceProfileRepository
@@ -32,6 +32,20 @@ class GenerateAudioResponse(BaseModel):
 
     story_id: UUID
     status: str = "processing"
+
+
+class ImportStoryRequest(BaseModel):
+    """Request model for importing a story."""
+
+    title: str = Field(..., max_length=200)
+    content: str = Field(..., max_length=5000)
+
+
+class GenerateStoryRequest(BaseModel):
+    """Request model for generating a story with AI."""
+
+    keywords: list[str] = Field(..., min_length=1, max_length=5)
+
 
 router = APIRouter(prefix="/stories", tags=["stories"])
 
@@ -60,20 +74,38 @@ async def create_story(data: StoryCreate) -> Story:
 
 @router.get("", response_model=StoryListResponse)
 async def list_stories(
-    parent_id: UUID = Query(..., description="Parent ID to filter stories"),
+    parent_id: UUID | None = Query(None, description="Parent ID to filter stories"),
     source: StorySource | None = Query(None, description="Filter by source"),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of items"),
     offset: int = Query(0, ge=0, description="Number of items to skip"),
+    x_parent_id: str | None = Header(None, alias="X-Parent-ID"),
 ) -> StoryListResponse:
     """List all stories for a parent with pagination.
 
-    - **parent_id**: Required parent ID to filter stories
+    - **parent_id**: Parent ID to filter stories (query param or X-Parent-ID header)
     - **source**: Optional filter by "imported" or "ai_generated"
     - **limit**: Maximum items per page (1-100, default 20)
     - **offset**: Number of items to skip for pagination
     """
+    # Use query param if provided, otherwise use header
+    effective_parent_id = parent_id
+    if effective_parent_id is None and x_parent_id:
+        try:
+            effective_parent_id = UUID(x_parent_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid X-Parent-ID header format",
+            )
+
+    if effective_parent_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="parent_id query parameter or X-Parent-ID header is required",
+        )
+
     stories, total = await StoryRepository.get_by_parent_id(
-        parent_id=parent_id,
+        parent_id=effective_parent_id,
         source=source,
         limit=limit,
         offset=offset,
@@ -85,6 +117,115 @@ async def list_stories(
         limit=limit,
         offset=offset,
     )
+
+
+@router.post("/import", response_model=StoryResponse, status_code=status.HTTP_201_CREATED)
+async def import_story(
+    data: ImportStoryRequest,
+    x_parent_id: str | None = Header(None, alias="X-Parent-ID"),
+) -> Story:
+    """Import a story from user-provided text.
+
+    - **title**: Story title (max 200 characters)
+    - **content**: Story text content (max 5000 characters)
+
+    Requires X-Parent-ID header for authentication.
+    """
+    if not x_parent_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="X-Parent-ID header is required",
+        )
+
+    try:
+        parent_id = UUID(x_parent_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid X-Parent-ID header format",
+        )
+
+    # Verify parent exists
+    parent = await ParentRepository.get_by_id(parent_id)
+    if parent is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Parent not found",
+        )
+
+    story_data = StoryCreate(
+        parent_id=parent_id,
+        title=data.title,
+        content=data.content,
+        source=StorySource.IMPORTED,
+    )
+
+    story = await StoryRepository.create(story_data)
+    return story
+
+
+@router.post("/generate", response_model=StoryResponse, status_code=status.HTTP_201_CREATED)
+async def generate_story(
+    data: GenerateStoryRequest,
+    x_parent_id: str | None = Header(None, alias="X-Parent-ID"),
+) -> Story:
+    """Generate a story using AI based on keywords.
+
+    - **keywords**: List of keywords to inspire the story (1-5 keywords)
+
+    Requires X-Parent-ID header for authentication.
+    """
+    if not x_parent_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="X-Parent-ID header is required",
+        )
+
+    try:
+        parent_id = UUID(x_parent_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid X-Parent-ID header format",
+        )
+
+    # Verify parent exists
+    parent = await ParentRepository.get_by_id(parent_id)
+    if parent is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Parent not found",
+        )
+
+    # Generate story using Claude
+    from src.services.llm import get_claude_service
+
+    try:
+        claude = get_claude_service()
+        result = await claude.generate_story(data.keywords)
+
+        story_data = StoryCreate(
+            parent_id=parent_id,
+            title=result.title,
+            content=result.content,
+            source=StorySource.AI_GENERATED,
+            keywords=data.keywords,
+        )
+    except ValueError as e:
+        # API key not configured
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"AI service not configured: {e}",
+        )
+    except RuntimeError as e:
+        # Claude API error
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"AI service error: {e}",
+        )
+
+    story = await StoryRepository.create(story_data)
+    return story
 
 
 @router.get("/{story_id}", response_model=StoryResponse)

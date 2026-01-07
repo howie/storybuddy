@@ -148,17 +148,22 @@ async def send_qa_message(
         )
     )
 
-    # TODO: Implement actual Claude Q&A handler
-    # For now, generate a placeholder response
-    # In a real implementation:
-    # 1. Send story context + question to Claude
-    # 2. Get response and determine if question is in scope
-    # 3. If out of scope, save to pending questions
-    # 4. Generate TTS audio for response
+    # Generate AI response using Claude
+    from src.services.llm import get_claude_service
 
-    # Generate mock AI response
-    is_in_scope = True  # Placeholder
-    ai_response_content = _generate_mock_response(data.content, story.content)
+    try:
+        claude = get_claude_service()
+        qa_result = await claude.answer_question(story.content, data.content)
+        is_in_scope = qa_result.is_in_scope
+        ai_response_content = qa_result.answer
+    except ValueError:
+        # API key not configured, use mock response
+        is_in_scope = True
+        ai_response_content = _generate_mock_response(data.content, story.content)
+    except RuntimeError:
+        # Claude API error, use mock response
+        is_in_scope = True
+        ai_response_content = _generate_mock_response(data.content, story.content)
 
     # Create assistant message
     assistant_message = await QAMessageRepository.create(

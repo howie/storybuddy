@@ -22,6 +22,22 @@ async def create_parent(data: ParentCreate) -> Parent:
 
 
 @router.get(
+    "/by-email/{email}",
+    response_model=ParentResponse,
+    summary="Get parent by email",
+)
+async def get_parent_by_email(email: str) -> Parent:
+    """Get a parent by their email address."""
+    parent = await ParentRepository.get_by_email(email)
+    if parent is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Parent with email {email} not found",
+        )
+    return parent
+
+
+@router.get(
     "/{parent_id}",
     response_model=ParentResponse,
     summary="Get parent by ID",

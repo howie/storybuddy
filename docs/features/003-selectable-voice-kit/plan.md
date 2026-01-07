@@ -5,19 +5,19 @@
 
 ## Summary
 
-Implement a selectable voice kit feature that allows children to choose from multiple character voices for story narration. Primary approach uses Microsoft Azure TTS with SSML role-play for child voices, supplemented by a plugin architecture for future TTS provider expansion.
+Implement a selectable voice kit feature that allows children to choose from multiple character voices for story narration. **MVP Strategy**: Due to budget constraints and generous free tier limits, we will use **Google Cloud TTS** as the primary provider. We will simulate different character roles (Child, Elder) by manipulating SSML pitch and rate parameters on standard Traditional Chinese voices, deferring premium Azure/ElevenLabs integration to later phases.
 
 ## Technical Context
 
 **Language/Version**: Python 3.11 (backend), Dart 3.x / Flutter 3.x (mobile)
-**Primary Dependencies**: Azure Cognitive Services Speech SDK, FastAPI, Flutter just_audio
+**Primary Dependencies**: `google-cloud-texttospeech`, FastAPI, Flutter just_audio
 **Storage**: SQLite (voice preferences), Cloud Storage (cached audio)
 **Testing**: pytest (backend), flutter_test (mobile)
 **Target Platform**: iOS 14+, Android 8+ (API 26), Linux server (backend)
 **Project Type**: Mobile + API
 **Performance Goals**: Voice preview <1s, story generation start <2s
 **Constraints**: Must work offline for cached content
-**Scale/Scope**: 6 built-in voices, expandable to downloadable voice packs
+**Scale/Scope**: 6 built-in voices (simulated via SSML), expandable structure
 
 ## Constitution Check
 
@@ -26,11 +26,11 @@ Implement a selectable voice kit feature that allows children to choose from mul
 | Principle | Status | Notes |
 |-----------|--------|-------|
 | I. Test-First | PASS | TDD for all new components |
-| II. Modular Design | PASS | TTSProvider abstraction layer |
-| III. Security & Privacy | PASS | API keys server-side only, no PII in voice requests |
+| II. Modular Design | PASS | TTSProvider abstraction layer (critical for switching back to Azure later) |
+| III. Security & Privacy | PASS | API keys server-side only |
 | IV. Observability | PASS | Structured logging for TTS calls |
-| V. Simplicity | PASS | 6 built-in voices, no over-engineering |
-| Children's Safety | PASS | Original character voices, no IP infringement |
+| V. Simplicity | PASS | Using SSML tweaks instead of multiple expensive models |
+| Children's Safety | PASS | Generic voices, safe content |
 | Privacy Requirements | PASS | Voice preferences local-first |
 
 ## Project Structure
@@ -40,12 +40,12 @@ Implement a selectable voice kit feature that allows children to choose from mul
 ```text
 docs/features/003-selectable-voice-kit/
 ├── plan.md              # This file
-├── research.md          # TTS provider research (complete)
+├── research.md          # TTS provider research
 ├── data-model.md        # Voice entities
-├── quickstart.md        # Integration guide
+├── quickstart.md        # Integration guide (Google updated)
 ├── contracts/           # API contracts
 │   └── voice-api.yaml   # OpenAPI spec
-└── tasks.md             # Implementation tasks (from /speckit.tasks)
+└── tasks.md             # Implementation tasks
 ```
 
 ### Source Code (repository root)
@@ -59,35 +59,13 @@ src/
 │   ├── tts/
 │   │   ├── __init__.py
 │   │   ├── base.py           # TTSProvider abstract base
-│   │   ├── azure_tts.py      # Azure implementation
-│   │   ├── google_tts.py     # Google Cloud implementation (future)
-│   │   └── elevenlabs_tts.py # ElevenLabs implementation (future)
+│   │   ├── google_tts.py     # Google implementation (MVP)
+│   │   ├── azure_tts.py      # Azure implementation (Future)
+│   │   └── elevenlabs_tts.py # ElevenLabs implementation (Future)
 │   └── voice_kit_service.py  # Voice kit business logic
 └── api/
     └── voice_routes.py       # Voice API endpoints
-
-tests/
-├── unit/
-│   └── services/
-│       └── test_voice_kit_service.py
-├── integration/
-│   └── test_azure_tts.py
-└── contract/
-    └── test_voice_api_contract.py
-
-# Flutter additions
-lib/
-├── models/
-│   └── voice_kit.dart        # Voice models
-├── services/
-│   └── voice_service.dart    # Voice API client
-├── providers/
-│   └── voice_provider.dart   # State management
-└── screens/
-    └── voice_selection_screen.dart
 ```
-
-**Structure Decision**: Mobile + API pattern, extending existing StoryBuddy backend and Flutter app.
 
 ## Complexity Tracking
 
@@ -111,33 +89,20 @@ class TTSProvider(ABC):
     ) -> bytes:
         """Generate speech audio from text."""
         pass
-
-    @abstractmethod
-    async def synthesize_stream(
-        self,
-        text: str,
-        voice_id: str,
-        options: dict | None = None
-    ) -> AsyncGenerator[bytes, None]:
-        """Stream speech audio generation."""
-        pass
-
-    @abstractmethod
-    async def get_preview(self, voice_id: str) -> bytes:
-        """Get voice preview audio."""
-        pass
 ```
 
-### Built-in Voice Configuration
+### Built-in Voice Configuration (Google MVP)
+
+We use `cmn-TW-Wavenet-A` (Female) and `cmn-TW-Wavenet-B` (Male) as bases, modifying pitch/rate to create personas.
 
 ```python
 BUILT_IN_VOICES = [
     VoiceCharacter(
         id="narrator-female",
         name="故事姐姐",
-        provider="azure",
-        provider_voice_id="zh-TW-HsiaoChenNeural",
-        ssml_options=None,
+        provider="google",
+        provider_voice_id="cmn-TW-Wavenet-A",
+        ssml_options={"pitch": "0st", "rate": "1.0"},
         gender="female",
         age_group="adult",
         style="narrator",
@@ -146,9 +111,9 @@ BUILT_IN_VOICES = [
     VoiceCharacter(
         id="narrator-male",
         name="故事哥哥",
-        provider="azure",
-        provider_voice_id="zh-TW-YunJheNeural",
-        ssml_options=None,
+        provider="google",
+        provider_voice_id="cmn-TW-Wavenet-B",
+        ssml_options={"pitch": "0st", "rate": "1.0"},
         gender="male",
         age_group="adult",
         style="narrator",
@@ -157,9 +122,9 @@ BUILT_IN_VOICES = [
     VoiceCharacter(
         id="child-girl",
         name="小美",
-        provider="azure",
-        provider_voice_id="zh-TW-HsiaoChenNeural",
-        ssml_options={"role": "Girl", "style": "cheerful"},
+        provider="google",
+        provider_voice_id="cmn-TW-Wavenet-A",
+        ssml_options={"pitch": "+4st", "rate": "1.05"},
         gender="female",
         age_group="child",
         style="character",
@@ -168,9 +133,9 @@ BUILT_IN_VOICES = [
     VoiceCharacter(
         id="child-boy",
         name="小明",
-        provider="azure",
-        provider_voice_id="zh-TW-YunJheNeural",
-        ssml_options={"role": "Boy", "style": "cheerful"},
+        provider="google",
+        provider_voice_id="cmn-TW-Wavenet-B",
+        ssml_options={"pitch": "+4st", "rate": "1.05"},
         gender="male",
         age_group="child",
         style="character",
@@ -179,9 +144,9 @@ BUILT_IN_VOICES = [
     VoiceCharacter(
         id="elder-female",
         name="故事阿嬤",
-        provider="azure",
-        provider_voice_id="zh-TW-HsiaoChenNeural",
-        ssml_options={"role": "SeniorFemale", "style": "gentle"},
+        provider="google",
+        provider_voice_id="cmn-TW-Wavenet-A",
+        ssml_options={"pitch": "-3st", "rate": "0.9"},
         gender="female",
         age_group="senior",
         style="narrator",
@@ -190,9 +155,9 @@ BUILT_IN_VOICES = [
     VoiceCharacter(
         id="elder-male",
         name="故事阿公",
-        provider="azure",
-        provider_voice_id="zh-TW-YunJheNeural",
-        ssml_options={"role": "SeniorMale", "style": "calm"},
+        provider="google",
+        provider_voice_id="cmn-TW-Wavenet-B",
+        ssml_options={"pitch": "-3st", "rate": "0.9"},
         gender="male",
         age_group="senior",
         style="narrator",
@@ -201,29 +166,20 @@ BUILT_IN_VOICES = [
 ]
 ```
 
-### Azure SSML Generation
+### Google SSML Generation
 
 ```python
 def generate_ssml(text: str, voice_id: str, options: dict | None) -> str:
-    voice_config = get_voice_config(voice_id)
-
-    if options and "role" in options:
-        return f'''
-<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
-       xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-TW">
-    <voice name="{voice_config.provider_voice_id}">
-        <mstts:express-as role="{options['role']}" style="{options.get('style', 'general')}">
-            {text}
-        </mstts:express-as>
-    </voice>
-</speak>'''
-
+    # Google uses 'voice' tag but pitch/rate are handled via 'prosody'
+    pitch = options.get("pitch", "0st")
+    rate = options.get("rate", "1.0")
+    
     return f'''
-<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="zh-TW">
-    <voice name="{voice_config.provider_voice_id}">
-        {text}
-    </voice>
-</speak>'''
+    <speak>
+        <prosody pitch="{pitch}" rate="{rate}">
+            {text}
+        </prosody>
+    </speak>'''
 ```
 
 ## API Endpoints
@@ -249,7 +205,7 @@ def generate_ssml(text: str, voice_id: str, options: dict | None) -> str:
 
 | Risk | Mitigation |
 |------|------------|
-| Azure SSML role quality inconsistent | Test all role combinations, fallback to base voice |
+| Google Simulated voices sound unnatural | Tune pitch/rate parameters carefully; Accept as MVP trade-off |
 | API rate limits | Implement caching, queue long requests |
 | Network latency | Pre-generate popular story audio, cache aggressively |
-| Cost overruns | Monitor usage, set alerts, implement quotas |
+| Cost overruns | Monitor usage, set alerts, implement quotas (Google has high free tier) |

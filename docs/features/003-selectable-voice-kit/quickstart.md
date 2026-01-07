@@ -5,26 +5,26 @@
 
 ## Prerequisites
 
-1. **Azure Account** with Speech Services enabled
+1. **Google Cloud Account** with Billing enabled
 2. **Python 3.11+** with dependencies installed
 3. **StoryBuddy backend** running (from 000-StoryBuddy-mvp)
 
 ## Environment Setup
 
-### 1. Azure Speech Services
+### 1. Google Cloud Text-to-Speech
 
-1. Create an Azure account at [portal.azure.com](https://portal.azure.com)
-2. Create a Speech Services resource
-3. Copy the **Key** and **Region**
+1. Create a project at [console.cloud.google.com](https://console.cloud.google.com)
+2. Enable the **Cloud Text-to-Speech API**
+3. Create a **Service Account** and download the JSON key file
+4. Place the JSON file in your project root (e.g., `service-account.json`) **(Do not commit this file!)**
 
 ### 2. Environment Variables
 
 Add to your `.env` file:
 
 ```bash
-# Azure TTS
-AZURE_SPEECH_KEY=your_speech_key_here
-AZURE_SPEECH_REGION=eastasia  # or your region
+# Google Cloud TTS
+GOOGLE_APPLICATION_CREDENTIALS=service-account.json
 
 # Optional: ElevenLabs (for premium character voices)
 ELEVENLABS_API_KEY=your_key_here
@@ -33,89 +33,82 @@ ELEVENLABS_API_KEY=your_key_here
 ### 3. Install Dependencies
 
 ```bash
-pip install azure-cognitiveservices-speech
+pip install google-cloud-texttospeech
 ```
 
 ## Quick Integration Guide
 
-### Backend: Generate Speech with Azure TTS
+### Backend: Generate Speech with Google TTS
 
 ```python
-import azure.cognitiveservices.speech as speechsdk
+from google.cloud import texttospeech
 import os
 
-def create_speech_config():
-    """Create Azure Speech config from environment."""
-    return speechsdk.SpeechConfig(
-        subscription=os.getenv("AZURE_SPEECH_KEY"),
-        region=os.getenv("AZURE_SPEECH_REGION")
+def synthesize_speech(text: str, voice_id: str = "cmn-TW-Wavenet-A") -> bytes:
+    """Convert text to speech audio using Google Cloud TTS."""
+    client = texttospeech.TextToSpeechClient()
+
+    synthesis_input = texttospeech.SynthesisInput(text=text)
+
+    voice = texttospeech.VoiceSelectionParams(
+        language_code="cmn-TW",
+        name=voice_id
     )
 
-def synthesize_speech(text: str, voice_id: str = "zh-TW-HsiaoChenNeural") -> bytes:
-    """Convert text to speech audio."""
-    speech_config = create_speech_config()
-    speech_config.speech_synthesis_voice_name = voice_id
-    speech_config.set_speech_synthesis_output_format(
-        speechsdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3
     )
 
-    synthesizer = speechsdk.SpeechSynthesizer(
-        speech_config=speech_config,
-        audio_config=None  # Return audio data instead of playing
+    response = client.synthesize_speech(
+        input=synthesis_input, voice=voice, audio_config=audio_config
     )
 
-    result = synthesizer.speak_text_async(text).get()
-
-    if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-        return result.audio_data
-    else:
-        raise Exception(f"Speech synthesis failed: {result.reason}")
+    return response.audio_content
 
 # Usage
-audio_data = synthesize_speech("大家好，我是故事姐姐！")
-with open("output.mp3", "wb") as f:
-    f.write(audio_data)
+# audio_data = synthesize_speech("大家好，我是故事姐姐！")
+# with open("output.mp3", "wb") as f:
+#     f.write(audio_data)
 ```
 
-### Backend: Use SSML for Character Voices
+### Backend: Use SSML for Character Voices (Simulated)
 
 ```python
-def synthesize_with_role(text: str, role: str = "Girl", style: str = "cheerful") -> bytes:
-    """Synthesize speech with character role using SSML."""
-    speech_config = create_speech_config()
-    speech_config.set_speech_synthesis_output_format(
-        speechsdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3
-    )
+def synthesize_with_role(text: str, pitch: str = "0st", rate: str = "1.0") -> bytes:
+    """Synthesize speech with character simulation using SSML prosody."""
+    client = texttospeech.TextToSpeechClient()
 
-    ssml = f'''
-    <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
-           xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-TW">
-        <voice name="zh-TW-HsiaoChenNeural">
-            <mstts:express-as role="{role}" style="{style}">
-                {text}
-            </mstts:express-as>
-        </voice>
+    ssml = f"""
+    <speak>
+        <prosody pitch="{pitch}" rate="{rate}">
+            {text}
+        </prosody>
     </speak>
-    '''
+    """
 
-    synthesizer = speechsdk.SpeechSynthesizer(
-        speech_config=speech_config,
-        audio_config=None
+    synthesis_input = texttospeech.SynthesisInput(ssml=ssml)
+
+    voice = texttospeech.VoiceSelectionParams(
+        language_code="cmn-TW",
+        name="cmn-TW-Wavenet-A"  # Base voice
     )
 
-    result = synthesizer.speak_ssml_async(ssml).get()
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3
+    )
 
-    if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-        return result.audio_data
-    else:
-        raise Exception(f"Speech synthesis failed: {result.reason}")
+    response = client.synthesize_speech(
+        input=synthesis_input, voice=voice, audio_config=audio_config
+    )
 
-# Usage: Child girl voice
-audio_data = synthesize_with_role(
-    "哈囉！我是小美，我們一起來冒險吧！",
-    role="Girl",
-    style="cheerful"
-)
+    return response.audio_content
+
+# Usage: Child girl voice (simulated)
+# audio_data = synthesize_with_role(
+#     "哈囉！我是小美，我們一起來冒險吧！",
+#     pitch="+4st",
+#     rate="1.05"
+# )
 ```
 
 ### Flutter: Voice Selection UI
@@ -360,34 +353,34 @@ class TestVoiceKitService:
 ### Integration Test Example
 
 ```python
-# tests/integration/test_azure_tts.py
+# tests/integration/test_google_tts.py
 import pytest
 import os
-from src.services.tts.azure_tts import AzureTTSProvider
+from src.services.tts.google_tts import GoogleTTSProvider
 
 @pytest.mark.skipif(
-    not os.getenv("AZURE_SPEECH_KEY"),
-    reason="Azure credentials not configured"
+    not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
+    reason="Google credentials not configured"
 )
-class TestAzureTTSIntegration:
+class TestGoogleTTSIntegration:
     @pytest.fixture
     def provider(self):
-        return AzureTTSProvider()
+        return GoogleTTSProvider()
 
     async def test_synthesize_returns_audio_data(self, provider):
         audio = await provider.synthesize(
             text="測試語音",
-            voice_id="zh-TW-HsiaoChenNeural"
+            voice_id="cmn-TW-Wavenet-A"
         )
         assert len(audio) > 0
         # Check MP3 magic bytes
         assert audio[:3] == b'\xff\xfb\x90' or audio[:3] == b'ID3'
 
-    async def test_synthesize_with_role_works(self, provider):
+    async def test_synthesize_with_ssml_options_works(self, provider):
         audio = await provider.synthesize(
             text="小女孩聲音測試",
-            voice_id="zh-TW-HsiaoChenNeural",
-            options={"role": "Girl", "style": "cheerful"}
+            voice_id="cmn-TW-Wavenet-A",
+            options={"pitch": "+4st", "rate": "1.05"}
         )
         assert len(audio) > 0
 ```
@@ -396,32 +389,32 @@ class TestAzureTTSIntegration:
 
 ### Common Issues
 
-**1. Azure authentication error**
+**1. Google Cloud authentication error**
 ```
-azure.core.exceptions.ClientAuthenticationError
+google.auth.exceptions.DefaultCredentialsError
 ```
-Solution: Check `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` environment variables.
+Solution: Ensure `GOOGLE_APPLICATION_CREDENTIALS` points to a valid JSON key file and the file exists.
 
 **2. Voice not found**
 ```
-Voice 'zh-TW-XxxNeural' is not available
+400 Invalid voice name
 ```
 Solution: Use one of the supported voices:
-- zh-TW-HsiaoChenNeural (Female)
-- zh-TW-YunJheNeural (Male)
-- zh-TW-HsiaoYuNeural (Female)
+- `cmn-TW-Wavenet-A` (Female)
+- `cmn-TW-Wavenet-B` (Male)
+- `cmn-TW-Wavenet-C` (Male)
 
 **3. SSML parsing error**
 ```
-SSML is not well-formed
+400 SSML is not well-formed
 ```
 Solution: Ensure text doesn't contain XML special characters. Escape `<`, `>`, `&` as `&lt;`, `&gt;`, `&amp;`.
 
-**4. Rate limit exceeded**
+**4. Quota exceeded**
 ```
-HTTP 429 Too Many Requests
+429 Quota exceeded
 ```
-Solution: Implement request queuing and caching. Azure has per-minute limits based on tier.
+Solution: Check Google Cloud Console billing/quotas. WaveNet voices have stricter limits than Standard voices.
 
 ## Next Steps
 

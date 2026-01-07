@@ -2,15 +2,18 @@
 
 **Feature Branch**: `003-selectable-voice-kit`
 **Created**: 2026-01-05
-**Status**: Draft
+**Status**: Research Complete / Implementation Pending (~10% complete)
+**Progress**: Research ✅ | Phase 1-2 Pending | US1-US3 Pending
 **Input**: User description: "研究市面上有哪些語音模組，可以模仿特定卡通人物或性別角色，如旺旺隊，巧虎..等，之後可以用來切換"
 
 ## Overview
 
-This feature enables StoryBuddy to offer multiple pre-built character voices for storytelling, beyond just the parent's cloned voice. Children can choose to hear stories narrated by popular cartoon character voices (e.g., PAW Patrol characters, Shimajiro) or different gender/age personas.
+This feature enables StoryBuddy to offer multiple pre-built character voices for storytelling, beyond just the parent's cloned voice. Children can choose to hear stories narrated by popular character archetypes or different gender/age personas.
+
+**MVP Note**: Due to budget constraints, the initial implementation uses **Google Cloud TTS** with SSML parameter tuning (pitch/rate) to simulate different characters (e.g., Child, Elder), rather than expensive pre-trained character models.
 
 The feature involves:
-- Research and integration of TTS services that provide character-like voices
+- Integration of Google Cloud TTS for cost-effective voice generation
 - Voice kit management (bundled voices, downloadable voice packs)
 - Voice switching UI in the mobile app
 - Backend API extensions for voice selection
@@ -112,23 +115,23 @@ The feature involves:
 
 1. **市場上有哪些 TTS 服務支援角色化聲音？**
    - ElevenLabs、Azure TTS、Google Cloud TTS、Amazon Polly 等
-   - 是否有專門針對兒童/卡通聲音的服務？
+   - **Decision**: Azure 支援原生角色扮演 (Role)，Google 支援基礎參數調整。MVP 因成本考量選用 **Google Cloud TTS**，透過 SSML pitch/rate 模擬角色。
 
 2. **授權與版權問題**
    - 能否合法使用「類似」旺旺隊、巧虎風格的聲音？
-   - 各 TTS 服務的商業授權條款
+   - **Decision**: 避免模仿特定 IP，改用通用角色原型（小男孩、小女孩、冒險家）。
 
 3. **中文支援程度**
    - 哪些服務支援自然的繁體中文發音？
-   - 支援台灣口音 vs 中國口音
+   - **Answer**: Google Cloud TTS 支援 `cmn-TW` (WaveNet/Standard) 聲音，雖無原生童音，但可透過調音模擬。
 
 4. **客製化程度**
    - 能否微調現有聲音（如提高音調、加快語速）？
-   - 能否用少量樣本訓練新角色？
+   - **Answer**: Google SSML `<prosody>` 標籤支援 `pitch` 和 `rate` 調整，適合 MVP 需求。
 
 5. **成本分析**
    - 各服務的定價模式（按字數、按請求、訂閱制）
-   - 預估每個故事的語音生成成本
+   - **Answer**: Google 提供每月 400 萬字元免費額度（標準版），最適合 MVP 驗證階段。
 
 ## Privacy & Security Requirements
 

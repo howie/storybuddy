@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(/Users/howie/Workspace/github/storybuddy/.specify/scripts/bash/update-agent-context.sh:*)",
-      "Bash(/Users/howie/Workspace/github/storybuddy/.specify/scripts/bash/check-prerequisites.sh:*)"
-    ]
-  }
-}

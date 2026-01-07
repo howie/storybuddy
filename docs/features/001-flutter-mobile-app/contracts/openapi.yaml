@@ -1,0 +1,859 @@
+openapi: 3.0.3
+info:
+  title: StoryBuddy API
+  description: |
+    Backend API for StoryBuddy mobile application.
+    This contract documents the endpoints the Flutter app consumes.
+  version: 0.1.0
+  contact:
+    name: StoryBuddy Team
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+  - url: https://api.storybuddy.app/api/v1
+    description: Production
+
+tags:
+  - name: Parents
+    description: Parent account management
+  - name: Voice
+    description: Voice profile and cloning
+  - name: Stories
+    description: Story management
+  - name: Q&A
+    description: Interactive Q&A sessions
+
+paths:
+  # ============ PARENTS ============
+  /parents:
+    post:
+      tags: [Parents]
+      summary: Create a new parent
+      operationId: createParent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParentCreate'
+      responses:
+        '201':
+          description: Parent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parent'
+
+    get:
+      tags: [Parents]
+      summary: List all parents
+      operationId: listParents
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of parents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Parent'
+
+  /parents/{parentId}:
+    get:
+      tags: [Parents]
+      summary: Get parent by ID
+      operationId: getParent
+      parameters:
+        - $ref: '#/components/parameters/parentId'
+      responses:
+        '200':
+          description: Parent details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Parents]
+      summary: Update a parent
+      operationId: updateParent
+      parameters:
+        - $ref: '#/components/parameters/parentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParentUpdate'
+      responses:
+        '200':
+          description: Parent updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Parents]
+      summary: Delete a parent
+      operationId: deleteParent
+      parameters:
+        - $ref: '#/components/parameters/parentId'
+      responses:
+        '204':
+          description: Parent deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============ VOICE PROFILES ============
+  /voice-profiles:
+    post:
+      tags: [Voice]
+      summary: Create a new voice profile
+      operationId: createVoiceProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoiceProfileCreate'
+      responses:
+        '201':
+          description: Voice profile created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceProfile'
+        '404':
+          description: Parent not found
+
+    get:
+      tags: [Voice]
+      summary: List voice profiles for a parent
+      operationId: listVoiceProfiles
+      parameters:
+        - name: parent_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of voice profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VoiceProfile'
+
+  /voice-profiles/{profileId}:
+    get:
+      tags: [Voice]
+      summary: Get voice profile by ID
+      operationId: getVoiceProfile
+      parameters:
+        - $ref: '#/components/parameters/profileId'
+      responses:
+        '200':
+          description: Voice profile details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Voice]
+      summary: Delete a voice profile
+      operationId: deleteVoiceProfile
+      parameters:
+        - $ref: '#/components/parameters/profileId'
+      responses:
+        '204':
+          description: Voice profile deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /voice-profiles/{profileId}/upload:
+    post:
+      tags: [Voice]
+      summary: Upload voice sample
+      operationId: uploadVoiceSample
+      description: |
+        Upload a voice sample for cloning.
+        Audio must be 30-180 seconds long.
+        Supported formats: WAV, MP3, M4A.
+      parameters:
+        - $ref: '#/components/parameters/profileId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                  description: Audio file (WAV, MP3, or M4A)
+              required:
+                - audio
+      responses:
+        '200':
+          description: Voice sample uploaded, processing started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceProfile'
+        '400':
+          description: Invalid audio format or file too large
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /voice-profiles/{profileId}/preview:
+    post:
+      tags: [Voice]
+      summary: Preview voice with text
+      operationId: previewVoice
+      description: Generate a preview audio using the cloned voice
+      parameters:
+        - $ref: '#/components/parameters/profileId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoicePreviewRequest'
+      responses:
+        '200':
+          description: Preview generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoicePreviewResponse'
+        '400':
+          description: Voice profile not ready
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============ STORIES ============
+  /stories:
+    post:
+      tags: [Stories]
+      summary: Create a new story
+      operationId: createStory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoryCreate'
+      responses:
+        '201':
+          description: Story created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
+        '404':
+          description: Parent not found
+
+    get:
+      tags: [Stories]
+      summary: List stories for a parent
+      operationId: listStories
+      parameters:
+        - name: parent_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: source
+          in: query
+          schema:
+            $ref: '#/components/schemas/StorySource'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: Paginated list of stories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryListResponse'
+
+  /stories/{storyId}:
+    get:
+      tags: [Stories]
+      summary: Get story by ID
+      operationId: getStory
+      parameters:
+        - $ref: '#/components/parameters/storyId'
+      responses:
+        '200':
+          description: Story details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Stories]
+      summary: Update a story
+      operationId: updateStory
+      parameters:
+        - $ref: '#/components/parameters/storyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoryUpdate'
+      responses:
+        '200':
+          description: Story updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Story'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Stories]
+      summary: Delete a story
+      operationId: deleteStory
+      parameters:
+        - $ref: '#/components/parameters/storyId'
+      responses:
+        '204':
+          description: Story deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /stories/{storyId}/audio:
+    post:
+      tags: [Stories]
+      summary: Generate audio for a story
+      operationId: generateStoryAudio
+      parameters:
+        - $ref: '#/components/parameters/storyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateAudioRequest'
+      responses:
+        '202':
+          description: Audio generation started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateAudioResponse'
+        '400':
+          description: Voice profile not ready
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      tags: [Stories]
+      summary: Get story audio file
+      operationId: getStoryAudio
+      parameters:
+        - $ref: '#/components/parameters/storyId'
+      responses:
+        '200':
+          description: Audio file
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Story or audio not found
+
+  # ============ Q&A SESSIONS ============
+  /qa/sessions:
+    post:
+      tags: [Q&A]
+      summary: Start a new Q&A session
+      operationId: startQASession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QASessionCreate'
+      responses:
+        '201':
+          description: Q&A session started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QASession'
+        '404':
+          description: Story not found
+
+  /qa/sessions/{sessionId}:
+    get:
+      tags: [Q&A]
+      summary: Get Q&A session with messages
+      operationId: getQASession
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: Q&A session with messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QASessionWithMessages'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Q&A]
+      summary: End a Q&A session
+      operationId: endQASession
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EndSessionRequest'
+      responses:
+        '200':
+          description: Session ended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QASession'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /qa/sessions/{sessionId}/messages:
+    post:
+      tags: [Q&A]
+      summary: Send a question and receive AI response
+      operationId: sendQAMessage
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '200':
+          description: Question processed, AI response returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendMessageResponse'
+        '400':
+          description: Session not active or message limit reached
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    parentId:
+      name: parentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    profileId:
+      name: profileId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    storyId:
+      name: storyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    sessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    # ============ PARENT SCHEMAS ============
+    ParentCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          maxLength: 255
+          format: email
+
+    ParentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          maxLength: 255
+          format: email
+
+    Parent:
+      type: object
+      required: [id, name, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # ============ VOICE PROFILE SCHEMAS ============
+    VoiceProfileStatus:
+      type: string
+      enum: [pending, processing, ready, failed]
+
+    VoiceProfileCreate:
+      type: object
+      required: [parent_id, name]
+      properties:
+        parent_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+          description: "Profile name (e.g., '爸爸', '媽媽')"
+
+    VoiceProfile:
+      type: object
+      required: [id, parent_id, name, status, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        parent_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
+        status:
+          $ref: '#/components/schemas/VoiceProfileStatus'
+        sample_duration_seconds:
+          type: integer
+          minimum: 30
+          maximum: 180
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    VoicePreviewRequest:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 500
+
+    VoicePreviewResponse:
+      type: object
+      properties:
+        audio_url:
+          type: string
+        duration_seconds:
+          type: number
+
+    # ============ STORY SCHEMAS ============
+    StorySource:
+      type: string
+      enum: [imported, ai_generated]
+
+    StoryCreate:
+      type: object
+      required: [parent_id, title, content, source]
+      properties:
+        parent_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+          maxLength: 5000
+        source:
+          $ref: '#/components/schemas/StorySource'
+        keywords:
+          type: array
+          items:
+            type: string
+
+    StoryUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+          maxLength: 5000
+
+    Story:
+      type: object
+      required: [id, parent_id, title, content, source, word_count, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        parent_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+        source:
+          $ref: '#/components/schemas/StorySource'
+        keywords:
+          type: array
+          items:
+            type: string
+        word_count:
+          type: integer
+        estimated_duration_minutes:
+          type: integer
+        audio_file_path:
+          type: string
+        audio_generated_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    StoryListResponse:
+      type: object
+      required: [items, total, limit, offset]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Story'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    GenerateAudioRequest:
+      type: object
+      required: [voice_profile_id]
+      properties:
+        voice_profile_id:
+          type: string
+          format: uuid
+
+    GenerateAudioResponse:
+      type: object
+      properties:
+        story_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          default: processing
+
+    # ============ Q&A SCHEMAS ============
+    QASessionStatus:
+      type: string
+      enum: [active, completed, timeout]
+
+    MessageRole:
+      type: string
+      enum: [child, assistant]
+
+    QASessionCreate:
+      type: object
+      required: [story_id]
+      properties:
+        story_id:
+          type: string
+          format: uuid
+
+    QASession:
+      type: object
+      required: [id, story_id, status, message_count, started_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        story_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/QASessionStatus'
+        message_count:
+          type: integer
+          maximum: 10
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+
+    QAMessage:
+      type: object
+      required: [id, session_id, role, content, sequence, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        role:
+          $ref: '#/components/schemas/MessageRole'
+        content:
+          type: string
+          maxLength: 500
+        is_in_scope:
+          type: boolean
+        audio_input_path:
+          type: string
+        audio_output_path:
+          type: string
+        sequence:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    QASessionWithMessages:
+      allOf:
+        - $ref: '#/components/schemas/QASession'
+        - type: object
+          properties:
+            messages:
+              type: array
+              items:
+                $ref: '#/components/schemas/QAMessage'
+
+    SendMessageRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          maxLength: 500
+
+    SendMessageResponse:
+      type: object
+      required: [user_message, assistant_message, is_in_scope]
+      properties:
+        user_message:
+          $ref: '#/components/schemas/QAMessage'
+        assistant_message:
+          $ref: '#/components/schemas/QAMessage'
+        is_in_scope:
+          type: boolean
+        audio_url:
+          type: string
+
+    EndSessionRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/QASessionStatus'
+
+    # ============ ERROR SCHEMA ============
+    Error:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          type: string
+        request_id:
+          type: string

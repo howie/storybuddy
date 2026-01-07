@@ -4,13 +4,26 @@ A Flutter mobile application for StoryBuddy - an interactive storytelling platfo
 
 ## Features
 
-- Browse and manage story library
-- Play stories with audio controls (play/pause, seek, speed control)
-- Interactive Q&A sessions during story playback
-- Voice profile recording for personalized narration
-- Offline mode with audio caching
-- Pending questions management
-- Parent answer recording for out-of-scope questions
+### Core User Stories
+
+| ID | Feature | Description |
+|----|---------|-------------|
+| US1 | Voice Profile Recording | Parents record 30+ seconds for AI voice cloning |
+| US2 | AI Voice Story Narration | Stories played with parent's cloned voice |
+| US3 | Interactive Q&A | Children can ask questions after stories |
+| US4 | Story Library | Browse, select, and manage stories |
+| US5 | Import Stories | Import stories from text (max 5000 chars) |
+| US6 | AI Story Generation | Generate stories from keywords |
+| US7 | Pending Questions | View out-of-scope questions for parents |
+
+### Additional Features
+
+- Background audio playback with lock screen controls
+- Offline mode with encrypted audio caching
+- Real-time waveform visualization during recording
+- Noise detection for optimal recording quality
+- Light/Dark theme support
+- Traditional Chinese localization
 
 ## Prerequisites
 
@@ -153,9 +166,47 @@ The app connects to the StoryBuddy backend API. Configure the API base URL in:
 
 For development, the default points to `http://localhost:8000`.
 
-## Architecture
+## Security Features
 
-This app follows Clean Architecture with the following layers:
+- **Encrypted Storage**: Auth tokens and sensitive data stored using flutter_secure_storage
+- **AES-256 Encryption**: Cached audio files are encrypted locally
+- **HTTPS/TLS**: All API communications use secure connections
+- **Privacy Consent**: Required before first voice recording
+- **Data Deletion**: Users can delete all local data from settings
+
+## Offline Support
+
+- **Local-First Architecture**: App works offline with local SQLite database
+- **Sync Queue**: Changes made offline are automatically synced when online
+- **Audio Caching**: Downloaded stories can be played offline
+- **Connectivity Awareness**: Visual indicators show online/offline status
+- **Background Sync**: Automatic sync when connection is restored
+
+## Troubleshooting
+
+### Build Issues
+
+If you encounter build issues, try:
+
+```bash
+# Clean build
+flutter clean
+flutter pub get
+flutter pub run build_runner build --delete-conflicting-outputs
+
+# iOS specific
+cd ios && pod deintegrate && pod install && cd ..
+```
+
+### Audio Not Working on iOS Simulator
+
+The iOS Simulator has limited audio recording capabilities. Test voice recording features on a physical device.
+
+### macOS Development
+
+On macOS without code signing, the app uses SharedPreferences fallback for secure storage. This is only for development purposes.
+
+## Architecture
 
 1. **Presentation** - UI widgets, pages, and state management (Riverpod)
 2. **Domain** - Business logic, entities, and use cases

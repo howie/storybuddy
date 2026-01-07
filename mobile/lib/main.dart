@@ -6,6 +6,7 @@ import 'app/theme.dart';
 import 'core/audio/audio_handler.dart';
 import 'core/init/app_initializer.dart';
 import 'features/settings/presentation/providers/settings_provider.dart';
+import 'shared/widgets/connectivity_listener.dart';
 
 Future<void> main() async {
   // Initialize app
@@ -37,6 +38,12 @@ class StoryBuddyApp extends ConsumerWidget {
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
       routerConfig: router,
+      builder: (context, child) {
+        // Wrap with connectivity listener for global offline notifications
+        return ConnectivityListener(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

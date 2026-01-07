@@ -29,9 +29,7 @@ class QASession(BaseModel):
     started_at: datetime = Field(default_factory=datetime.utcnow, description="Session start time")
     ended_at: datetime | None = Field(None, description="Session end time")
     message_count: int = Field(default=0, le=10, description="Number of messages in session")
-    status: QASessionStatus = Field(
-        default=QASessionStatus.ACTIVE, description="Session status"
-    )
+    status: QASessionStatus = Field(default=QASessionStatus.ACTIVE, description="Session status")
 
     model_config = {"from_attributes": True}
 

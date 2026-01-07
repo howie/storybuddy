@@ -4,11 +4,10 @@ Tests verify the API conforms to the OpenAPI contract at:
 /docs/features/000-StoryBuddy-mvp/contracts/openapi.yaml
 """
 
-import pytest
-from httpx import ASGITransport, AsyncClient
 from uuid import uuid4
 
-from src.main import app
+import pytest
+from httpx import AsyncClient
 
 
 @pytest.fixture
@@ -25,9 +24,7 @@ class TestCreateStory:
     """Tests for POST /api/v1/stories endpoint."""
 
     @pytest.mark.asyncio
-    async def test_create_story_success(
-        self, client: AsyncClient, sample_parent: dict
-    ) -> None:
+    async def test_create_story_success(self, client: AsyncClient, sample_parent: dict) -> None:
         """Test creating an imported story successfully."""
         response = await client.post(
             "/api/v1/stories",
@@ -75,9 +72,7 @@ class TestCreateStory:
         assert data["keywords"] == ["冒險", "友誼", "勇氣"]
 
     @pytest.mark.asyncio
-    async def test_create_story_invalid_parent_id(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_create_story_invalid_parent_id(self, client: AsyncClient) -> None:
         """Test creating story with non-existent parent ID."""
         response = await client.post(
             "/api/v1/stories",
@@ -116,9 +111,7 @@ class TestListStories:
     """Tests for GET /api/v1/stories endpoint."""
 
     @pytest.mark.asyncio
-    async def test_list_stories_empty(
-        self, client: AsyncClient, sample_parent: dict
-    ) -> None:
+    async def test_list_stories_empty(self, client: AsyncClient, sample_parent: dict) -> None:
         """Test listing stories when none exist."""
         response = await client.get(
             "/api/v1/stories",
@@ -134,9 +127,7 @@ class TestListStories:
         assert "offset" in data
 
     @pytest.mark.asyncio
-    async def test_list_stories_with_items(
-        self, client: AsyncClient, sample_parent: dict
-    ) -> None:
+    async def test_list_stories_with_items(self, client: AsyncClient, sample_parent: dict) -> None:
         """Test listing stories with existing items."""
         # Create a story first
         await client.post(
@@ -201,9 +192,7 @@ class TestListStories:
         assert data["items"][0]["source"] == "imported"
 
     @pytest.mark.asyncio
-    async def test_list_stories_pagination(
-        self, client: AsyncClient, sample_parent: dict
-    ) -> None:
+    async def test_list_stories_pagination(self, client: AsyncClient, sample_parent: dict) -> None:
         """Test listing stories with pagination."""
         # Create 3 stories
         for i in range(3):
@@ -245,9 +234,7 @@ class TestGetStory:
     """Tests for GET /api/v1/stories/{story_id} endpoint."""
 
     @pytest.mark.asyncio
-    async def test_get_story_success(
-        self, client: AsyncClient, sample_parent: dict
-    ) -> None:
+    async def test_get_story_success(self, client: AsyncClient, sample_parent: dict) -> None:
         """Test getting a story by ID."""
         # Create a story
         create_response = await client.post(
@@ -271,9 +258,7 @@ class TestGetStory:
         assert data["title"] == "Test Story"
 
     @pytest.mark.asyncio
-    async def test_get_story_not_found(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_get_story_not_found(self, client: AsyncClient) -> None:
         """Test getting a non-existent story."""
         response = await client.get(f"/api/v1/stories/{uuid4()}")
 
@@ -284,9 +269,7 @@ class TestUpdateStory:
     """Tests for PUT /api/v1/stories/{story_id} endpoint."""
 
     @pytest.mark.asyncio
-    async def test_update_story_title(
-        self, client: AsyncClient, sample_parent: dict
-    ) -> None:
+    async def test_update_story_title(self, client: AsyncClient, sample_parent: dict) -> None:
         """Test updating a story's title."""
         # Create a story
         create_response = await client.post(
@@ -313,9 +296,7 @@ class TestUpdateStory:
         assert data["content"] == "Original content"
 
     @pytest.mark.asyncio
-    async def test_update_story_content(
-        self, client: AsyncClient, sample_parent: dict
-    ) -> None:
+    async def test_update_story_content(self, client: AsyncClient, sample_parent: dict) -> None:
         """Test updating a story's content recalculates word count."""
         # Create a story
         create_response = await client.post(
@@ -331,7 +312,9 @@ class TestUpdateStory:
         original_word_count = create_response.json()["word_count"]
 
         # Update with longer content
-        new_content = "This is a much longer content that should change the word count significantly"
+        new_content = (
+            "This is a much longer content that should change the word count significantly"
+        )
         response = await client.put(
             f"/api/v1/stories/{story_id}",
             json={"content": new_content},
@@ -344,9 +327,7 @@ class TestUpdateStory:
         assert data["word_count"] != original_word_count
 
     @pytest.mark.asyncio
-    async def test_update_story_not_found(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_update_story_not_found(self, client: AsyncClient) -> None:
         """Test updating a non-existent story."""
         response = await client.put(
             f"/api/v1/stories/{uuid4()}",
@@ -360,9 +341,7 @@ class TestDeleteStory:
     """Tests for DELETE /api/v1/stories/{story_id} endpoint."""
 
     @pytest.mark.asyncio
-    async def test_delete_story_success(
-        self, client: AsyncClient, sample_parent: dict
-    ) -> None:
+    async def test_delete_story_success(self, client: AsyncClient, sample_parent: dict) -> None:
         """Test deleting a story."""
         # Create a story
         create_response = await client.post(
@@ -386,9 +365,7 @@ class TestDeleteStory:
         assert get_response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_story_not_found(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_delete_story_not_found(self, client: AsyncClient) -> None:
         """Test deleting a non-existent story."""
         response = await client.delete(f"/api/v1/stories/{uuid4()}")
 

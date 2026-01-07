@@ -1,9 +1,11 @@
 """Voice profile API routes for StoryBuddy."""
 
+import logging
 from uuid import UUID
 
 import aiofiles
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 
 from src.config import get_settings
 from src.db.repository import ParentRepository, VoiceAudioRepository, VoiceProfileRepository
@@ -16,6 +18,13 @@ from src.models.voice import (
     VoiceProfileResponse,
     VoiceProfileUpdate,
 )
+from src.services.voice_cloning import (
+    VoiceCloningError,
+    generate_preview_audio,
+    process_voice_cloning,
+)
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/voice-profiles", tags=["Voice"])
 settings = get_settings()
@@ -117,6 +126,7 @@ async def delete_voice_profile(profile_id: UUID) -> None:
 )
 async def upload_voice_sample(
     profile_id: UUID,
+    background_tasks: BackgroundTasks,
     audio: UploadFile = File(..., description="Audio file (WAV, MP3, or M4A)"),
 ) -> VoiceProfile:
     """Upload a voice sample for cloning.
@@ -185,14 +195,20 @@ async def upload_voice_sample(
     )
     updated_profile = await VoiceProfileRepository.update(profile_id, update_data)
 
-    # TODO: Trigger async voice cloning with ElevenLabs
-    # For MVP, we'll just mark as processing
-
     if updated_profile is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update profile",
         )
+
+    # Trigger async voice cloning with ElevenLabs
+    background_tasks.add_task(
+        process_voice_cloning,
+        profile_id,
+        str(file_path),
+        profile.name,
+    )
+    logger.info(f"Voice cloning task queued for profile {profile_id}")
 
     return updated_profile
 
@@ -204,10 +220,11 @@ async def upload_voice_sample(
 async def preview_voice(
     profile_id: UUID,
     request: VoicePreviewRequest,
-) -> dict[str, str]:
+) -> FileResponse:
     """Generate a preview audio using the cloned voice.
 
     The voice profile must be in 'ready' status.
+    Returns the audio file as audio/mpeg content.
     """
     profile = await VoiceProfileRepository.get_by_id(profile_id)
     if profile is None:
@@ -222,9 +239,28 @@ async def preview_voice(
             detail=f"Voice profile is not ready. Current status: {profile.status.value}",
         )
 
-    # TODO: Generate preview using ElevenLabs TTS
-    # For MVP, return a placeholder response
-    return {
-        "message": "Preview generation not implemented yet",
-        "text": request.text,
-    }
+    if not profile.elevenlabs_voice_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Voice profile does not have a valid voice ID",
+        )
+
+    try:
+        audio_path = await generate_preview_audio(
+            voice_id=profile.elevenlabs_voice_id,
+            profile_id=profile_id,
+            text=request.text,
+        )
+
+        return FileResponse(
+            path=audio_path,
+            media_type="audio/mpeg",
+            filename=f"preview_{profile_id}.mp3",
+        )
+
+    except VoiceCloningError as e:
+        logger.error(f"Preview generation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Preview generation failed: {e}",
+        )

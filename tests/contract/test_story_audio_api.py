@@ -4,9 +4,10 @@ Tests verify the API conforms to the OpenAPI contract at:
 /docs/features/000-StoryBuddy-mvp/contracts/openapi.yaml
 """
 
+from uuid import uuid4
+
 import pytest
 from httpx import AsyncClient
-from uuid import uuid4
 
 
 @pytest.fixture
@@ -30,12 +31,13 @@ async def sample_voice_profile(client: AsyncClient, sample_parent: dict) -> dict
 
 
 @pytest.fixture
-async def ready_voice_profile(client: AsyncClient, sample_parent: dict, test_db: None) -> dict:
+async def ready_voice_profile(sample_parent: dict) -> dict:
     """Create a voice profile with 'ready' status for testing."""
     from uuid import UUID
+
     from src.db.repository import VoiceProfileRepository
-    from src.models.voice import VoiceProfileCreate, VoiceProfileUpdate
     from src.models import VoiceProfileStatus
+    from src.models.voice import VoiceProfileCreate, VoiceProfileUpdate
 
     # Create a voice profile
     profile = await VoiceProfileRepository.create(
@@ -150,9 +152,7 @@ class TestGetStoryAudio:
         sample_story: dict,
     ) -> None:
         """Test getting audio when none has been generated."""
-        response = await client.get(
-            f"/api/v1/stories/{sample_story['id']}/audio"
-        )
+        response = await client.get(f"/api/v1/stories/{sample_story['id']}/audio")
 
         # No audio has been generated yet
         assert response.status_code == 404
@@ -165,9 +165,7 @@ class TestGetStoryAudio:
         client: AsyncClient,
     ) -> None:
         """Test getting audio for non-existent story."""
-        response = await client.get(
-            f"/api/v1/stories/{uuid4()}/audio"
-        )
+        response = await client.get(f"/api/v1/stories/{uuid4()}/audio")
 
         assert response.status_code == 404
 

@@ -13,7 +13,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from src.api import parents, qa, stories, voice, voice_routes
+from src.api import parents, qa, questions, stories, voice, voice_routes
 from src.config import get_settings
 from src.db.init import init_database
 
@@ -68,9 +68,7 @@ def setup_logging() -> logging.Logger:
         handler.setFormatter(JSONFormatter())
     else:
         handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         )
 
     logger.addHandler(handler)
@@ -210,7 +208,7 @@ app.include_router(voice.router, prefix="/api/v1")
 app.include_router(stories.router, prefix="/api/v1")
 app.include_router(qa.router, prefix="/api/v1")
 app.include_router(voice_routes.router, prefix="/api")
-# app.include_router(questions.router, prefix="/api/v1", tags=["Questions"])
+app.include_router(questions.router, prefix="/api/v1")
 
 
 if __name__ == "__main__":

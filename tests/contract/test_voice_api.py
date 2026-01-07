@@ -19,9 +19,7 @@ class TestVoiceProfileAPI:
     ) -> None:
         """POST /api/v1/voice-profiles - creates a voice profile successfully."""
         # First create a parent
-        parent_response = await client.post(
-            "/api/v1/parents", json=sample_parent_data
-        )
+        parent_response = await client.post("/api/v1/parents", json=sample_parent_data)
         assert parent_response.status_code == 201
         parent_id = parent_response.json()["id"]
 
@@ -60,9 +58,7 @@ class TestVoiceProfileAPI:
     ) -> None:
         """GET /api/v1/voice-profiles/{id} - returns voice profile details."""
         # Create parent and voice profile
-        parent_response = await client.post(
-            "/api/v1/parents", json=sample_parent_data
-        )
+        parent_response = await client.post("/api/v1/parents", json=sample_parent_data)
         parent_id = parent_response.json()["id"]
 
         create_response = await client.post(
@@ -79,9 +75,7 @@ class TestVoiceProfileAPI:
         assert data["id"] == profile_id
         assert data["name"] == sample_voice_profile_data["name"]
 
-    async def test_get_voice_profile_not_found(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_get_voice_profile_not_found(self, client: AsyncClient) -> None:
         """GET /api/v1/voice-profiles/{id} - returns 404 for non-existent profile."""
         response = await client.get(f"/api/v1/voice-profiles/{uuid4()}")
         assert response.status_code == 404
@@ -93,9 +87,7 @@ class TestVoiceProfileAPI:
     ) -> None:
         """GET /api/v1/voice-profiles - lists voice profiles for parent."""
         # Create parent and two voice profiles
-        parent_response = await client.post(
-            "/api/v1/parents", json=sample_parent_data
-        )
+        parent_response = await client.post("/api/v1/parents", json=sample_parent_data)
         parent_id = parent_response.json()["id"]
 
         await client.post(
@@ -108,9 +100,7 @@ class TestVoiceProfileAPI:
         )
 
         # List voice profiles
-        response = await client.get(
-            f"/api/v1/voice-profiles?parent_id={parent_id}"
-        )
+        response = await client.get(f"/api/v1/voice-profiles?parent_id={parent_id}")
 
         assert response.status_code == 200
         data = response.json()
@@ -126,9 +116,7 @@ class TestVoiceProfileAPI:
     ) -> None:
         """DELETE /api/v1/voice-profiles/{id} - deletes voice profile."""
         # Create parent and voice profile
-        parent_response = await client.post(
-            "/api/v1/parents", json=sample_parent_data
-        )
+        parent_response = await client.post("/api/v1/parents", json=sample_parent_data)
         parent_id = parent_response.json()["id"]
 
         create_response = await client.post(
@@ -138,15 +126,11 @@ class TestVoiceProfileAPI:
         profile_id = create_response.json()["id"]
 
         # Delete voice profile
-        delete_response = await client.delete(
-            f"/api/v1/voice-profiles/{profile_id}"
-        )
+        delete_response = await client.delete(f"/api/v1/voice-profiles/{profile_id}")
         assert delete_response.status_code == 204
 
         # Verify deletion
-        get_response = await client.get(
-            f"/api/v1/voice-profiles/{profile_id}"
-        )
+        get_response = await client.get(f"/api/v1/voice-profiles/{profile_id}")
         assert get_response.status_code == 404
 
 
@@ -154,9 +138,7 @@ class TestVoiceProfileAPI:
 class TestVoiceUploadAPI:
     """Tests for /api/v1/voice-profiles/{id}/upload endpoint."""
 
-    async def test_upload_voice_sample_profile_not_found(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_upload_voice_sample_profile_not_found(self, client: AsyncClient) -> None:
         """POST /api/v1/voice-profiles/{id}/upload - returns 404 for non-existent profile."""
         # Create a minimal audio file for testing
         audio_content = b"RIFF" + b"\x00" * 1000  # Minimal WAV-like content
@@ -172,9 +154,7 @@ class TestVoiceUploadAPI:
 class TestVoicePreviewAPI:
     """Tests for /api/v1/voice-profiles/{id}/preview endpoint."""
 
-    async def test_preview_profile_not_found(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_preview_profile_not_found(self, client: AsyncClient) -> None:
         """POST /api/v1/voice-profiles/{id}/preview - returns 404 for non-existent profile."""
         response = await client.post(
             f"/api/v1/voice-profiles/{uuid4()}/preview",
@@ -190,9 +170,7 @@ class TestVoicePreviewAPI:
     ) -> None:
         """POST /api/v1/voice-profiles/{id}/preview - returns 400 if profile not ready."""
         # Create parent and voice profile (status will be 'pending')
-        parent_response = await client.post(
-            "/api/v1/parents", json=sample_parent_data
-        )
+        parent_response = await client.post("/api/v1/parents", json=sample_parent_data)
         parent_id = parent_response.json()["id"]
 
         create_response = await client.post(

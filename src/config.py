@@ -37,9 +37,7 @@ class Settings(BaseSettings):
 
     # Azure Speech Services (STT)
     azure_speech_key: str = Field(default="", description="Azure Speech API key")
-    azure_speech_region: str = Field(
-        default="eastasia", description="Azure Speech region"
-    )
+    azure_speech_region: str = Field(default="eastasia", description="Azure Speech region")
 
     # Anthropic Claude (LLM)
     anthropic_api_key: str = Field(default="", description="Anthropic API key")
@@ -53,25 +51,19 @@ class Settings(BaseSettings):
     )
 
     # Story Settings
-    max_story_word_count: int = Field(
-        default=5000, description="Maximum story word count"
-    )
+    max_story_word_count: int = Field(default=5000, description="Maximum story word count")
     words_per_minute: int = Field(
         default=200, description="Assumed reading speed for duration estimation"
     )
 
     # Q&A Settings
-    max_qa_messages: int = Field(
-        default=10, description="Maximum messages per Q&A session"
-    )
+    max_qa_messages: int = Field(default=10, description="Maximum messages per Q&A session")
 
     # Logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
         default="INFO", description="Logging level"
     )
-    log_format: Literal["json", "text"] = Field(
-        default="json", description="Log output format"
-    )
+    log_format: Literal["json", "text"] = Field(default="json", description="Log output format")
 
     @property
     def voice_samples_dir(self) -> Path:

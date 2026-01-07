@@ -4,9 +4,10 @@ Tests verify the API conforms to the OpenAPI contract at:
 /docs/features/000-StoryBuddy-mvp/contracts/openapi.yaml
 """
 
+from uuid import uuid4
+
 import pytest
 from httpx import AsyncClient
-from uuid import uuid4
 
 
 @pytest.fixture
@@ -28,8 +29,8 @@ async def sample_story(client: AsyncClient, sample_parent: dict) -> dict:
             "parent_id": sample_parent["id"],
             "title": "Test Story for Q&A",
             "content": "Once upon a time, there was a brave little rabbit who lived in a forest. "
-                      "The rabbit had many friends including a wise owl and a friendly deer. "
-                      "One day, they went on an adventure together.",
+            "The rabbit had many friends including a wise owl and a friendly deer. "
+            "One day, they went on an adventure together.",
             "source": "imported",
         },
     )
@@ -50,9 +51,7 @@ class TestStartQASession:
     """Tests for POST /api/v1/qa/sessions endpoint."""
 
     @pytest.mark.asyncio
-    async def test_start_session_success(
-        self, client: AsyncClient, sample_story: dict
-    ) -> None:
+    async def test_start_session_success(self, client: AsyncClient, sample_story: dict) -> None:
         """Test starting a new Q&A session."""
         response = await client.post(
             "/api/v1/qa/sessions",
@@ -70,9 +69,7 @@ class TestStartQASession:
         assert data["ended_at"] is None
 
     @pytest.mark.asyncio
-    async def test_start_session_story_not_found(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_start_session_story_not_found(self, client: AsyncClient) -> None:
         """Test starting a session with non-existent story."""
         response = await client.post(
             "/api/v1/qa/sessions",
@@ -86,13 +83,9 @@ class TestGetQASession:
     """Tests for GET /api/v1/qa/sessions/{session_id} endpoint."""
 
     @pytest.mark.asyncio
-    async def test_get_session_success(
-        self, client: AsyncClient, sample_qa_session: dict
-    ) -> None:
+    async def test_get_session_success(self, client: AsyncClient, sample_qa_session: dict) -> None:
         """Test getting a Q&A session by ID."""
-        response = await client.get(
-            f"/api/v1/qa/sessions/{sample_qa_session['id']}"
-        )
+        response = await client.get(f"/api/v1/qa/sessions/{sample_qa_session['id']}")
 
         assert response.status_code == 200
         data = response.json()
@@ -102,13 +95,9 @@ class TestGetQASession:
         assert isinstance(data["messages"], list)
 
     @pytest.mark.asyncio
-    async def test_get_session_not_found(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_get_session_not_found(self, client: AsyncClient) -> None:
         """Test getting a non-existent session."""
-        response = await client.get(
-            f"/api/v1/qa/sessions/{uuid4()}"
-        )
+        response = await client.get(f"/api/v1/qa/sessions/{uuid4()}")
 
         assert response.status_code == 404
 
@@ -117,9 +106,7 @@ class TestEndQASession:
     """Tests for PATCH /api/v1/qa/sessions/{session_id} endpoint."""
 
     @pytest.mark.asyncio
-    async def test_end_session_success(
-        self, client: AsyncClient, sample_qa_session: dict
-    ) -> None:
+    async def test_end_session_success(self, client: AsyncClient, sample_qa_session: dict) -> None:
         """Test ending a Q&A session."""
         response = await client.patch(
             f"/api/v1/qa/sessions/{sample_qa_session['id']}",
@@ -133,9 +120,7 @@ class TestEndQASession:
         assert data["ended_at"] is not None
 
     @pytest.mark.asyncio
-    async def test_end_session_timeout(
-        self, client: AsyncClient, sample_qa_session: dict
-    ) -> None:
+    async def test_end_session_timeout(self, client: AsyncClient, sample_qa_session: dict) -> None:
         """Test ending a session with timeout status."""
         response = await client.patch(
             f"/api/v1/qa/sessions/{sample_qa_session['id']}",
@@ -148,9 +133,7 @@ class TestEndQASession:
         assert data["status"] == "timeout"
 
     @pytest.mark.asyncio
-    async def test_end_session_not_found(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_end_session_not_found(self, client: AsyncClient) -> None:
         """Test ending a non-existent session."""
         response = await client.patch(
             f"/api/v1/qa/sessions/{uuid4()}",
@@ -164,9 +147,7 @@ class TestSendQAMessage:
     """Tests for POST /api/v1/qa/sessions/{session_id}/messages endpoint."""
 
     @pytest.mark.asyncio
-    async def test_send_message_success(
-        self, client: AsyncClient, sample_qa_session: dict
-    ) -> None:
+    async def test_send_message_success(self, client: AsyncClient, sample_qa_session: dict) -> None:
         """Test sending a question and receiving a response."""
         response = await client.post(
             f"/api/v1/qa/sessions/{sample_qa_session['id']}/messages",
@@ -189,9 +170,7 @@ class TestSendQAMessage:
         assert len(data["assistant_message"]["content"]) > 0
 
     @pytest.mark.asyncio
-    async def test_send_message_session_not_found(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_send_message_session_not_found(self, client: AsyncClient) -> None:
         """Test sending message to non-existent session."""
         response = await client.post(
             f"/api/v1/qa/sessions/{uuid4()}/messages",
@@ -258,9 +237,7 @@ class TestQASessionMessages:
         )
 
         # Get the session
-        response = await client.get(
-            f"/api/v1/qa/sessions/{sample_qa_session['id']}"
-        )
+        response = await client.get(f"/api/v1/qa/sessions/{sample_qa_session['id']}")
 
         assert response.status_code == 200
         data = response.json()

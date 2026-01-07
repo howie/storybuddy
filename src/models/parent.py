@@ -10,9 +10,7 @@ class ParentBase(BaseModel):
     """Base parent model with common fields."""
 
     name: str = Field(..., max_length=100, description="Parent's display name")
-    email: str | None = Field(
-        None, max_length=255, description="Parent's email (optional)"
-    )
+    email: str | None = Field(None, max_length=255, description="Parent's email (optional)")
 
 
 class ParentCreate(ParentBase):
@@ -32,9 +30,7 @@ class Parent(ParentBase):
     """Full parent model with all fields."""
 
     id: UUID = Field(default_factory=uuid4, description="Unique identifier")
-    created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Creation timestamp"
-    )
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     updated_at: datetime = Field(
         default_factory=datetime.utcnow, description="Last update timestamp"
     )

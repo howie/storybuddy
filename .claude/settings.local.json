@@ -27,7 +27,8 @@
       "Bash(curl:*)",
       "Bash(flutter devices:*)",
       "Bash(python3:*)",
-      "Bash(gh pr create:*)"
+      "Bash(gh pr create:*)",
+      "Bash(git rebase:*)"
     ]
   }
 }

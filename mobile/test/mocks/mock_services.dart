@@ -26,7 +26,7 @@ class MockAudioCacheManager extends Mock implements AudioCacheManager {}
 
 class MockSyncManager extends Mock implements SyncManager {}
 
-class MockStoryBuddyAudioHandler extends Mock implements StoryBuddyAudioHandler {}
+class MockStoryAudioHandler extends Mock implements StoryAudioHandler {}
 
 // Data Sources
 class MockStoryRemoteDataSource extends Mock implements StoryRemoteDataSource {}

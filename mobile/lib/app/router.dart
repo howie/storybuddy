@@ -32,30 +32,32 @@ abstract class AppRoutes {
 }
 
 /// Provider to ensure a parent exists, creating one if needed (for development).
+/// Always verifies the parent exists on the server to handle stale local IDs.
 final _parentSetupProvider = FutureProvider<void>((ref) async {
   final secureStorage = ref.read(secureStorageServiceProvider);
-  final existingParentId = await secureStorage.getParentId();
+  final parentRepository = ref.read(parentRepositoryProvider);
+  const defaultEmail = 'parent@storybuddy.app';
 
-  if (existingParentId == null || existingParentId.isEmpty) {
-    final parentRepository = ref.read(parentRepositoryProvider);
-    const defaultEmail = 'parent@storybuddy.app';
+  // Always check if parent exists on server by email (handles stale local IDs)
+  final existingParent = await parentRepository.getParentByEmail(defaultEmail);
 
-    // Check if parent already exists by email on the server
-    final existingParent = await parentRepository.getParentByEmail(defaultEmail);
-
-    if (existingParent != null) {
-      // Parent exists, just store their ID
+  if (existingParent != null) {
+    // Parent exists on server, ensure we have the correct ID stored
+    final storedId = await secureStorage.getParentId();
+    if (storedId != existingParent.id) {
       await parentRepository.setCurrentParentId(existingParent.id);
-      debugPrint('Found existing parent. Parent ID: ${existingParent.id}');
+      debugPrint('Updated parent ID to server ID: ${existingParent.id}');
     } else {
-      // No parent exists, create one
-      await parentRepository.createParent(
-        name: 'Default Parent',
-        email: defaultEmail,
-      );
-      final newParentId = await secureStorage.getParentId();
-      debugPrint('Parent setup complete. Parent ID: $newParentId');
+      debugPrint('Parent ID verified: ${existingParent.id}');
     }
+  } else {
+    // No parent on server, create one
+    await parentRepository.createParent(
+      name: 'Default Parent',
+      email: defaultEmail,
+    );
+    final newParentId = await secureStorage.getParentId();
+    debugPrint('Parent setup complete. Parent ID: $newParentId');
   }
 });
 

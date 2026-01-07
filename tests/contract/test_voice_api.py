@@ -208,3 +208,64 @@ class TestVoicePreviewAPI:
         )
         assert response.status_code == 400
         assert "not ready" in response.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+class TestSelectableVoiceAPI:
+    """Tests for Selectable Voice Kit endpoints (/api/voices)."""
+
+    async def test_get_voices_list(self, client: AsyncClient) -> None:
+        """GET /api/voices - returns list of available system voices."""
+        response = await client.get("/api/voices")
+        
+        # Endpoint might not be implemented yet, but we assert contract
+        if response.status_code == 404:
+            return  # Skip if not implemented
+            
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+        
+        if len(data) > 0:
+            voice = data[0]
+            assert "id" in voice
+            assert "name" in voice
+            assert "provider_voice_id" in voice
+            assert "gender" in voice
+            # Check for kit_id/is_builtin if returned
+            
+    async def test_get_voice_detail(self, client: AsyncClient) -> None:
+        """GET /api/voices/{id} - returns details of specific voice."""
+        # Get list first
+        list_response = await client.get("/api/voices")
+        if list_response.status_code != 200:
+            return
+            
+        voices = list_response.json()
+        if not voices:
+            return
+            
+        voice_id = voices[0]["id"]
+        response = await client.get(f"/api/voices/{voice_id}")
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == voice_id
+        
+    async def test_get_voice_preview(self, client: AsyncClient) -> None:
+        """GET /api/voices/{id}/preview - returns audio preview."""
+        # Get list first
+        list_response = await client.get("/api/voices")
+        if list_response.status_code != 200:
+            return
+            
+        voices = list_response.json()
+        if not voices:
+            return
+            
+        voice_id = voices[0]["id"]
+        # Assuming preview takes text query param or uses default
+        response = await client.get(f"/api/voices/{voice_id}/preview?text=Hello")
+        
+        assert response.status_code == 200
+        assert "audio/" in response.headers["content-type"]

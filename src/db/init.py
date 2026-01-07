@@ -110,8 +110,48 @@ CREATE TABLE IF NOT EXISTS pending_question (
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'answered'))
 );
 
+
 CREATE INDEX IF NOT EXISTS idx_pending_question_parent_id_status ON pending_question(parent_id, status);
 CREATE INDEX IF NOT EXISTS idx_pending_question_asked_at ON pending_question(asked_at DESC);
+
+-- Voice Kits
+CREATE TABLE IF NOT EXISTS voice_kits (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    provider TEXT NOT NULL,
+    version TEXT NOT NULL,
+    download_size INTEGER DEFAULT 0,
+    is_builtin INTEGER DEFAULT 1,
+    is_downloaded INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Voice Characters
+CREATE TABLE IF NOT EXISTS voice_characters (
+    id TEXT PRIMARY KEY,
+    kit_id TEXT NOT NULL REFERENCES voice_kits(id),
+    name TEXT NOT NULL,
+    provider_voice_id TEXT NOT NULL,
+    ssml_options TEXT, -- JSON
+    gender TEXT NOT NULL CHECK (gender IN ('male', 'female', 'neutral')),
+    age_group TEXT NOT NULL CHECK (age_group IN ('child', 'adult', 'senior')),
+    style TEXT NOT NULL CHECK (style IN ('narrator', 'character', 'both')),
+    preview_url TEXT,
+    preview_text TEXT,
+    UNIQUE(kit_id, name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_voice_characters_kit ON voice_characters(kit_id);
+
+-- User Voice Preferences
+CREATE TABLE IF NOT EXISTS voice_preferences (
+    user_id TEXT PRIMARY KEY,
+    default_voice_id TEXT REFERENCES voice_characters(id),
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Story Voice Mappings (from T041 but included in init.py for completeness/future proofing if desired, though task says T041 is later. I will omit T041 table here to follow phase structure strictly? No, init.py should ideally have full schema if possible, but I will stick to what I added in migrations.)
 """
 
 

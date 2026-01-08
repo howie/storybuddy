@@ -282,6 +282,50 @@ EOF
             echo "ℹ️ No changes to commit"
           fi
 
+      - name: Close Previous Failure Issues
+        if: steps.agent_fix.outputs.success == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Find open issues with ci-failure and python labels
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'ci-failure,python',
+              state: 'open'
+            });
+
+            // Close each issue with a comment
+            for (const issue of issues.data) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `## ✅ Auto-Fixed by Agent
+
+                The Python CI errors have been automatically fixed by Claude Agent.
+
+                **Fixed in commit:** ${{ github.sha }}
+                **Branch:** \`${{ github.head_ref || github.ref_name }}\`
+                **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+                Closing this issue automatically.`
+              });
+
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+
+              console.log(`✅ Closed issue #${issue.number}: ${issue.title}`);
+            }
+
+            if (issues.data.length === 0) {
+              console.log('ℹ️ No open ci-failure issues found');
+            }
+
       - name: Create Issue on Failure
         if: steps.agent_fix.outputs.success == 'false'
         uses: actions/github-script@v7
@@ -403,6 +447,50 @@ EOF
           else
             echo "ℹ️ No changes to commit"
           fi
+
+      - name: Close Previous Failure Issues
+        if: steps.agent_fix.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Find open issues with ci-failure and flutter labels
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'ci-failure,flutter',
+              state: 'open'
+            });
+
+            // Close each issue with a comment
+            for (const issue of issues.data) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `## ✅ Auto-Fixed by Agent
+
+                The Flutter CI errors have been automatically fixed by Claude Agent.
+
+                **Fixed in commit:** ${{ github.sha }}
+                **Branch:** \`${{ github.head_ref || github.ref_name }}\`
+                **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+                Closing this issue automatically.`
+              });
+
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+
+              console.log(`✅ Closed issue #${issue.number}: ${issue.title}`);
+            }
+
+            if (issues.data.length === 0) {
+              console.log('ℹ️ No open ci-failure issues found');
+            }
 
       - name: Create Issue on Failure
         if: steps.agent_fix.outcome == 'failure'

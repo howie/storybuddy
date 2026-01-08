@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional, Dict, Any
 from sqlalchemy import select, update
 from src.db.init import get_db_connection
@@ -17,6 +18,7 @@ class VoiceKitService:
     """Service for managing voice kits and characters."""
 
     def __init__(self):
+        self.logger = logging.getLogger("storybuddy.services.voice")
         # Initialize providers
         self.azure_provider = AzureTTSProvider()
 
@@ -136,13 +138,18 @@ class VoiceKitService:
 
     async def download_kit(self, kit_id: str) -> Optional[VoiceKit]:
         """Simulate downloading a kit."""
+        self.logger.info(f"Downloading voice kit: {kit_id}", extra={"kit_id": kit_id})
+        
         kit = await self.get_kit(kit_id)
         if not kit:
+            self.logger.warning(f"Kit not found for download: {kit_id}")
             return None
             
         # Simulate processing (could verify size, etc)
         # In real app, this would trigger background job.
         kit.is_downloaded = True
+        
+        self.logger.info(f"Voice kit downloaded successfully: {kit_id}", extra={"kit_id": kit_id})
         return kit
 
     async def get_voice(self, voice_id: str) -> Optional[VoiceCharacter]:

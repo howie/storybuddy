@@ -1,3 +1,4 @@
+import logging
 import azure.cognitiveservices.speech as speechsdk
 from typing import Any, Dict, List, Optional
 
@@ -13,6 +14,7 @@ class AzureTTSProvider(TTSProvider):
     def __init__(self):
         self.settings = get_settings()
         self._speech_config = None
+        self.logger = logging.getLogger("storybuddy.services.tts.azure")
 
     @property
     def provider_type(self) -> TTSProviderEnum:
@@ -74,6 +76,15 @@ class AzureTTSProvider(TTSProvider):
         # The goal is to return bytes.
         # speech_synthesizer.speak_ssml_async(ssml).get() returns result with audio_data
         
+        self.logger.info(
+            "Synthesizing text",
+            extra={
+                "voice_id": voice_id,
+                "text_length": len(text),
+                "options": options
+            }
+        )
+
         synthesizer = speechsdk.SpeechSynthesizer(
             speech_config=self.speech_config, 
             audio_config=None # None means do not play to speaker, just generate
@@ -82,14 +93,24 @@ class AzureTTSProvider(TTSProvider):
         result = synthesizer.speak_ssml_async(ssml).get()
 
         if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-            return result.audio_data
+             self.logger.info(
+                "Synthesis completed",
+                extra={
+                    "voice_id": voice_id,
+                    "audio_size": len(result.audio_data)
+                }
+            )
+             return result.audio_data
         elif result.reason == speechsdk.ResultReason.Canceled:
             cancellation_details = result.cancellation_details
             error_msg = f"Speech synthesis canceled: {cancellation_details.reason}"
             if cancellation_details.reason == speechsdk.CancellationReason.Error:
                 error_msg += f". Error details: {cancellation_details.error_details}"
+            
+            self.logger.error(f"Synthesis failed: {error_msg}")
             raise RuntimeError(error_msg)
         else:
+            self.logger.error(f"Synthesis failed with reason: {result.reason}")
             raise RuntimeError(f"Speech synthesis failed with reason: {result.reason}")
 
     async def get_voices(self) -> List[Dict[str, Any]]:

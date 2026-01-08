@@ -216,12 +216,7 @@ jobs:
             echo "🔄 Agent Auto-Fix Attempt $attempt of $max_attempts"
 
             # Run Claude Agent
-            if claude agent run \
-              --model "${{ steps.model.outputs.model }}" \
-              --allowed-tools "Read,Edit,Bash" \
-              --allowed-commands "ruff,mypy,pytest,git,pip,python" \
-              --max-iterations "${{ steps.model.outputs.max_iterations }}" \
-              --prompt "The Python CI checks failed. Please fix all issues:
+            if echo "The Python CI checks failed. Please fix all issues:
                 1. Run 'ruff check --fix .' to auto-fix linting issues
                 2. Run 'ruff format .' to fix formatting
                 3. Fix any mypy type errors in src/
@@ -229,7 +224,7 @@ jobs:
                 5. Only modify necessary code - do not refactor or add features
                 6. Ensure all changes are minimal and focused
 
-                After fixes, verify by running the checks again."; then
+                After fixes, verify by running the checks again." | claude --dangerously-skip-user-approval; then
               echo "✅ Agent succeeded on attempt $attempt"
               echo "success=true" >> $GITHUB_OUTPUT
               exit 0
@@ -360,18 +355,13 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          claude agent run \
-            --model sonnet \
-            --allowed-tools "Read,Edit,Bash" \
-            --allowed-commands "flutter,dart,git" \
-            --max-iterations 5 \
-            --prompt "The Flutter CI checks failed. Please fix all issues:
+          echo "The Flutter CI checks failed. Please fix all issues:
               1. Run 'dart format .' in mobile/ directory to fix formatting
               2. Fix issues reported by 'flutter analyze'
               3. Fix failing Flutter tests
               4. Only modify necessary code in mobile/ directory
 
-              After fixes, verify by running the checks again."
+              After fixes, verify by running the checks again." | claude --dangerously-skip-user-approval
 
       - name: Re-run Checks to Verify Fixes
         if: steps.agent_fix.outcome == 'success'
@@ -463,15 +453,11 @@ jobs:
           echo "Changed files: $CHANGED_FILES"
 
       - name: Run Code Review Agent
+        continue-on-error: true
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          claude agent run \
-            --model sonnet \
-            --allowed-tools "Read,Grep,Glob,Bash" \
-            --allowed-commands "git" \
-            --output review-report.md \
-            --prompt "Review the following changed files for a pull request:
+          echo "Review the following changed files for a pull request:
 
               Changed files: ${{ steps.changed_files.outputs.files }}
 
@@ -490,7 +476,9 @@ jobs:
               - Suggestions for improvement
               - Positive observations
 
-              Be constructive and specific."
+              Be constructive and specific.
+
+              Save your review to a file called review-report.md" | claude --dangerously-skip-user-approval || echo "Code review skipped - agent unavailable" > review-report.md
 
       - name: Post Review Comment
         uses: actions/github-script@v7

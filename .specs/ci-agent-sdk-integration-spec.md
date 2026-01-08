@@ -74,7 +74,7 @@ auto-fix:
     - name: Checkout with PAT
       uses: actions/checkout@v4
       with:
-        token: ${{ secrets.GITHUB_PAT }}
+        token: ${{ secrets.GH_PAT }}
 
     - name: Install Claude CLI
       run: npm install -g @anthropic-ai/claude-code

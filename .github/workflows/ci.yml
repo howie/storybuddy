@@ -172,7 +172,7 @@ jobs:
       - name: Checkout Code with PAT
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_PAT }}
+          token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
       - name: Setup Python
@@ -338,7 +338,7 @@ jobs:
       - name: Checkout Code with PAT
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_PAT }}
+          token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
       - name: Setup Flutter

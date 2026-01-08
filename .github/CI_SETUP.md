@@ -17,7 +17,7 @@ Navigate to: `Settings` → `Secrets and variables` → `Actions` → `New repos
 | Secret Name | Description | How to Get |
 |------------|-------------|------------|
 | `ANTHROPIC_API_KEY` | Claude API key for Agent SDK | Get from [console.anthropic.com](https://console.anthropic.com/) |
-| `GITHUB_PAT` | Personal Access Token for pushing fixes | Create at [github.com/settings/tokens](https://github.com/settings/tokens) |
+| `GH_PAT` | Personal Access Token for pushing fixes | Create at [github.com/settings/tokens](https://github.com/settings/tokens) |
 
 #### GitHub PAT 設定:
 
@@ -26,7 +26,7 @@ Navigate to: `Settings` → `Secrets and variables` → `Actions` → `New repos
 3. 設定以下權限:
    - ✅ `repo` (Full control of private repositories)
    - ✅ `workflow` (Update GitHub Action workflows)
-4. 複製 token 並新增為 secret `GITHUB_PAT`
+4. 複製 token 並新增為 secret `GH_PAT`
 
 ### 2. Pre-commit Hooks (本地開發)
 

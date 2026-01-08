@@ -39,7 +39,7 @@ dependencies:
   encrypt: ^5.0.3
 
   # Background Tasks
-  workmanager: ^0.5.2
+  workmanager: ^0.9.0
 
   # Shared Preferences
   shared_preferences: ^2.2.0

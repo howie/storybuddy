@@ -151,7 +151,16 @@ CREATE TABLE IF NOT EXISTS voice_preferences (
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
--- Story Voice Mappings (from T041 but included in init.py for completeness/future proofing if desired, though task says T041 is later. I will omit T041 table here to follow phase structure strictly? No, init.py should ideally have full schema if possible, but I will stick to what I added in migrations.)
+-- Story Voice Mappings
+CREATE TABLE IF NOT EXISTS story_voice_maps (
+    story_id TEXT NOT NULL REFERENCES story(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES parent(id) ON DELETE CASCADE, -- Using parent(id) as user_id for now
+    role TEXT NOT NULL,
+    voice_id TEXT NOT NULL REFERENCES voice_characters(id),
+    PRIMARY KEY (story_id, user_id, role)
+);
+
+CREATE INDEX IF NOT EXISTS idx_story_voice_maps_story ON story_voice_maps(story_id);
 """
 
 
@@ -197,6 +206,7 @@ async def reset_database() -> None:
             "voice_audio",
             "voice_profile",
             "parent",
+            "story_voice_maps",
             "voice_preferences",
             "voice_characters",
             "voice_kits",

@@ -1,4 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from sqlalchemy import select, update
+from src.db.init import get_db_connection
 
 from src.models.voice import (
     AgeGroup,
@@ -212,3 +214,85 @@ class VoiceKitService:
             voice_id=voice.provider_voice_id,
             options=voice.ssml_options
         )
+
+    # -- User Preferences --
+
+    async def get_user_preferences(self, user_id: str) -> Dict[str, Any]:
+        """Get user voice preferences."""
+        async with get_db_connection() as db:
+            async with db.execute(
+                "SELECT * FROM voice_preferences WHERE user_id = :user_id",
+                {"user_id": user_id}
+            ) as cursor:
+                row = await cursor.fetchone()
+                if row:
+                    return dict(row)
+                return {"user_id": user_id, "default_voice_id": None}
+
+    async def update_default_voice(self, user_id: str, voice_id: str) -> Dict[str, Any]:
+        """Update user's default voice."""
+        # Verify voice exists
+        if not await self.get_voice(voice_id):
+            raise ValueError(f"Voice not found: {voice_id}")
+
+        async with get_db_connection() as db:
+            # Upsert
+            await db.execute(
+                """
+                INSERT INTO voice_preferences (user_id, default_voice_id)
+                VALUES (:user_id, :voice_id)
+                ON CONFLICT(user_id) DO UPDATE SET 
+                    default_voice_id = :voice_id,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                {"user_id": user_id, "voice_id": voice_id}
+            )
+            await db.commit()
+            
+        return await self.get_user_preferences(user_id)
+
+    # -- Story Voice Mappings --
+
+    async def get_story_voice_mappings(self, user_id: str, story_id: str) -> List[Dict[str, Any]]:
+        """Get all voice mappings for a specific story."""
+        async with get_db_connection() as db:
+            async with db.execute(
+                """
+                SELECT * FROM story_voice_maps 
+                WHERE user_id = :user_id AND story_id = :story_id
+                """,
+                {"user_id": user_id, "story_id": story_id}
+            ) as cursor:
+                rows = await cursor.fetchall()
+                return [dict(row) for row in rows]
+
+    async def update_story_voice_mapping(
+        self, user_id: str, story_id: str, role: str, voice_id: str
+    ) -> Dict[str, Any]:
+        """Update a voice mapping for a specific story role."""
+         # Verify voice exists
+        if not await self.get_voice(voice_id):
+            raise ValueError(f"Voice not found: {voice_id}")
+            
+        async with get_db_connection() as db:
+            await db.execute(
+                """
+                INSERT INTO story_voice_maps (story_id, user_id, role, voice_id)
+                VALUES (:story_id, :user_id, :role, :voice_id)
+                ON CONFLICT(story_id, user_id, role) DO UPDATE SET voice_id = :voice_id
+                """,
+                {
+                    "story_id": story_id,
+                    "user_id": user_id,
+                    "role": role,
+                    "voice_id": voice_id
+                }
+            )
+            await db.commit()
+            
+        return {
+            "story_id": story_id,
+            "user_id": user_id,
+            "role": role,
+            "voice_id": voice_id
+        }

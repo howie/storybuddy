@@ -1,12 +1,24 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Query, Response
+from pydantic import BaseModel
 
 from src.models.voice import VoiceCharacter, VoiceKit
 from src.services.voice_kit_service import VoiceKitService
 
 router = APIRouter(tags=["System Voices"])
 service = VoiceKitService()
+
+
+class VoicePreferenceRequest(BaseModel):
+    user_id: str
+    default_voice_id: str
+
+
+class StoryVoiceMapRequest(BaseModel):
+    user_id: str
+    role: str
+    voice_id: str
 
 
 @router.get("/voices", response_model=List[VoiceCharacter])
@@ -56,3 +68,39 @@ async def download_kit(kit_id: str) -> VoiceKit:
     if not kit:
         raise HTTPException(status_code=404, detail="Kit not found")
     return kit
+
+
+# -- Voice Preferences --
+
+@router.get("/voices/preferences")
+async def get_user_preferences(user_id: str) -> Dict[str, Any]:
+    """Get user voice preferences."""
+    return await service.get_user_preferences(user_id)
+
+
+@router.post("/voices/preferences")
+async def update_user_preferences(request: VoicePreferenceRequest) -> Dict[str, Any]:
+    """Update user voice preferences."""
+    try:
+        return await service.update_default_voice(request.user_id, request.default_voice_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# -- Story Voice Mappings --
+
+@router.get("/stories/{story_id}/voices")
+async def get_story_voice_mappings(story_id: str, user_id: str) -> List[Dict[str, Any]]:
+    """Get voice mappings for a specific story."""
+    return await service.get_story_voice_mappings(user_id, story_id)
+
+
+@router.post("/stories/{story_id}/voices")
+async def update_story_voice_mapping(story_id: str, request: StoryVoiceMapRequest) -> Dict[str, Any]:
+    """Update voice mapping for a specific story role."""
+    try:
+        return await service.update_story_voice_mapping(
+            request.user_id, story_id, request.role, request.voice_id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

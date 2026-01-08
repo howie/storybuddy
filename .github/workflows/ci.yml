@@ -216,16 +216,19 @@ jobs:
           while [ $attempt -le $max_attempts ]; do
             echo "🔄 Agent Auto-Fix Attempt $attempt of $max_attempts"
 
-            # Run Claude Agent
-            if echo "The Python CI checks failed. Please fix all issues:
-                1. Run 'ruff check --fix .' to auto-fix linting issues
-                2. Run 'ruff format .' to fix formatting
-                3. Fix any mypy type errors in src/
-                4. Fix failing pytest tests
-                5. Only modify necessary code - do not refactor or add features
-                6. Ensure all changes are minimal and focused
+            # Run Claude Agent with yes to auto-approve
+            if yes | claude << 'EOF'
+The Python CI checks failed. Please fix all issues:
+1. Run 'ruff check --fix .' to auto-fix linting issues
+2. Run 'ruff format .' to fix formatting
+3. Fix any mypy type errors in src/
+4. Fix failing pytest tests
+5. Only modify necessary code - do not refactor or add features
+6. Ensure all changes are minimal and focused
 
-                After fixes, verify by running the checks again." | claude --dangerously-skip-user-approval; then
+After fixes, verify by running the checks again.
+EOF
+            then
               echo "✅ Agent succeeded on attempt $attempt"
               echo "success=true" >> $GITHUB_OUTPUT
               exit 0
@@ -357,13 +360,16 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          echo "The Flutter CI checks failed. Please fix all issues:
-              1. Run 'dart format .' in mobile/ directory to fix formatting
-              2. Fix issues reported by 'flutter analyze'
-              3. Fix failing Flutter tests
-              4. Only modify necessary code in mobile/ directory
+          # Run Claude Agent with yes to auto-approve
+          yes | claude << 'EOF'
+The Flutter CI checks failed. Please fix all issues:
+1. Run 'dart format .' in mobile/ directory to fix formatting
+2. Fix issues reported by 'flutter analyze'
+3. Fix failing Flutter tests
+4. Only modify necessary code in mobile/ directory
 
-              After fixes, verify by running the checks again." | claude --dangerously-skip-user-approval
+After fixes, verify by running the checks again.
+EOF
 
       - name: Re-run Checks to Verify Fixes
         if: steps.agent_fix.outcome == 'success'
@@ -459,28 +465,31 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          echo "Review the following changed files for a pull request:
+          # Run Claude Agent with yes to auto-approve
+          yes | claude << 'EOF' || echo "Code review skipped - agent unavailable" > review-report.md
+Review the following changed files for a pull request:
 
-              Changed files: ${{ steps.changed_files.outputs.files }}
+Changed files: ${{ steps.changed_files.outputs.files }}
 
-              Please provide a comprehensive code review covering:
-              1. **Code Quality**: Readability, maintainability, best practices
-              2. **Security**: Potential vulnerabilities (SQL injection, XSS, etc.)
-              3. **Performance**: Inefficient algorithms, memory leaks, N+1 queries
-              4. **Testing**: Missing test coverage, edge cases
-              5. **Architecture**: Design patterns, separation of concerns
-              6. **Python-specific**: Type hints, PEP 8 compliance (for .py files)
-              7. **Flutter-specific**: Widget structure, state management (for .dart files)
+Please provide a comprehensive code review covering:
+1. **Code Quality**: Readability, maintainability, best practices
+2. **Security**: Potential vulnerabilities (SQL injection, XSS, etc.)
+3. **Performance**: Inefficient algorithms, memory leaks, N+1 queries
+4. **Testing**: Missing test coverage, edge cases
+5. **Architecture**: Design patterns, separation of concerns
+6. **Python-specific**: Type hints, PEP 8 compliance (for .py files)
+7. **Flutter-specific**: Widget structure, state management (for .dart files)
 
-              Format the review as markdown with:
-              - Summary section
-              - Issues found (categorized by severity: Critical, High, Medium, Low)
-              - Suggestions for improvement
-              - Positive observations
+Format the review as markdown with:
+- Summary section
+- Issues found (categorized by severity: Critical, High, Medium, Low)
+- Suggestions for improvement
+- Positive observations
 
-              Be constructive and specific.
+Be constructive and specific.
 
-              Save your review to a file called review-report.md" | claude --dangerously-skip-user-approval || echo "Code review skipped - agent unavailable" > review-report.md
+Save your review to a file called review-report.md
+EOF
 
       - name: Post Review Comment
         uses: actions/github-script@v7

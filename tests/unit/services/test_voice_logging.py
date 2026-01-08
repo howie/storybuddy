@@ -33,9 +33,15 @@ async def test_azure_tts_logging(caplog):
     # We need to test AzureTTSProvider directly, but it relies on settings.
     # We'll mock the settings or just check if it logs.
     
-    with patch("src.services.tts.azure_tts.get_settings") as mock_settings:
+    with patch("src.services.tts.azure_tts.get_settings") as mock_settings, \
+         patch("src.services.tts.azure_tts.TTSCache") as MockCache:
+        
         mock_settings.return_value.azure_speech_key = "fake-key"
         mock_settings.return_value.azure_speech_region = "fake-region"
+        
+        # Setup mock cache
+        mock_cache_instance = MockCache.return_value
+        mock_cache_instance.get.return_value = None # Cache miss
         
         provider = AzureTTSProvider()
         
@@ -53,12 +59,14 @@ async def test_azure_tts_logging(caplog):
             await provider.synthesize("test text", "voice-id")
             
             # Check records for structured data (extra fields)
-            # caplog.text might not show extra fields depending on formatter.
-            # We check the LogRecord objects directly.
             
             start_record = next(r for r in caplog.records if "Synthesizing text" in r.message)
             assert start_record.voice_id == "voice-id"
             assert start_record.text_length == 9
+            assert start_record.cached is False
             
             end_record = next(r for r in caplog.records if "Synthesis completed" in r.message)
             assert end_record.voice_id == "voice-id"
+            
+            # Verify cache was set
+            mock_cache_instance.set.assert_called_once()

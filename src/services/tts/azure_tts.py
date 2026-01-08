@@ -6,6 +6,7 @@ from src.config import get_settings
 from src.models.voice import TTSProvider as TTSProviderEnum, Gender, AgeGroup
 from src.services.tts.base import TTSProvider
 from src.services.tts.ssml_utils import create_ssml
+from src.services.tts.cache import TTSCache
 
 
 class AzureTTSProvider(TTSProvider):
@@ -15,6 +16,7 @@ class AzureTTSProvider(TTSProvider):
         self.settings = get_settings()
         self._speech_config = None
         self.logger = logging.getLogger("storybuddy.services.tts.azure")
+        self.cache = TTSCache()
 
     @property
     def provider_type(self) -> TTSProviderEnum:
@@ -59,6 +61,12 @@ class AzureTTSProvider(TTSProvider):
         """
         options = options or {}
         
+        # Check cache
+        cached = self.cache.get(text, voice_id, options)
+        if cached:
+            self.logger.info(f"Returning cached audio for {voice_id}", extra={"voice_id": voice_id, "cached": True})
+            return cached
+        
         # Generate SSML
         ssml = create_ssml(
             text=text,
@@ -81,7 +89,8 @@ class AzureTTSProvider(TTSProvider):
             extra={
                 "voice_id": voice_id,
                 "text_length": len(text),
-                "options": options
+                "options": options,
+                "cached": False
             }
         )
 
@@ -100,6 +109,8 @@ class AzureTTSProvider(TTSProvider):
                     "audio_size": len(result.audio_data)
                 }
             )
+             # Save to cache
+             self.cache.set(text, voice_id, options, result.audio_data)
              return result.audio_data
         elif result.reason == speechsdk.ResultReason.Canceled:
             cancellation_details = result.cancellation_details

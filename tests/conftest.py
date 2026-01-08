@@ -30,7 +30,7 @@ async def test_db() -> AsyncGenerator[None, None]:
 
 
 @pytest_asyncio.fixture
-async def client(test_db: None) -> AsyncGenerator[AsyncClient, None]:
+async def client(test_db: None) -> AsyncGenerator[AsyncClient, None]:  # noqa: ARG001
     """Create an async HTTP client for testing."""
     transport = ASGITransport(app=app)  # type: ignore[arg-type]
     async with AsyncClient(transport=transport, base_url="http://test") as ac:

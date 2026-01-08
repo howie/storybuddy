@@ -1,9 +1,12 @@
 """Story API routes for StoryBuddy."""
 
+import logging
+import time
 from pathlib import Path
+from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Header, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Query, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
@@ -17,8 +20,12 @@ from src.models.story import (
     StoryResponse,
     StoryUpdate,
 )
+from src.services.story_generator import StoryGeneratorError, generate_story_from_keywords
+from src.services.voice_cloning import VoiceCloningError
+from src.services.voice_cloning import generate_story_audio as generate_audio
 from src.services.voice_kit_service import VoiceKitService
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
@@ -43,18 +50,67 @@ class ImportStoryRequest(BaseModel):
 
 
 class GenerateStoryRequest(BaseModel):
-    """Request model for generating a story with AI."""
+    """Request model for AI story generation."""
 
+    parent_id: UUID
     keywords: list[str] = Field(..., min_length=1, max_length=5)
+    age_group: Literal["3-5", "4-6", "7-10"] = "4-6"
+    word_count: int = Field(default=500, ge=200, le=2000)
 
 
 class GenerateSystemAudioRequest(BaseModel):
     """Request model for generating story audio with system voice."""
-    
+
     voice_id: str
 
 
 router = APIRouter(prefix="/stories", tags=["stories"])
+
+
+@router.post("/generate", response_model=StoryResponse, status_code=status.HTTP_201_CREATED)
+async def generate_story(data: GenerateStoryRequest) -> Story:
+    """Generate a story using AI from keywords.
+
+    - **parent_id**: UUID of the parent who owns this story
+    - **keywords**: List of 1-5 keywords to include in the story
+    - **age_group**: Target age group ("3-5", "4-6", "7-10")
+    - **word_count**: Target word count (200-2000)
+    """
+    # Verify parent exists
+    parent = await ParentRepository.get_by_id(data.parent_id)
+    if parent is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Parent not found",
+        )
+
+    try:
+        # Generate story using Claude
+        generated = await generate_story_from_keywords(
+            keywords=data.keywords,
+            age_group=data.age_group,
+            target_word_count=data.word_count,
+        )
+
+        # Save to database
+        story_create = StoryCreate(
+            parent_id=data.parent_id,
+            title=generated.title,
+            content=generated.content,
+            source=StorySource.AI_GENERATED,
+            keywords=data.keywords,
+        )
+        story = await StoryRepository.create(story_create)
+
+        logger.info(f"Generated story: {story.id} with {story.word_count} words")
+        return story
+
+    except StoryGeneratorError as e:
+        logger.error(f"Story generation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Story generation failed: {e}",
+        )
 
 
 @router.post("", response_model=StoryResponse, status_code=status.HTTP_201_CREATED)
@@ -171,70 +227,6 @@ async def import_story(
     return story
 
 
-@router.post("/generate", response_model=StoryResponse, status_code=status.HTTP_201_CREATED)
-async def generate_story(
-    data: GenerateStoryRequest,
-    x_parent_id: str | None = Header(None, alias="X-Parent-ID"),
-) -> Story:
-    """Generate a story using AI based on keywords.
-
-    - **keywords**: List of keywords to inspire the story (1-5 keywords)
-
-    Requires X-Parent-ID header for authentication.
-    """
-    if not x_parent_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="X-Parent-ID header is required",
-        )
-
-    try:
-        parent_id = UUID(x_parent_id)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid X-Parent-ID header format",
-        )
-
-    # Verify parent exists
-    parent = await ParentRepository.get_by_id(parent_id)
-    if parent is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Parent not found",
-        )
-
-    # Generate story using Claude
-    from src.services.llm import get_claude_service
-
-    try:
-        claude = get_claude_service()
-        result = await claude.generate_story(data.keywords)
-
-        story_data = StoryCreate(
-            parent_id=parent_id,
-            title=result.title,
-            content=result.content,
-            source=StorySource.AI_GENERATED,
-            keywords=data.keywords,
-        )
-    except ValueError as e:
-        # API key not configured
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"AI service not configured: {e}",
-        )
-    except RuntimeError as e:
-        # Claude API error
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"AI service error: {e}",
-        )
-
-    story = await StoryRepository.create(story_data)
-    return story
-
-
 @router.get("/{story_id}", response_model=StoryResponse)
 async def get_story(story_id: UUID) -> Story:
     """Get a story by ID."""
@@ -274,6 +266,26 @@ async def delete_story(story_id: UUID) -> None:
         )
 
 
+async def _generate_audio_task(
+    story_id: UUID,
+    story_content: str,
+    voice_id: str,
+) -> None:
+    """Background task to generate story audio."""
+    try:
+        audio_path = await generate_audio(
+            voice_id=voice_id,
+            story_id=story_id,
+            story_content=story_content,
+        )
+        await StoryRepository.update_audio(story_id, str(audio_path))
+        logger.info(f"Audio generated for story {story_id}")
+    except VoiceCloningError as e:
+        logger.error(f"Audio generation failed for story {story_id}: {e}")
+    except Exception as e:
+        logger.exception(f"Unexpected error generating audio for story {story_id}: {e}")
+
+
 @router.post(
     "/{story_id}/generate-audio",
     response_model=GenerateAudioResponse,
@@ -291,7 +303,7 @@ async def generate_story_audio_system(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="X-Parent-ID header is required",
         )
-        
+
     # Verify story exists
     story = await StoryRepository.get_by_id(story_id)
     if story is None:
@@ -301,44 +313,20 @@ async def generate_story_audio_system(
         )
 
     # Use VoiceKitService to generate audio
-    # Note: In production this should be a background task
     service = VoiceKitService()
     try:
         audio_bytes = await service.generate_story_audio(str(story_id), data.voice_id)
-        
+
         # Save to file
         filename = f"{story_id}_{data.voice_id}_{int(time.time())}.wav"
         file_path = settings.stories_audio_dir / filename
-        
+
         # Ensure dir exists
         settings.ensure_directories()
-        
+
         with open(file_path, "wb") as f:
             f.write(audio_bytes)
-            
-        # Update story with audio path
-        # We need to construct a StoryUpdate but standard StoryUpdate might not have audio_file_path?
-        # StoryUpdate model has: (I should check src/models/story.py). 
-        # But StoryRepository.update takes StoryUpdate.
-        # If StoryUpdate doesn't support it, I might need to update repository or model.
-        # For now, let's look at StoryRepository.
-        # Wait, I can't check everything. I'll assume I can update.
-        # But wait, existing code implies `audio_file_path` is on Story.
-        # I'll try to update it using a dict/kwargs if repository allows, or skip DB update if it's too complex for this tool call.
-        # Actually, I should update the DB.
-        
-        # Checking StoryUpdate definition in `src/models/story.py` is wise but extra step.
-        # I'll rely on `story` object update using SQLAlchemy/Repository directly if possible?
-        # Repository.update expects (id, model).
-        
-        # Hack: manually update via SQL if necessary or just skip DB update in MVP Code but save file.
-        # T030 is just "Implement POST endpoint". Validating flow requires DB update.
-        
-        # I'll assume Repository.update handles extra fields or I can pass a partial.
-        # Or I leave the DB update for a background worker as the comment suggests?
-        # "In a real implementation, this would... 4. Update the story..."
-        # So maybe for MVP I just return "processing" and save the file?
-        
+
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
@@ -346,13 +334,16 @@ async def generate_story_audio_system(
 
     return GenerateAudioResponse(story_id=story_id, status="processing")
 
+
 @router.post(
     "/{story_id}/audio",
     response_model=GenerateAudioResponse,
     status_code=status.HTTP_202_ACCEPTED,
 )
-async def generate_story_audio(
-    story_id: UUID, data: GenerateAudioRequest
+async def generate_story_audio_endpoint(
+    story_id: UUID,
+    data: GenerateAudioRequest,
+    background_tasks: BackgroundTasks,
 ) -> GenerateAudioResponse:
     """Generate audio for a story using a cloned voice.
 
@@ -384,13 +375,20 @@ async def generate_story_audio(
             detail=f"Voice profile is not ready for audio generation. Current status: {voice_profile.status.value}",
         )
 
-    # TODO: Implement actual audio generation with ElevenLabs
-    # For now, we just return a processing status
-    # In a real implementation, this would:
-    # 1. Queue an async task for audio generation
-    # 2. Use ElevenLabs TTS with the cloned voice
-    # 3. Save the audio file to data/audio/stories/
-    # 4. Update the story with audio_file_path and audio_generated_at
+    # Check if voice profile has ElevenLabs ID
+    if not voice_profile.elevenlabs_voice_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Voice profile does not have a valid voice ID",
+        )
+
+    # Queue background task for audio generation
+    background_tasks.add_task(
+        _generate_audio_task,
+        story_id,
+        story.content,
+        voice_profile.elevenlabs_voice_id,
+    )
 
     return GenerateAudioResponse(story_id=story_id, status="processing")
 

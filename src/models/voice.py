@@ -37,9 +37,7 @@ class TTSProvider(str, Enum):
 class VoiceProfileBase(BaseModel):
     """Base voice profile model with common fields."""
 
-    name: str = Field(
-        ..., max_length=100, description="Voice profile name (e.g., '爸爸', '媽媽')"
-    )
+    name: str = Field(..., max_length=100, description="Voice profile name (e.g., '爸爸', '媽媽')")
 
 
 class VoiceProfileCreate(VoiceProfileBase):
@@ -62,18 +60,14 @@ class VoiceProfile(VoiceProfileBase):
 
     id: UUID = Field(default_factory=uuid4, description="Unique identifier")
     parent_id: UUID = Field(..., description="Parent ID this voice belongs to")
-    elevenlabs_voice_id: str | None = Field(
-        None, description="ElevenLabs Voice ID after cloning"
-    )
+    elevenlabs_voice_id: str | None = Field(None, description="ElevenLabs Voice ID after cloning")
     status: VoiceProfileStatus = Field(
         default=VoiceProfileStatus.PENDING, description="Voice cloning status"
     )
     sample_duration_seconds: int | None = Field(
         None, ge=30, le=180, description="Total sample duration in seconds"
     )
-    created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Creation timestamp"
-    )
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     updated_at: datetime = Field(
         default_factory=datetime.utcnow, description="Last update timestamp"
     )

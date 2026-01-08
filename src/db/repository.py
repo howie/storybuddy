@@ -4,7 +4,13 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from src.db.init import get_db_connection
-from src.models import MessageRole, QASessionStatus, StorySource, VoiceProfileStatus
+from src.models import (
+    MessageRole,
+    PendingQuestionStatus,
+    QASessionStatus,
+    StorySource,
+    VoiceProfileStatus,
+)
 from src.models.parent import Parent, ParentCreate, ParentUpdate
 from src.models.qa import (
     QAMessage,
@@ -12,6 +18,10 @@ from src.models.qa import (
     QASession,
     QASessionCreate,
     QASessionUpdate,
+)
+from src.models.question import (
+    PendingQuestion,
+    PendingQuestionCreate,
 )
 from src.models.story import Story, StoryCreate, StoryUpdate
 from src.models.voice import (
@@ -562,9 +572,7 @@ class StoryRepository:
             return cursor.rowcount > 0
 
     @staticmethod
-    async def update_audio(
-        story_id: UUID, audio_file_path: str
-    ) -> Story | None:
+    async def update_audio(story_id: UUID, audio_file_path: str) -> Story | None:
         """Update story with generated audio file path."""
         now = datetime.utcnow().isoformat()
 
@@ -636,11 +644,7 @@ class QASessionRepository:
                 id=UUID(row["id"]),
                 story_id=UUID(row["story_id"]),
                 started_at=datetime.fromisoformat(row["started_at"]),
-                ended_at=(
-                    datetime.fromisoformat(row["ended_at"])
-                    if row["ended_at"]
-                    else None
-                ),
+                ended_at=(datetime.fromisoformat(row["ended_at"]) if row["ended_at"] else None),
                 message_count=row["message_count"],
                 status=QASessionStatus(row["status"]),
             )
@@ -711,11 +715,7 @@ class QASessionRepository:
                     id=UUID(row["id"]),
                     story_id=UUID(row["story_id"]),
                     started_at=datetime.fromisoformat(row["started_at"]),
-                    ended_at=(
-                        datetime.fromisoformat(row["ended_at"])
-                        if row["ended_at"]
-                        else None
-                    ),
+                    ended_at=(datetime.fromisoformat(row["ended_at"]) if row["ended_at"] else None),
                     message_count=row["message_count"],
                     status=QASessionStatus(row["status"]),
                 )
@@ -788,9 +788,7 @@ class QAMessageRepository:
                     role=MessageRole(row["role"]),
                     content=row["content"],
                     is_in_scope=(
-                        bool(row["is_in_scope"])
-                        if row["is_in_scope"] is not None
-                        else None
+                        bool(row["is_in_scope"]) if row["is_in_scope"] is not None else None
                     ),
                     audio_input_path=row["audio_input_path"],
                     audio_output_path=row["audio_output_path"],
@@ -810,3 +808,198 @@ class QAMessageRepository:
             )
             row = await cursor.fetchone()
             return row[0] if row else 0
+
+
+class PendingQuestionRepository:
+    """Repository for PendingQuestion CRUD operations."""
+
+    @staticmethod
+    async def create(data: PendingQuestionCreate) -> PendingQuestion:
+        """Create a new pending question."""
+
+        question_id = str(uuid4())
+        now = datetime.utcnow().isoformat()
+
+        async with get_db_connection() as db:
+            await db.execute(
+                """
+                INSERT INTO pending_question (
+                    id, parent_id, story_id, question, asked_at, status
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    question_id,
+                    str(data.parent_id),
+                    str(data.story_id) if data.story_id else None,
+                    data.question,
+                    now,
+                    PendingQuestionStatus.PENDING.value,
+                ),
+            )
+            await db.commit()
+
+            return PendingQuestion(
+                id=UUID(question_id),
+                parent_id=data.parent_id,
+                story_id=data.story_id,
+                qa_session_id=data.qa_session_id,
+                question=data.question,
+                asked_at=datetime.fromisoformat(now),
+                answer=None,
+                answer_audio_path=None,
+                answered_at=None,
+                status=PendingQuestionStatus.PENDING,
+            )
+
+    @staticmethod
+    async def get_by_id(question_id: UUID) -> PendingQuestion | None:
+        """Get a pending question by ID."""
+
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                "SELECT * FROM pending_question WHERE id = ?",
+                (str(question_id),),
+            )
+            row = await cursor.fetchone()
+
+            if row is None:
+                return None
+
+            return PendingQuestion(
+                id=UUID(row["id"]),
+                parent_id=UUID(row["parent_id"]),
+                story_id=UUID(row["story_id"]) if row["story_id"] else None,
+                qa_session_id=None,
+                question=row["question"],
+                asked_at=datetime.fromisoformat(row["asked_at"]),
+                answer=row["answer"],
+                answer_audio_path=row["answer_audio_path"],
+                answered_at=(
+                    datetime.fromisoformat(row["answered_at"]) if row["answered_at"] else None
+                ),
+                status=PendingQuestionStatus(row["status"]),
+            )
+
+    @staticmethod
+    async def get_by_parent_id(
+        parent_id: UUID,
+        status: PendingQuestionStatus | None = None,
+    ) -> list[PendingQuestion]:
+        """Get all pending questions for a parent."""
+
+        async with get_db_connection() as db:
+            if status:
+                cursor = await db.execute(
+                    """
+                    SELECT * FROM pending_question
+                    WHERE parent_id = ? AND status = ?
+                    ORDER BY asked_at DESC
+                    """,
+                    (str(parent_id), status.value),
+                )
+            else:
+                cursor = await db.execute(
+                    """
+                    SELECT * FROM pending_question
+                    WHERE parent_id = ?
+                    ORDER BY asked_at DESC
+                    """,
+                    (str(parent_id),),
+                )
+            rows = await cursor.fetchall()
+
+            return [
+                PendingQuestion(
+                    id=UUID(row["id"]),
+                    parent_id=UUID(row["parent_id"]),
+                    story_id=UUID(row["story_id"]) if row["story_id"] else None,
+                    qa_session_id=None,
+                    question=row["question"],
+                    asked_at=datetime.fromisoformat(row["asked_at"]),
+                    answer=row["answer"],
+                    answer_audio_path=row["answer_audio_path"],
+                    answered_at=(
+                        datetime.fromisoformat(row["answered_at"]) if row["answered_at"] else None
+                    ),
+                    status=PendingQuestionStatus(row["status"]),
+                )
+                for row in rows
+            ]
+
+    @staticmethod
+    async def answer_question(
+        question_id: UUID,
+        answer: str,
+        answer_audio_path: str | None = None,
+    ) -> PendingQuestion | None:
+        """Answer a pending question."""
+
+        now = datetime.utcnow().isoformat()
+
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                """
+                UPDATE pending_question
+                SET answer = ?, answer_audio_path = ?, answered_at = ?, status = ?
+                WHERE id = ?
+                """,
+                (
+                    answer,
+                    answer_audio_path,
+                    now,
+                    PendingQuestionStatus.ANSWERED.value,
+                    str(question_id),
+                ),
+            )
+            await db.commit()
+
+            if cursor.rowcount == 0:
+                return None
+
+        return await PendingQuestionRepository.get_by_id(question_id)
+
+    @staticmethod
+    async def find_answered_question(parent_id: UUID, question_text: str) -> PendingQuestion | None:
+        """Find if a similar question has been answered before."""
+
+        async with get_db_connection() as db:
+            # Simple exact match for now - could be enhanced with fuzzy matching
+            cursor = await db.execute(
+                """
+                SELECT * FROM pending_question
+                WHERE parent_id = ? AND question = ? AND status = ?
+                LIMIT 1
+                """,
+                (str(parent_id), question_text, PendingQuestionStatus.ANSWERED.value),
+            )
+            row = await cursor.fetchone()
+
+            if row is None:
+                return None
+
+            return PendingQuestion(
+                id=UUID(row["id"]),
+                parent_id=UUID(row["parent_id"]),
+                story_id=UUID(row["story_id"]) if row["story_id"] else None,
+                qa_session_id=None,
+                question=row["question"],
+                asked_at=datetime.fromisoformat(row["asked_at"]),
+                answer=row["answer"],
+                answer_audio_path=row["answer_audio_path"],
+                answered_at=(
+                    datetime.fromisoformat(row["answered_at"]) if row["answered_at"] else None
+                ),
+                status=PendingQuestionStatus(row["status"]),
+            )
+
+    @staticmethod
+    async def delete(question_id: UUID) -> bool:
+        """Delete a pending question."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                "DELETE FROM pending_question WHERE id = ?",
+                (str(question_id),),
+            )
+            await db.commit()
+            return cursor.rowcount > 0

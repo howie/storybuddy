@@ -1,0 +1,129 @@
+# Pre-commit hooks configuration for StoryBuddy
+# See https://pre-commit.com for more information
+
+repos:
+  # ============================================================================
+  # Python Code Quality
+  # ============================================================================
+
+  # Ruff - Fast Python linter (replaces flake8, isort, etc.)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.0
+    hooks:
+      # Run the linter
+      - id: ruff
+        args: [--fix]
+        types_or: [python, pyi]
+
+      # Run the formatter
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  # MyPy - Static type checker for Python
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - types-requests
+          - types-pyyaml
+        args: [--config-file=pyproject.toml]
+        files: ^src/
+        exclude: ^tests/
+
+  # ============================================================================
+  # Flutter/Dart Code Quality
+  # ============================================================================
+
+  - repo: local
+    hooks:
+      # Dart formatting
+      - id: dart-format
+        name: dart format
+        entry: bash -c 'cd mobile && dart format .'
+        language: system
+        files: \.dart$
+        pass_filenames: false
+
+      # Flutter analyze
+      - id: flutter-analyze
+        name: flutter analyze
+        entry: bash -c 'cd mobile && flutter analyze'
+        language: system
+        files: \.dart$
+        pass_filenames: false
+
+  # ============================================================================
+  # Generic Checks (Python, Dart, YAML, etc.)
+  # ============================================================================
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      # Prevent committing to main/master directly
+      - id: no-commit-to-branch
+        args: [--branch, main, --branch, master]
+
+      # File content checks
+      - id: trailing-whitespace
+        exclude: \.md$
+      - id: end-of-file-fixer
+      - id: check-yaml
+        exclude: ^\.github/workflows/
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+
+      # Prevent common mistakes
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+      # Python-specific
+      - id: check-ast  # Check Python syntax
+      - id: debug-statements  # Check for debugger imports
+      - id: name-tests-test  # Ensure test files are named correctly
+        args: [--pytest-test-first]
+
+  # ============================================================================
+  # Security Checks
+  # ============================================================================
+
+  # Check for secrets and credentials
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+        exclude: \.env\.example$
+
+  # ============================================================================
+  # Documentation
+  # ============================================================================
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+        args: [--fix]
+        exclude: ^\.github/|^\.specs/
+
+# Configuration
+default_install_hook_types: [pre-commit, pre-push, commit-msg]
+default_stages: [commit]
+
+# CI-specific settings
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

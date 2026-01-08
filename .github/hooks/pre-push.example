@@ -1,0 +1,111 @@
+#!/bin/bash
+# Pre-push hook example for StoryBuddy
+# This hook runs checks before pushing to remote
+#
+# To install:
+#   cp .github/hooks/pre-push.example .git/hooks/pre-push
+#   chmod +x .git/hooks/pre-push
+
+echo "🔍 Running pre-push checks..."
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Get the current branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Prevent direct push to main/master
+if [ "$current_branch" = "main" ] || [ "$current_branch" = "master" ]; then
+    echo -e "${RED}❌ Direct push to $current_branch is not allowed!${NC}"
+    echo -e "${YELLOW}Please create a pull request instead.${NC}"
+    exit 1
+fi
+
+# ==============================================================================
+# 1. Check for uncommitted changes
+# ==============================================================================
+if ! git diff-index --quiet HEAD --; then
+    echo -e "${YELLOW}⚠ You have uncommitted changes${NC}"
+    exit 1
+fi
+
+# ==============================================================================
+# 2. Run Python checks (if Python files changed)
+# ==============================================================================
+if git diff --name-only origin/$current_branch...HEAD | grep -q "\.py$"; then
+    echo "🐍 Running Python checks..."
+
+    # Activate venv if it exists
+    if [ -d "venv" ]; then
+        source venv/bin/activate 2>/dev/null || . venv/bin/activate
+    fi
+
+    # Run ruff
+    if ! ruff check .; then
+        echo -e "${RED}❌ Ruff linting failed${NC}"
+        echo -e "${YELLOW}Fix with: ruff check --fix .${NC}"
+        exit 1
+    fi
+
+    # Run mypy
+    if ! mypy src/; then
+        echo -e "${RED}❌ MyPy type checking failed${NC}"
+        exit 1
+    fi
+
+    # Run tests
+    if ! pytest tests/ --tb=short; then
+        echo -e "${RED}❌ Tests failed${NC}"
+        exit 1
+    fi
+
+    echo -e "${GREEN}✓ Python checks passed${NC}"
+fi
+
+# ==============================================================================
+# 3. Run Flutter checks (if Dart files changed)
+# ==============================================================================
+if git diff --name-only origin/$current_branch...HEAD | grep -q "\.dart$"; then
+    echo "📱 Running Flutter checks..."
+
+    cd mobile || exit 1
+
+    # Run flutter analyze
+    if ! flutter analyze; then
+        echo -e "${RED}❌ Flutter analyze failed${NC}"
+        cd ..
+        exit 1
+    fi
+
+    # Run flutter tests
+    if ! flutter test; then
+        echo -e "${RED}❌ Flutter tests failed${NC}"
+        cd ..
+        exit 1
+    fi
+
+    cd ..
+    echo -e "${GREEN}✓ Flutter checks passed${NC}"
+fi
+
+# ==============================================================================
+# 4. Check for secrets
+# ==============================================================================
+if command -v detect-secrets >/dev/null 2>&1; then
+    echo "🔐 Checking for secrets..."
+    if ! detect-secrets scan --baseline .secrets.baseline $(git diff --name-only origin/$current_branch...HEAD) >/dev/null 2>&1; then
+        echo -e "${RED}❌ Potential secrets detected!${NC}"
+        echo -e "${YELLOW}Review the files and update .secrets.baseline if needed${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✓ No secrets detected${NC}"
+fi
+
+# ==============================================================================
+# 5. All checks passed
+# ==============================================================================
+echo -e "${GREEN}✅ All pre-push checks passed! Pushing...${NC}"
+exit 0

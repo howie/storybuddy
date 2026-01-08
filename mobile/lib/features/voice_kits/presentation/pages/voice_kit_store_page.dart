@@ -52,7 +52,14 @@ class VoiceKitStorePage extends ConsumerWidget {
                  margin: const EdgeInsets.only(bottom: 12),
                  child: ListTile(
                    title: Text(kit.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                   subtitle: Text(kit.description ?? kit.version),
+                   subtitle: Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                       Text(kit.description ?? kit.version),
+                       const SizedBox(height: 4),
+                       Text('Provider: ${kit.provider}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                     ],
+                   ),
                    trailing: kit.isDownloaded
                        ? const Chip(
                            label: Text('已安裝', style: TextStyle(color: Colors.green)),

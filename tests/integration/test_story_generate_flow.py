@@ -1,0 +1,257 @@
+"""Integration tests for AI story generation flow.
+
+Tests the complete workflow for generating stories with AI.
+"""
+
+from unittest.mock import AsyncMock, patch
+from uuid import uuid4
+
+import pytest
+from httpx import AsyncClient
+
+from src.services.story_generator import GeneratedStory
+
+
+@pytest.fixture
+async def sample_parent(client: AsyncClient) -> dict:
+    """Create a sample parent for testing."""
+    response = await client.post(
+        "/api/v1/parents",
+        json={"name": "Generate Test Parent", "email": f"gen_{uuid4().hex[:8]}@example.com"},
+    )
+    return response.json()
+
+
+class TestStoryGenerationFlow:
+    """Integration tests for AI story generation."""
+
+    @pytest.mark.asyncio
+    async def test_generate_story_with_mock(
+        self,
+        client: AsyncClient,
+        sample_parent: dict,
+    ) -> None:
+        """Test story generation flow with mocked AI service."""
+        content = (
+            "從前從前，有一隻可愛的小兔子住在森林裡。牠喜歡和朋友們一起玩耍。"
+            "有一天，小兔子決定去探險，發現了一個神奇的花園。"
+            "在花園裡，牠遇到了許多新朋友，大家一起玩得很開心。"
+        )
+        mock_story = GeneratedStory(
+            title="小兔子的冒險",
+            content=content,
+            word_count=len(content),
+        )
+
+        with patch(
+            "src.api.stories.generate_story_from_keywords",
+            new_callable=AsyncMock,
+            return_value=mock_story,
+        ):
+            response = await client.post(
+                "/api/v1/stories/generate",
+                json={
+                    "parent_id": sample_parent["id"],
+                    "keywords": ["兔子", "冒險", "友誼"],
+                    "age_group": "4-6",
+                    "word_count": 500,
+                },
+            )
+
+            assert response.status_code == 201
+            data = response.json()
+
+            assert data["title"] == "小兔子的冒險"
+            assert data["source"] == "ai_generated"
+            assert data["keywords"] == ["兔子", "冒險", "友誼"]
+            assert data["parent_id"] == sample_parent["id"]
+            assert data["word_count"] > 0
+
+    @pytest.mark.asyncio
+    async def test_generate_story_invalid_parent(
+        self,
+        client: AsyncClient,
+    ) -> None:
+        """Test story generation with non-existent parent."""
+        response = await client.post(
+            "/api/v1/stories/generate",
+            json={
+                "parent_id": str(uuid4()),
+                "keywords": ["test"],
+                "age_group": "4-6",
+            },
+        )
+
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_generate_story_validates_keywords(
+        self,
+        client: AsyncClient,
+        sample_parent: dict,
+    ) -> None:
+        """Test that keyword validation works."""
+        # Empty keywords should fail
+        response = await client.post(
+            "/api/v1/stories/generate",
+            json={
+                "parent_id": sample_parent["id"],
+                "keywords": [],
+                "age_group": "4-6",
+            },
+        )
+
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_generate_story_validates_word_count(
+        self,
+        client: AsyncClient,
+        sample_parent: dict,
+    ) -> None:
+        """Test that word count validation works."""
+        # Word count too low (less than 200)
+        response = await client.post(
+            "/api/v1/stories/generate",
+            json={
+                "parent_id": sample_parent["id"],
+                "keywords": ["test"],
+                "age_group": "4-6",
+                "word_count": 50,
+            },
+        )
+
+        assert response.status_code == 422
+
+        # Word count too high (more than 2000)
+        response = await client.post(
+            "/api/v1/stories/generate",
+            json={
+                "parent_id": sample_parent["id"],
+                "keywords": ["test"],
+                "age_group": "4-6",
+                "word_count": 5000,
+            },
+        )
+
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_generate_story_validates_age_group(
+        self,
+        client: AsyncClient,
+        sample_parent: dict,
+    ) -> None:
+        """Test that age group validation works."""
+        # Invalid age group
+        response = await client.post(
+            "/api/v1/stories/generate",
+            json={
+                "parent_id": sample_parent["id"],
+                "keywords": ["test"],
+                "age_group": "invalid",
+            },
+        )
+
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_generated_story_appears_in_list(
+        self,
+        client: AsyncClient,
+        sample_parent: dict,
+    ) -> None:
+        """Test that generated stories appear in story list."""
+        content = "This is a story generated by AI for testing purposes."
+        mock_story = GeneratedStory(
+            title="Generated Story",
+            content=content,
+            word_count=len(content),
+        )
+
+        with patch(
+            "src.api.stories.generate_story_from_keywords",
+            new_callable=AsyncMock,
+            return_value=mock_story,
+        ):
+            # Generate a story
+            gen_response = await client.post(
+                "/api/v1/stories/generate",
+                json={
+                    "parent_id": sample_parent["id"],
+                    "keywords": ["test"],
+                    "age_group": "4-6",
+                },
+            )
+            assert gen_response.status_code == 201
+            story = gen_response.json()
+
+            # Check it appears in list
+            list_response = await client.get(
+                "/api/v1/stories",
+                params={"parent_id": sample_parent["id"]},
+            )
+
+            assert list_response.status_code == 200
+            stories = list_response.json()
+            assert stories["total"] >= 1
+
+            # Find the generated story
+            story_ids = [s["id"] for s in stories["items"]]
+            assert story["id"] in story_ids
+
+    @pytest.mark.asyncio
+    async def test_generated_story_can_have_audio_generated(
+        self,
+        client: AsyncClient,
+        sample_parent: dict,
+    ) -> None:
+        """Test that generated stories can have audio generated."""
+        from src.db.repository import VoiceProfileRepository
+        from src.models import VoiceProfileStatus
+        from src.models.voice import VoiceProfileCreate, VoiceProfileUpdate
+        from uuid import UUID
+
+        # Create ready voice profile
+        profile = await VoiceProfileRepository.create(
+            VoiceProfileCreate(parent_id=UUID(sample_parent["id"]), name="Test Voice")
+        )
+        await VoiceProfileRepository.update(
+            profile.id,
+            VoiceProfileUpdate(
+                status=VoiceProfileStatus.READY,
+                elevenlabs_voice_id="test_voice_id",
+            ),
+        )
+
+        content = "This is a story that will have audio generated."
+        mock_story = GeneratedStory(
+            title="Audio Test Story",
+            content=content,
+            word_count=len(content),
+        )
+
+        with patch(
+            "src.api.stories.generate_story_from_keywords",
+            new_callable=AsyncMock,
+            return_value=mock_story,
+        ):
+            # Generate story
+            gen_response = await client.post(
+                "/api/v1/stories/generate",
+                json={
+                    "parent_id": sample_parent["id"],
+                    "keywords": ["audio", "test"],
+                    "age_group": "4-6",
+                },
+            )
+            story = gen_response.json()
+
+            # Request audio generation
+            audio_response = await client.post(
+                f"/api/v1/stories/{story['id']}/audio",
+                json={"voice_profile_id": str(profile.id)},
+            )
+
+            # Should be accepted for processing
+            assert audio_response.status_code == 202

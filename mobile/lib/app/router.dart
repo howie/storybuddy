@@ -16,6 +16,7 @@ import '../features/voice_profile/presentation/pages/voice_profile_status_page.d
 import '../features/voice_profile/presentation/pages/voice_recording_page.dart';
 import '../features/voice_kits/presentation/pages/voice_selection_page.dart';
 import '../features/voice_kits/presentation/pages/voice_kit_store_page.dart';
+import '../features/voice_kits/presentation/pages/voice_configuration_page.dart';
 
 /// Route names for the app.
 abstract class AppRoutes {
@@ -33,6 +34,7 @@ abstract class AppRoutes {
   static const String settings = '/settings';
   static const String voiceSelection = '/voices';
   static const String voiceStore = '/voices/store';
+  static const String storyVoiceSettings = '/stories/:id/voices';
 }
 
 /// Provider to ensure a parent exists, creating one if needed (for development).
@@ -119,6 +121,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) {
                   final id = state.pathParameters['id']!;
                   return QASessionPage(storyId: id);
+                },
+              ),
+              // Voice Settings
+              GoRoute(
+                path: 'voices',
+                name: 'storyVoiceSettings',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return VoiceConfigurationPage(storyId: id);
                 },
               ),
             ],

@@ -82,3 +82,73 @@ final downloadKitControllerProvider = StateNotifierProvider<DownloadKitControlle
   final repository = ref.watch(voiceKitRepositoryProvider);
   return DownloadKitController(repository);
 });
+
+// -- Voice Preferences --
+final voicePreferencesProvider = FutureProvider.family<Map<String, dynamic>, String>((ref, userId) async {
+  final repository = ref.watch(voiceKitRepositoryProvider);
+  return repository.getPreferences(userId);
+});
+
+class VoicePreferencesController extends StateNotifier<AsyncValue<void>> {
+  final VoiceKitRepository _repository;
+  
+  VoicePreferencesController(this._repository) : super(const AsyncValue.data(null));
+
+  Future<void> updateDefaultVoice(String userId, String voiceId) async {
+    state = const AsyncValue.loading();
+    try {
+      await _repository.updatePreferences(userId, voiceId);
+      state = const AsyncValue.data(null);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+}
+
+final voicePreferencesControllerProvider = StateNotifierProvider<VoicePreferencesController, AsyncValue<void>>((ref) {
+  final repository = ref.watch(voiceKitRepositoryProvider);
+  return VoicePreferencesController(repository);
+});
+
+// -- Story Voice Mappings --
+
+// Tuple for family arguments? Or a custom class.
+class StoryVoiceMappingParams {
+  final String userId;
+  final String storyId;
+  
+  StoryVoiceMappingParams(this.userId, this.storyId);
+  
+  @override
+  bool operator ==(Object other) => 
+      other is StoryVoiceMappingParams && other.userId == userId && other.storyId == storyId;
+      
+  @override
+  int get hashCode => Object.hash(userId, storyId);
+}
+
+final storyVoiceMappingsProvider = FutureProvider.family<List<dynamic>, StoryVoiceMappingParams>((ref, params) async {
+  final repository = ref.watch(voiceKitRepositoryProvider);
+  return repository.getStoryVoiceMappings(params.userId, params.storyId);
+});
+
+class StoryVoiceMapController extends StateNotifier<AsyncValue<void>> {
+  final VoiceKitRepository _repository;
+
+  StoryVoiceMapController(this._repository) : super(const AsyncValue.data(null));
+
+  Future<void> updateMapping(String userId, String storyId, String role, String voiceId) async {
+    state = const AsyncValue.loading();
+    try {
+      await _repository.updateStoryVoiceMapping(userId, storyId, role, voiceId);
+      state = const AsyncValue.data(null);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+}
+
+final storyVoiceMapControllerProvider = StateNotifierProvider<StoryVoiceMapController, AsyncValue<void>>((ref) {
+  final repository = ref.watch(voiceKitRepositoryProvider);
+  return StoryVoiceMapController(repository);
+});

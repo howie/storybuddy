@@ -25,6 +25,10 @@ Commands will be added as the project develops. Expected tools based on .gitigno
 - **Linting:** `ruff check .` or `ruff format .`
 - **Type checking:** `mypy`
 
+## Coding Conventions
+
+- **Database Queries:** 不要直接寫 raw SQL，應使用 Query Builder（Python: SQLAlchemy, Flutter: Drift）
+
 ## License
 
 Apache License 2.0

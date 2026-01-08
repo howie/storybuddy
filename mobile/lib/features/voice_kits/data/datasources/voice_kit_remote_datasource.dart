@@ -13,18 +13,24 @@ class VoiceKitRemoteDataSourceImpl implements VoiceKitRemoteDataSource {
   VoiceKitRemoteDataSourceImpl(this._apiClient);
 
   @override
-  Future<List<VoiceCharacter>> getVoices() async {
-    final response = await _apiClient.get('/voices');
+  Future<List<VoiceKit>> getVoiceKits() async {
+    final response = await _apiClient.get('/kits');
     return (response.data as List)
-        .map((e) => VoiceCharacter.fromJson(e as Map<String, dynamic>))
+        .map((e) => VoiceKit.fromJson(e as Map<String, dynamic>))
         .toList();
   }
-  
+
   @override
-  Future<List<VoiceCharacter>> getVoiceKits() async {
-     // TODO: Implement for US2
-     return [];
+  Future<VoiceKit> downloadVoiceKit(String kitId) async {
+    final response = await _apiClient.post('/kits/$kitId/download');
+    return VoiceKit.fromJson(response.data as Map<String, dynamic>);
   }
+}
+
+abstract class VoiceKitRemoteDataSource {
+  Future<List<VoiceCharacter>> getVoices();
+  Future<List<VoiceKit>> getVoiceKits();
+  Future<VoiceKit> downloadVoiceKit(String kitId);
 }
 
 final voiceKitRemoteDataSourceProvider = Provider<VoiceKitRemoteDataSource>((ref) {

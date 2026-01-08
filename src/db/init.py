@@ -184,6 +184,7 @@ async def reset_database() -> None:
 
     WARNING: This will delete all data!
     """
+    settings.ensure_directories()
     db_path = str(settings.db_path)
 
     async with aiosqlite.connect(db_path) as db:
@@ -196,6 +197,9 @@ async def reset_database() -> None:
             "voice_audio",
             "voice_profile",
             "parent",
+            "voice_preferences",
+            "voice_characters",
+            "voice_kits",
         ]
 
         for table in tables:

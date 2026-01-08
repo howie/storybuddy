@@ -54,3 +54,31 @@ class VoicePreviewNotifier extends StateNotifier<String?> {
 final voicePreviewProvider = StateNotifierProvider<VoicePreviewNotifier, String?>((ref) {
   return VoicePreviewNotifier();
 });
+
+// -- Voice Kits Provider --
+final voiceKitsProvider = FutureProvider<List<VoiceKit>>((ref) async {
+  final repository = ref.watch(voiceKitRepositoryProvider);
+  return repository.getVoiceKits();
+});
+
+// -- Download Kit Controller --
+class DownloadKitController extends StateNotifier<AsyncValue<void>> {
+  final VoiceKitRepository _repository;
+  
+  DownloadKitController(this._repository) : super(const AsyncValue.data(null));
+
+  Future<void> downloadKit(String kitId) async {
+    state = const AsyncValue.loading();
+    try {
+      await _repository.downloadVoiceKit(kitId);
+      state = const AsyncValue.data(null);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+}
+
+final downloadKitControllerProvider = StateNotifierProvider<DownloadKitController, AsyncValue<void>>((ref) {
+  final repository = ref.watch(voiceKitRepositoryProvider);
+  return DownloadKitController(repository);
+});

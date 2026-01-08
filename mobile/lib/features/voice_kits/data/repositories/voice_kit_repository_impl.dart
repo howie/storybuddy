@@ -12,6 +12,16 @@ class VoiceKitRepositoryImpl implements VoiceKitRepository {
   Future<List<VoiceCharacter>> getVoices() async {
     return _remoteDataSource.getVoices();
   }
+
+  @override
+  Future<List<VoiceKit>> getVoiceKits() async {
+    return _remoteDataSource.getVoiceKits();
+  }
+
+  @override
+  Future<VoiceKit> downloadVoiceKit(String kitId) async {
+    return _remoteDataSource.downloadVoiceKit(kitId);
+  }
 }
 
 final voiceKitRepositoryProvider = Provider<VoiceKitRepository>((ref) {

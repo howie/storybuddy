@@ -14,6 +14,7 @@ import '../features/stories/presentation/pages/story_detail_page.dart';
 import '../features/stories/presentation/pages/story_list_page.dart';
 import '../features/voice_profile/presentation/pages/voice_profile_status_page.dart';
 import '../features/voice_profile/presentation/pages/voice_recording_page.dart';
+import '../features/voice_kits/presentation/pages/voice_selection_page.dart';
 
 /// Route names for the app.
 abstract class AppRoutes {
@@ -29,6 +30,7 @@ abstract class AppRoutes {
   static const String qaSession = '/stories/:id/qa';
   static const String pendingQuestions = '/pending-questions';
   static const String settings = '/settings';
+  static const String voiceSelection = '/voices';
 }
 
 /// Provider to ensure a parent exists, creating one if needed (for development).
@@ -158,6 +160,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.settings,
         name: 'settings',
         builder: (context, state) => const SettingsPage(),
+      ),
+      // Voice Selection
+      GoRoute(
+        path: AppRoutes.voiceSelection,
+        name: 'voiceSelection',
+        builder: (context, state) => const VoiceSelectionPage(),
       ),
     ],
     errorBuilder: (context, state) => _ErrorPage(error: state.error),

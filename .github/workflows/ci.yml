@@ -164,7 +164,7 @@ jobs:
     name: 🤖 Agent Auto-Fix (Python)
     runs-on: ubuntu-latest
     needs: [python-check]
-    if: failure() && needs.python-check.result == 'failure'
+    if: always() && needs.python-check.result == 'failure'
     permissions:
       contents: write
       issues: write
@@ -326,7 +326,7 @@ jobs:
     name: 🤖 Agent Auto-Fix (Flutter)
     runs-on: ubuntu-latest
     needs: [flutter-check]
-    if: failure() && needs.flutter-check.result == 'failure'
+    if: always() && needs.flutter-check.result == 'failure'
     permissions:
       contents: write
       issues: write

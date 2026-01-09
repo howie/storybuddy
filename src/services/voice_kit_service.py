@@ -12,6 +12,7 @@ from src.models.voice import (
     VoiceStyle,
 )
 from src.services.tts.azure_tts import AzureTTSProvider
+from src.services.tts.google_tts import GoogleTTSProvider
 
 
 class VoiceKitService:
@@ -21,6 +22,7 @@ class VoiceKitService:
         self.logger = logging.getLogger("storybuddy.services.voice")
         # Initialize providers
         self.azure_provider = AzureTTSProvider()
+        self.google_provider = GoogleTTSProvider()
 
         # Load built-in kits
         # MVP: Hardcoded built-in kits (In-memory storage for now)
@@ -114,6 +116,48 @@ class VoiceKitService:
                         preview_text="禮物都準備好囉！",
                     ),
                 ],
+            ),
+            # Kit 3: Google Basic (Google TTS)
+            VoiceKit(
+                id="google-basic-v1",
+                name="Google 基礎語音",
+                description="Google Cloud 提供的標準與 WaveNet 中文語音",
+                provider=TTSProviderEnum.GOOGLE,
+                version="1.0.0",
+                is_builtin=False,
+                is_downloaded=True,  # Assume always available if cloud is connected
+                download_size=0,
+                voices=[
+                    VoiceCharacter(
+                        id="google-female-a",
+                        kit_id="google-basic-v1",
+                        name="Google 女聲 A",
+                        provider_voice_id="cmn-TW-Wavenet-A",
+                        gender=Gender.FEMALE,
+                        age_group=AgeGroup.ADULT,
+                        style=VoiceStyle.NARRATOR,
+                        preview_text="你好，我是 Google 語音助手。",
+                    ),
+                    VoiceCharacter(
+                        id="google-male-b",
+                        kit_id="google-basic-v1",
+                        name="Google 男聲 B",
+                        provider_voice_id="cmn-TW-Wavenet-B",
+                        gender=Gender.MALE,
+                        age_group=AgeGroup.ADULT,
+                        style=VoiceStyle.NARRATOR,
+                        preview_text="很高興為您服務。",
+                    ),
+                    VoiceCharacter(
+                        id="google-male-c",
+                        kit_id="google-basic-v1",
+                        name="Google 男聲 C",
+                        provider_voice_id="cmn-TW-Wavenet-C",
+                        gender=Gender.MALE,
+                        age_group=AgeGroup.ADULT,
+                        style=VoiceStyle.NARRATOR,
+                    ),
+                ],
             )
         ]
 
@@ -171,12 +215,20 @@ class VoiceKitService:
 
         preview_text = text or voice.preview_text or "你好，這是聲音預覽。"
 
-        # Route to provider (currently only Azure)
-        # We could check voice.kit_id or look up kit provider, 
-        # but for MVP we assume Azure based on TTSProviderEnum in kit.
-        
-        # In a real dynamic system, we'd map kit provider to service instance.
-        return await self.azure_provider.synthesize(
+        # Find kit to determine provider
+        kit = next((k for k in self._kits if k.id == voice.kit_id), None)
+        if not kit:
+             raise ValueError(f"Kit not found for voice: {voice_id}")
+
+        if kit.provider == TTSProviderEnum.GOOGLE:
+            provider = self.google_provider
+        elif kit.provider == TTSProviderEnum.AZURE:
+            provider = self.azure_provider
+        else:
+             # Default or handle ElevenLabs later
+             provider = self.azure_provider
+
+        return await provider.synthesize(
             text=preview_text,
             voice_id=voice.provider_voice_id,
             options=voice.ssml_options
@@ -212,11 +264,22 @@ class VoiceKitService:
         # Usually yes.
         # kit = next(k for k in self._kits if k.id == voice.kit_id)
         # if not kit.is_downloaded: raise ValueError("Kit not downloaded")
+        
+        kit = next((k for k in self._kits if k.id == voice.kit_id), None)
+        if not kit:
+             raise ValueError(f"Kit not found for voice: {voice_id}")
+
+        if kit.provider == TTSProviderEnum.GOOGLE:
+            provider = self.google_provider
+        elif kit.provider == TTSProviderEnum.AZURE:
+            provider = self.azure_provider
+        else:
+             provider = self.azure_provider
             
         # TODO: Get story content from DB
         story_text = "這是一個測試故事內容。很久很久以前..."
         
-        return await self.azure_provider.synthesize(
+        return await provider.synthesize(
             text=story_text,
             voice_id=voice.provider_voice_id,
             options=voice.ssml_options

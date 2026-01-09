@@ -41,6 +41,11 @@ class Settings(BaseSettings):
         default="eastasia", description="Azure Speech region"
     )
 
+    # Google Cloud TTS
+    google_application_credentials: str | None = Field(
+         default=None, description="Path to Google Cloud Service Account JSON"
+    )
+
     # Anthropic Claude (LLM)
     anthropic_api_key: str = Field(default="", description="Anthropic API key")
 

@@ -13,6 +13,7 @@ from src.models.voice import (
 )
 from src.services.tts.azure_tts import AzureTTSProvider
 from src.services.tts.google_tts import GoogleTTSProvider
+from src.services.tts.elevenlabs_tts import ElevenLabsProvider
 
 
 class VoiceKitService:
@@ -23,6 +24,7 @@ class VoiceKitService:
         # Initialize providers
         self.azure_provider = AzureTTSProvider()
         self.google_provider = GoogleTTSProvider()
+        self.elevenlabs_provider = ElevenLabsProvider()
 
         # Load built-in kits
         # MVP: Hardcoded built-in kits (In-memory storage for now)
@@ -158,6 +160,47 @@ class VoiceKitService:
                         style=VoiceStyle.NARRATOR,
                     ),
                 ],
+            ),
+            # Kit 4: ElevenLabs Premium (Premium Voices)
+            VoiceKit(
+                id="elevenlabs-premium-v1",
+                name="ElevenLabs 情感聲音",
+                description="高品質 AI 情感語音 (需付費)",
+                provider=TTSProviderEnum.ELEVENLABS,
+                version="1.0.0",
+                is_builtin=False,
+                is_downloaded=True,  # Cloud
+                download_size=0,
+                voices=[
+                    VoiceCharacter(
+                        id="eleven-rachel",
+                        kit_id="elevenlabs-premium-v1",
+                        name="Rachel (美式女聲)",
+                        provider_voice_id="21m00Tcm4TlvDq8ikWAM",
+                        gender=Gender.FEMALE,
+                        age_group=AgeGroup.ADULT,
+                        style=VoiceStyle.NARRATOR,
+                        preview_text="Hey there, I love telling stories.",
+                    ),
+                    VoiceCharacter(
+                        id="eleven-drew",
+                        kit_id="elevenlabs-premium-v1",
+                        name="Drew (新聞主播)",
+                        provider_voice_id="29vD33N1CtxCmqQRPOHJ", 
+                        gender=Gender.MALE,
+                        age_group=AgeGroup.ADULT,
+                        style=VoiceStyle.NARRATOR,
+                    ),
+                    VoiceCharacter(
+                        id="eleven-clyde",
+                        kit_id="elevenlabs-premium-v1",
+                        name="Clyde (深沉男聲)",
+                        provider_voice_id="2EiwWnXFnvU5JabPnv8n",
+                        gender=Gender.MALE,
+                        age_group=AgeGroup.SENIOR,
+                        style=VoiceStyle.CHARACTER,
+                    ),
+                ],
             )
         ]
 
@@ -222,10 +265,12 @@ class VoiceKitService:
 
         if kit.provider == TTSProviderEnum.GOOGLE:
             provider = self.google_provider
+        elif kit.provider == TTSProviderEnum.ELEVENLABS:
+             provider = self.elevenlabs_provider
         elif kit.provider == TTSProviderEnum.AZURE:
             provider = self.azure_provider
         else:
-             # Default or handle ElevenLabs later
+             # Default
              provider = self.azure_provider
 
         return await provider.synthesize(
@@ -271,6 +316,8 @@ class VoiceKitService:
 
         if kit.provider == TTSProviderEnum.GOOGLE:
             provider = self.google_provider
+        elif kit.provider == TTSProviderEnum.ELEVENLABS:
+             provider = self.elevenlabs_provider
         elif kit.provider == TTSProviderEnum.AZURE:
             provider = self.azure_provider
         else:

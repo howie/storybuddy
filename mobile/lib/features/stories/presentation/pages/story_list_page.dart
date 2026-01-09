@@ -6,6 +6,7 @@ import '../../../../core/network/connectivity_service.dart';
 import '../../../../shared/widgets/error_widget.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../providers/story_provider.dart';
+import '../widgets/app_drawer.dart';
 import '../widgets/story_card.dart';
 import '../widgets/story_empty_state.dart';
 
@@ -24,6 +25,13 @@ class StoryListPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('我的故事'),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+            tooltip: '選單',
+          ),
+        ),
         actions: [
           if (!isOnline)
             const Padding(
@@ -32,6 +40,7 @@ class StoryListPage extends ConsumerWidget {
             ),
         ],
       ),
+      drawer: const AppDrawer(),
       body: RefreshIndicator(
         onRefresh: () async {
           await ref.read(storyListNotifierProvider.notifier).refresh();

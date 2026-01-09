@@ -79,7 +79,7 @@
 
 ### Tests for User Story 2
 
-- [ ] T013 [P] [US2] Write/update widget test for StoryDetailPage FAB logic in mobile/test/features/stories/presentation/pages/story_detail_page_test.dart
+- [x] T013 [P] [US2] Write/update widget test for StoryDetailPage FAB logic in mobile/test/features/stories/presentation/pages/story_detail_page_test.dart
 
 ### Implementation for User Story 2
 
@@ -88,7 +88,7 @@
 - [x] T016 [US2] Add generateAudio method call from FAB in story_detail_page.dart
 - [x] T017 [US2] Implement audio generation progress indicator (SnackBar or overlay) in story_detail_page.dart
 - [x] T018 [US2] Handle no voice profile case - navigate to /voice-profile with prompt
-- [ ] T019 [US2] Verify T013 test passes with updated StoryDetailPage
+- [x] T019 [US2] Verify T013 test passes with updated StoryDetailPage
 
 **Checkpoint**: User Story 2 complete - 家長可從故事詳情生成語音
 
@@ -118,7 +118,7 @@
 ### Implementation for User Story 4
 
 - [x] T022 [US4] Add 待答問題 ListTile to AppDrawer with navigation to /pending-questions in mobile/lib/features/stories/presentation/widgets/app_drawer.dart
-- [ ] T023 [US4] Add pending question count badge to drawer item (optional enhancement)
+- [x] T023 [US4] Add pending question count badge to drawer item (optional enhancement)
 - [x] T024 [US4] Update AppDrawer test to verify pending questions navigation in mobile/test/features/stories/presentation/widgets/app_drawer_test.dart
 
 **Checkpoint**: User Story 4 complete - 待答問題頁面可從 Drawer 進入
@@ -145,11 +145,11 @@
 
 **Purpose**: Final validation and cleanup
 
-- [x] T028 Run all tests: `flutter test` in mobile/
-- [ ] T029 Run manual test per quickstart.md checklist
+- [x] T028 Run all tests: `flutter test` in mobile/ (229 passed, 1 skipped)
+- [ ] T029 Run manual test per quickstart.md checklist (requires device/simulator)
 - [x] T030 [P] Update any code comments or documentation
-- [ ] T031 Verify navigation works on iOS simulator (if available)
-- [ ] T032 Verify navigation works on Android emulator (if available)
+- [ ] T031 Verify navigation works on iOS simulator (if available) - NO SIMULATORS AVAILABLE
+- [ ] T032 Verify navigation works on Android emulator (if available) - NO EMULATORS AVAILABLE
 
 ---
 

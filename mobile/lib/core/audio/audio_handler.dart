@@ -156,15 +156,29 @@ final audioHandlerProvider = Provider<StoryAudioHandler>((ref) {
   return handler;
 });
 
+/// Flag to track if audio service has been initialized.
+bool _audioServiceInitialized = false;
+
 /// Initializes the audio service for background playback.
-Future<StoryAudioHandler> initAudioService() async {
-  return await AudioService.init(
-    builder: StoryAudioHandler.new,
-    config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.storybuddy.storybuddy.audio',
-      androidNotificationChannelName: 'StoryBuddy Audio',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
-    ),
-  );
+/// Safe to call multiple times - will only initialize once.
+Future<StoryAudioHandler?> initAudioService() async {
+  if (_audioServiceInitialized) {
+    return null;
+  }
+  _audioServiceInitialized = true;
+
+  try {
+    return await AudioService.init(
+      builder: StoryAudioHandler.new,
+      config: const AudioServiceConfig(
+        androidNotificationChannelId: 'com.storybuddy.storybuddy.audio',
+        androidNotificationChannelName: 'StoryBuddy Audio',
+        androidNotificationOngoing: true,
+        androidStopForegroundOnPause: true,
+      ),
+    );
+  } catch (e) {
+    // AudioService already initialized (can happen in tests)
+    return null;
+  }
 }

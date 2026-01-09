@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:storybuddy/core/database/enums.dart';
+import 'package:storybuddy/features/pending_questions/presentation/providers/pending_question_provider.dart';
 import 'package:storybuddy/features/stories/presentation/widgets/app_drawer.dart';
 import 'package:storybuddy/features/voice_profile/domain/entities/voice_profile.dart';
 import 'package:storybuddy/features/voice_profile/presentation/providers/voice_profile_provider.dart';
@@ -17,6 +18,7 @@ void main() {
 
     Widget buildTestWidget({
       List<VoiceProfile>? voiceProfiles,
+      int pendingQuestionCount = 0,
       bool isLoading = false,
       Object? error,
     }) {
@@ -67,6 +69,9 @@ void main() {
               isLoading: isLoading,
               error: error,
             ),
+          ),
+          pendingQuestionCountProvider.overrideWith(
+            (ref) async => pendingQuestionCount,
           ),
         ],
         child: MaterialApp.router(
@@ -163,7 +168,8 @@ void main() {
       expect(find.text('已就緒'), findsOneWidget);
     });
 
-    testWidgets('displays voice status indicator with null status when no profiles',
+    testWidgets(
+        'displays voice status indicator with null status when no profiles',
         (tester) async {
       await tester.pumpWidget(buildTestWidget(voiceProfiles: []));
       await tester.tap(find.text('Open Drawer'));
@@ -189,6 +195,51 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('處理中'), findsOneWidget);
+    });
+
+    group('Pending Question Badge', () {
+      testWidgets('shows badge with count when there are pending questions',
+          (tester) async {
+        await tester.pumpWidget(buildTestWidget(pendingQuestionCount: 5));
+        await tester.tap(find.text('Open Drawer'));
+        await tester.pumpAndSettle();
+
+        // Badge should show the count
+        expect(find.byType(Badge), findsOneWidget);
+        expect(find.text('5'), findsOneWidget);
+        // Subtitle should reflect the count
+        expect(find.text('有 5 個問題等待回答'), findsOneWidget);
+      });
+
+      testWidgets('hides badge when there are no pending questions',
+          (tester) async {
+        await tester.pumpWidget(buildTestWidget(pendingQuestionCount: 0));
+        await tester.tap(find.text('Open Drawer'));
+        await tester.pumpAndSettle();
+
+        // Badge should exist but label should not be visible
+        expect(find.byType(Badge), findsOneWidget);
+        // Default subtitle should show
+        expect(find.text('查看小朋友的問題'), findsOneWidget);
+      });
+
+      testWidgets('shows 99+ when count exceeds 99', (tester) async {
+        await tester.pumpWidget(buildTestWidget(pendingQuestionCount: 150));
+        await tester.tap(find.text('Open Drawer'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('99+'), findsOneWidget);
+        expect(find.text('有 150 個問題等待回答'), findsOneWidget);
+      });
+
+      testWidgets('shows count of 1 correctly', (tester) async {
+        await tester.pumpWidget(buildTestWidget(pendingQuestionCount: 1));
+        await tester.tap(find.text('Open Drawer'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('1'), findsOneWidget);
+        expect(find.text('有 1 個問題等待回答'), findsOneWidget);
+      });
     });
   });
 }

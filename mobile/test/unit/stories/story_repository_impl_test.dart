@@ -208,7 +208,7 @@ void main() {
 
         // Act & Assert
         expect(
-          () => repository.generateStory(keywords: ['小熊', '森林']),
+          () => repository.generateStory(parentId: 'parent-1', keywords: ['小熊', '森林']),
           throwsException,
         );
       });
@@ -227,13 +227,13 @@ void main() {
         );
         when(() => mockConnectivityService.isConnected)
             .thenAnswer((_) async => true);
-        when(() => mockRemoteDataSource.generateStory(keywords: any(named: 'keywords')))
+        when(() => mockRemoteDataSource.generateStory(parentId: any(named: 'parentId'), keywords: any(named: 'keywords')))
             .thenAnswer((_) async => remoteModel);
         when(() => mockLocalDataSource.saveStory(any()))
             .thenAnswer((_) async {});
 
         // Act
-        final result = await repository.generateStory(keywords: ['小熊', '森林']);
+        final result = await repository.generateStory(parentId: 'parent-1', keywords: ['小熊', '森林']);
 
         // Assert
         expect(result.id, 'generated-id');

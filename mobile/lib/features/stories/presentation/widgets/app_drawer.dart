@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/database/enums.dart';
 import '../../../../shared/widgets/voice_status_indicator.dart';
+import '../../../pending_questions/presentation/providers/pending_question_provider.dart';
 import '../../../voice_profile/domain/entities/voice_profile.dart';
 import '../../../voice_profile/presentation/providers/voice_profile_provider.dart';
 
@@ -21,9 +22,11 @@ class AppDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final voiceProfilesAsync = ref.watch(voiceProfileListNotifierProvider);
+    final pendingCountAsync = ref.watch(pendingQuestionCountProvider);
 
     // Get the best voice profile status to display
     final voiceStatus = _getVoiceStatus(voiceProfilesAsync);
+    final pendingCount = pendingCountAsync.valueOrNull ?? 0;
 
     return Drawer(
       child: ListView(
@@ -31,7 +34,7 @@ class AppDrawer extends ConsumerWidget {
         children: [
           _buildDrawerHeader(context, voiceStatus),
           _buildVoiceRecordingTile(context, voiceStatus),
-          _buildPendingQuestionsTile(context),
+          _buildPendingQuestionsTile(context, pendingCount),
           const Divider(),
           _buildSettingsTile(context),
         ],
@@ -105,11 +108,17 @@ class AppDrawer extends ConsumerWidget {
     );
   }
 
-  Widget _buildPendingQuestionsTile(BuildContext context) {
+  Widget _buildPendingQuestionsTile(BuildContext context, int pendingCount) {
     return ListTile(
-      leading: const Icon(Icons.question_answer),
+      leading: Badge(
+        isLabelVisible: pendingCount > 0,
+        label: Text(pendingCount > 99 ? '99+' : pendingCount.toString()),
+        child: const Icon(Icons.question_answer),
+      ),
       title: const Text('待答問題'),
-      subtitle: const Text('查看小朋友的問題'),
+      subtitle: Text(
+        pendingCount > 0 ? '有 $pendingCount 個問題等待回答' : '查看小朋友的問題',
+      ),
       onTap: () => _navigateTo(context, '/pending-questions'),
     );
   }

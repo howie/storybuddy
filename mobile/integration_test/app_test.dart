@@ -11,7 +11,8 @@ void main() {
     testWidgets('app starts and shows story list page', (tester) async {
       // Launch the app
       app.main();
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+      // Wait longer for initial app startup (includes network timeout handling)
+      await tester.pumpAndSettle(const Duration(seconds: 10));
 
       // Verify app loads with story list page
       expect(find.text('我的故事'), findsOneWidget);

@@ -17,6 +17,7 @@ abstract class StoryRemoteDataSource {
 
   /// Creates a new story using AI generation.
   Future<StoryModel> generateStory({
+    required String parentId,
     required List<String> keywords,
   });
 
@@ -76,9 +77,10 @@ class StoryRemoteDataSourceImpl implements StoryRemoteDataSource {
 
   @override
   Future<StoryModel> generateStory({
+    required String parentId,
     required List<String> keywords,
   }) async {
-    final request = GenerateStoryRequest(keywords: keywords);
+    final request = GenerateStoryRequest(parentId: parentId, keywords: keywords);
     final response = await apiClient.post<Map<String, dynamic>>(
       '/stories/generate',
       data: request.toJson(),

@@ -17,7 +17,10 @@ class GenerateStoryUseCase {
   static const int maxKeywordLength = 20;
 
   /// Generates a story from the given keywords.
-  Future<Story> call({required List<String> keywords}) async {
+  Future<Story> call({
+    required String parentId,
+    required List<String> keywords,
+  }) async {
     // Validate keywords
     final trimmedKeywords = keywords
         .map((k) => k.trim())
@@ -52,7 +55,10 @@ class GenerateStoryUseCase {
       }
     }
 
-    return repository.generateStory(keywords: trimmedKeywords);
+    return repository.generateStory(
+      parentId: parentId,
+      keywords: trimmedKeywords,
+    );
   }
 
   /// Validates keywords without generating.

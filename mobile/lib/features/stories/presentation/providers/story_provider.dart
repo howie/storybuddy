@@ -101,10 +101,14 @@ class StoryListNotifier extends _$StoryListNotifier {
 
   /// Generates a story using AI.
   Future<Story> generateStory({
+    required String parentId,
     required List<String> keywords,
   }) async {
     final repository = ref.read(storyRepositoryProvider);
-    final story = await repository.generateStory(keywords: keywords);
+    final story = await repository.generateStory(
+      parentId: parentId,
+      keywords: keywords,
+    );
 
     // Refresh list
     ref.invalidateSelf();

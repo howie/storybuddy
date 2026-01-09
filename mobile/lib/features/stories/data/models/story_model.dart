@@ -110,8 +110,12 @@ class ImportStoryRequest {
 @JsonSerializable(createFactory: false)
 class GenerateStoryRequest {
   GenerateStoryRequest({
+    required this.parentId,
     required this.keywords,
   });
+
+  @JsonKey(name: 'parent_id')
+  final String parentId;
 
   final List<String> keywords;
 

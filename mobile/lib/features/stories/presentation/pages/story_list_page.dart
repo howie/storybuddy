@@ -18,6 +18,9 @@ class StoryListPage extends ConsumerWidget {
     final storiesAsync = ref.watch(storyListNotifierProvider);
     final isOnline = ref.watch(connectivityStatusProvider).valueOrNull ?? true;
 
+    // Determine if story list is empty (for conditional FAB display)
+    final hasStories = storiesAsync.valueOrNull?.isNotEmpty ?? false;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('我的故事'),
@@ -67,11 +70,14 @@ class StoryListPage extends ConsumerWidget {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddOptions(context),
-        icon: const Icon(Icons.add),
-        label: const Text('新增故事'),
-      ),
+      // Hide FAB when empty state is shown (empty state has its own action buttons)
+      floatingActionButton: hasStories
+          ? FloatingActionButton.extended(
+              onPressed: () => _showAddOptions(context),
+              icon: const Icon(Icons.add),
+              label: const Text('新增故事'),
+            )
+          : null,
     );
   }
 

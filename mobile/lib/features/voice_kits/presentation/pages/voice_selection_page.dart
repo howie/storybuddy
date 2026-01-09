@@ -24,9 +24,20 @@ class VoiceSelectionPage extends ConsumerWidget {
             return const Center(child: Text('沒有可用的聲音'));
           }
           return ListView.builder(
-            itemCount: voices.length,
+            itemCount: voices.length + 1, // +1 for footer
             padding: const EdgeInsets.all(16),
             itemBuilder: (context, index) {
+              if (index == voices.length) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  child: Center(
+                    child: Text(
+                      'Powered by Microsoft Azure Cognitive Services',
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ),
+                );
+              }
               final voice = voices[index];
               final isSelected = voice.id == selectedVoiceId;
               final isPreviewing = voice.id == previewingVoiceId;

@@ -1,0 +1,125 @@
+name: Auto Fix (Claude)
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-fix:
+    name: Auto Fix Lint & Format
+    runs-on: ubuntu-latest
+    # Only run on PRs from the same repo (not forks) for security
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get branch name
+        id: branch
+        run: |
+          echo "name=$(git rev-parse --abbrev-ref HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout PR branch
+        run: |
+          git fetch origin "${{ github.event.pull_request.head.ref }}"
+          git checkout "${{ github.event.pull_request.head.ref }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Python tools
+        run: pip install ruff
+
+      - name: Install Flutter dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Run Flutter code generation
+        working-directory: mobile
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # Auto-fix Python
+      - name: Fix Python lint issues
+        run: ruff check --fix . || true
+
+      - name: Fix Python formatting
+        run: ruff format .
+
+      # Auto-fix Flutter/Dart
+      - name: Fix Dart formatting
+        working-directory: mobile
+        run: dart format .
+
+      - name: Fix Dart lint issues
+        working-directory: mobile
+        run: dart fix --apply || true
+
+      # Commit and push fixes
+      - name: Check for changes
+        id: changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push fixes
+        if: steps.changes.outputs.has_changes == 'true'
+        env:
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "style: auto-fix lint and format issues
+
+          Co-Authored-By: Claude <noreply@anthropic.com>"
+          git push origin HEAD:"$PR_BRANCH"
+
+  claude-code-review:
+    name: Claude Code Review
+    runs-on: ubuntu-latest
+    needs: auto-fix
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Get changed files
+        id: changed
+        run: |
+          FILES=$(git diff --name-only origin/main...HEAD | head -20 | tr '\n' ' ')
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+
+      - name: Run Claude Code Review
+        if: steps.changed.outputs.files != ''
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CHANGED_FILES: ${{ steps.changed.outputs.files }}
+        run: |
+          echo "Reviewing files: $CHANGED_FILES"
+          claude -p "Review these changed files for potential issues: $CHANGED_FILES. Focus on bugs, security issues, and code quality. Be concise." --allowedTools "Read,Grep,Glob" || echo "Claude review skipped (API key may not be configured)"

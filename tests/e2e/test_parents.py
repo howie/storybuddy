@@ -38,14 +38,9 @@ class TestCreateParent:
     # PA-002: Create parent with name only
     # =========================================================================
 
-    async def test_create_parent_with_name_only(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_create_parent_with_name_only(self, client: AsyncClient) -> None:
         """PA-002: Create parent with only name (email is optional)."""
-        response = await client.post(
-            "/api/v1/parents",
-            json={"name": "Parent Without Email"}
-        )
+        response = await client.post("/api/v1/parents", json={"name": "Parent Without Email"})
 
         assert response.status_code == 201
         data = response.json()
@@ -61,10 +56,7 @@ class TestCreateParent:
         self, client: AsyncClient, long_string_100: str
     ) -> None:
         """PA-003: Create parent with name > 100 characters fails."""
-        response = await client.post(
-            "/api/v1/parents",
-            json={"name": long_string_100}
-        )
+        response = await client.post("/api/v1/parents", json={"name": long_string_100})
 
         assert response.status_code == 422
 
@@ -73,13 +65,10 @@ class TestCreateParent:
     # =========================================================================
 
     @pytest.mark.skip(reason="API does not validate email format - feature not implemented")
-    async def test_create_parent_invalid_email(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_create_parent_invalid_email(self, client: AsyncClient) -> None:
         """PA-004: Create parent with invalid email format fails."""
         response = await client.post(
-            "/api/v1/parents",
-            json={"name": "Test Parent", "email": "invalid-email-format"}
+            "/api/v1/parents", json={"name": "Test Parent", "email": "invalid-email-format"}
         )
 
         assert response.status_code == 422
@@ -89,23 +78,19 @@ class TestCreateParent:
     # =========================================================================
 
     @pytest.mark.skip(reason="API throws IntegrityError - duplicate email handling not implemented")
-    async def test_create_parent_duplicate_email(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_create_parent_duplicate_email(self, client: AsyncClient) -> None:
         """PA-005: Create parent with duplicate email fails."""
         email = f"duplicate_{uuid4().hex[:8]}@example.com"
 
         # Create first parent
         response1 = await client.post(
-            "/api/v1/parents",
-            json={"name": "First Parent", "email": email}
+            "/api/v1/parents", json={"name": "First Parent", "email": email}
         )
         assert response1.status_code == 201
 
         # Try to create second parent with same email
         response2 = await client.post(
-            "/api/v1/parents",
-            json={"name": "Second Parent", "email": email}
+            "/api/v1/parents", json={"name": "Second Parent", "email": email}
         )
 
         # Should fail with 400 or 409
@@ -139,15 +124,13 @@ class TestListParents:
     # PA-007: Custom limit and offset
     # =========================================================================
 
-    async def test_list_parents_custom_pagination(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_list_parents_custom_pagination(self, client: AsyncClient) -> None:
         """PA-007: List parents with custom limit and offset."""
         # Create multiple parents
         for i in range(3):
             await client.post(
                 "/api/v1/parents",
-                json={"name": f"Parent {i}", "email": f"parent{i}_{uuid4().hex[:4]}@example.com"}
+                json={"name": f"Parent {i}", "email": f"parent{i}_{uuid4().hex[:4]}@example.com"},
             )
 
         response = await client.get("/api/v1/parents", params={"limit": 2, "offset": 0})
@@ -165,9 +148,7 @@ class TestListParents:
     # PA-008: Limit exceeds maximum
     # =========================================================================
 
-    async def test_list_parents_limit_exceeds_max(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_list_parents_limit_exceeds_max(self, client: AsyncClient) -> None:
         """PA-008: List parents with limit > 100 is limited or errors."""
         response = await client.get("/api/v1/parents", params={"limit": 200})
 
@@ -205,9 +186,7 @@ class TestGetParent:
     # PA-010: Get non-existent parent
     # =========================================================================
 
-    async def test_get_parent_not_found(
-        self, client: AsyncClient, random_uuid: str
-    ) -> None:
+    async def test_get_parent_not_found(self, client: AsyncClient, random_uuid: str) -> None:
         """PA-010: Get non-existent parent returns 404."""
         response = await client.get(f"/api/v1/parents/{random_uuid}")
 
@@ -217,9 +196,7 @@ class TestGetParent:
     # PA-011: Invalid UUID format
     # =========================================================================
 
-    async def test_get_parent_invalid_uuid(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_get_parent_invalid_uuid(self, client: AsyncClient) -> None:
         """PA-011: Get parent with invalid UUID format returns 422."""
         response = await client.get("/api/v1/parents/invalid-uuid-format")
 
@@ -241,10 +218,7 @@ class TestUpdateParent:
         parent_id = created_parent["id"]
         new_name = "Updated Parent Name"
 
-        response = await client.patch(
-            f"/api/v1/parents/{parent_id}",
-            json={"name": new_name}
-        )
+        response = await client.patch(f"/api/v1/parents/{parent_id}", json={"name": new_name})
 
         assert response.status_code == 200
         data = response.json()
@@ -263,10 +237,7 @@ class TestUpdateParent:
         parent_id = created_parent["id"]
         new_email = f"updated_{uuid4().hex[:8]}@example.com"
 
-        response = await client.patch(
-            f"/api/v1/parents/{parent_id}",
-            json={"email": new_email}
-        )
+        response = await client.patch(f"/api/v1/parents/{parent_id}", json={"email": new_email})
 
         assert response.status_code == 200
         data = response.json()
@@ -277,14 +248,9 @@ class TestUpdateParent:
     # PA-014: Update non-existent parent
     # =========================================================================
 
-    async def test_update_parent_not_found(
-        self, client: AsyncClient, random_uuid: str
-    ) -> None:
+    async def test_update_parent_not_found(self, client: AsyncClient, random_uuid: str) -> None:
         """PA-014: Update non-existent parent returns 404."""
-        response = await client.patch(
-            f"/api/v1/parents/{random_uuid}",
-            json={"name": "New Name"}
-        )
+        response = await client.patch(f"/api/v1/parents/{random_uuid}", json={"name": "New Name"})
 
         assert response.status_code == 404
 
@@ -313,14 +279,12 @@ class TestDeleteParent:
         get_response = await client.get(f"/api/v1/parents/{parent_id}")
         assert get_response.status_code == 404
 
-    async def test_delete_parent_with_stories(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_delete_parent_with_stories(self, client: AsyncClient) -> None:
         """PA-015: Delete parent also deletes associated stories."""
         # Create parent
         parent_response = await client.post(
             "/api/v1/parents",
-            json={"name": "Parent to Delete", "email": f"delete_{uuid4().hex[:8]}@example.com"}
+            json={"name": "Parent to Delete", "email": f"delete_{uuid4().hex[:8]}@example.com"},
         )
         parent_id = parent_response.json()["id"]
 
@@ -332,7 +296,7 @@ class TestDeleteParent:
                 "title": "Story to be deleted",
                 "content": "This story should be deleted with parent",
                 "source": "imported",
-            }
+            },
         )
         story_id = story_response.json()["id"]
 

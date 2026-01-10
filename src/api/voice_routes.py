@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from fastapi import APIRouter, HTTPException, Query, Response
 
 from src.models.voice import VoiceCharacter
@@ -9,8 +7,8 @@ router = APIRouter(prefix="/voices", tags=["System Voices"])
 service = VoiceKitService()
 
 
-@router.get("", response_model=List[VoiceCharacter])
-async def list_voices() -> List[VoiceCharacter]:
+@router.get("", response_model=list[VoiceCharacter])
+async def list_voices() -> list[VoiceCharacter]:
     """List all available system voices."""
     return await service.list_voices()
 
@@ -27,7 +25,7 @@ async def get_voice(voice_id: str) -> VoiceCharacter:
 @router.get("/{voice_id}/preview")
 async def get_voice_preview(
     voice_id: str,
-    text: Optional[str] = Query(
+    text: str | None = Query(
         None, description="Text to preview (defaults to voice's preview text)"
     ),
 ) -> Response:

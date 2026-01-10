@@ -14,12 +14,9 @@ class StoryModel {
     required this.title,
     required this.content,
     required this.source,
-    this.keywords,
-    required this.wordCount,
+    required this.wordCount, required this.createdAt, required this.updatedAt, this.keywords,
     this.estimatedDurationMinutes,
     this.audioUrl,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory StoryModel.fromJson(Map<String, dynamic> json) =>

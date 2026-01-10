@@ -9,8 +9,7 @@ import '../../core/network/connectivity_service.dart';
 /// notifications when the device goes online or offline.
 class ConnectivityListener extends ConsumerStatefulWidget {
   const ConnectivityListener({
-    super.key,
-    required this.child,
+    required this.child, super.key,
   });
 
   /// The child widget to render.
@@ -66,7 +65,6 @@ class _ConnectivityListenerState extends ConsumerState<ConnectivityListener> {
           ],
         ),
         backgroundColor: Theme.of(context).colorScheme.error,
-        duration: const Duration(seconds: 4),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -78,8 +76,8 @@ class _ConnectivityListenerState extends ConsumerState<ConnectivityListener> {
 
     messenger.clearSnackBars();
     messenger.showSnackBar(
-      SnackBar(
-        content: const Row(
+      const SnackBar(
+        content: Row(
           children: [
             Icon(Icons.cloud_done, color: Colors.white, size: 18),
             SizedBox(width: 8),
@@ -87,7 +85,7 @@ class _ConnectivityListenerState extends ConsumerState<ConnectivityListener> {
           ],
         ),
         backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
+        duration: Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
       ),
     );

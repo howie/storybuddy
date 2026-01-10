@@ -1,12 +1,12 @@
-from typing import List, Optional
-
 from src.models.voice import (
     AgeGroup,
     Gender,
-    TTSProvider as TTSProviderEnum,
     VoiceCharacter,
     VoiceKit,
     VoiceStyle,
+)
+from src.models.voice import (
+    TTSProvider as TTSProviderEnum,
 )
 from src.services.tts.azure_tts import AzureTTSProvider
 
@@ -62,7 +62,7 @@ class VoiceKitService:
                         style=VoiceStyle.CHARACTER,
                         preview_text="嘿！我是小強，這裡有好多好玩的東西！",
                     ),
-                     VoiceCharacter(
+                    VoiceCharacter(
                         id="narrator-male",
                         kit_id="builtin-v1",
                         name="故事哥哥",
@@ -76,7 +76,7 @@ class VoiceKitService:
             )
         ]
 
-    async def list_voices(self) -> List[VoiceCharacter]:
+    async def list_voices(self) -> list[VoiceCharacter]:
         """List all available voices from all kits."""
         all_voices = []
         for kit in self._kits:
@@ -84,7 +84,7 @@ class VoiceKitService:
             all_voices.extend(kit.voices)
         return all_voices
 
-    async def get_voice(self, voice_id: str) -> Optional[VoiceCharacter]:
+    async def get_voice(self, voice_id: str) -> VoiceCharacter | None:
         """Get a specific voice by ID."""
         for kit in self._kits:
             for voice in kit.voices:
@@ -92,7 +92,7 @@ class VoiceKitService:
                     return voice
         return None
 
-    async def get_voice_preview(self, voice_id: str, text: Optional[str] = None) -> bytes:
+    async def get_voice_preview(self, voice_id: str, text: str | None = None) -> bytes:
         """Get audio preview for a voice."""
         voice = await self.get_voice(voice_id)
         if not voice:
@@ -101,47 +101,43 @@ class VoiceKitService:
         preview_text = text or voice.preview_text or "你好，這是聲音預覽。"
 
         # Route to provider (currently only Azure)
-        # We could check voice.kit_id or look up kit provider, 
+        # We could check voice.kit_id or look up kit provider,
         # but for MVP we assume Azure based on TTSProviderEnum in kit.
-        
+
         # In a real dynamic system, we'd map kit provider to service instance.
         return await self.azure_provider.synthesize(
-            text=preview_text,
-            voice_id=voice.provider_voice_id,
-            options=voice.ssml_options
+            text=preview_text, voice_id=voice.provider_voice_id, options=voice.ssml_options
         )
 
     async def generate_story_audio(self, story_id: str, voice_id: str) -> bytes:
         """
         Generate audio for a story using a specific voice.
-        
+
         Args:
             story_id: ID of story to read (would fetch content from DB)
             voice_id: ID of voice to use
-            
+
         Returns:
             Audio bytes
         """
         # MVP Implementation:
         # 1. Fetch story content (Mocked for now or TODO: Inject StoryService)
         # 2. Call synthesize
-        
+
         # Since I don't have StoryService injected yet, I will mock fetching story content
         # or just fail if text not provided.
         # But method signature is (story_id, voice_id).
-        
+
         # I'll implement a placeholder that synthesizes a fixed string or needs extension.
         # For now, let's assume we just verify voice exists.
-        
+
         voice = await self.get_voice(voice_id)
         if not voice:
             raise ValueError(f"Voice not found: {voice_id}")
-            
+
         # TODO: Get story content from DB
         story_text = "這是一個測試故事內容。很久很久以前..."
-        
+
         return await self.azure_provider.synthesize(
-            text=story_text,
-            voice_id=voice.provider_voice_id,
-            options=voice.ssml_options
+            text=story_text, voice_id=voice.provider_voice_id, options=voice.ssml_options
         )

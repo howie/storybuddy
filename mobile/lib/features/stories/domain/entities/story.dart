@@ -23,11 +23,11 @@ class Story with _$Story {
     /// Content source (imported or AI generated).
     required StorySource source,
 
-    /// AI generation keywords (if AI generated).
-    List<String>? keywords,
-
     /// Character count of content.
-    required int wordCount,
+    required int wordCount, /// Creation timestamp.
+    required DateTime createdAt, /// Last update timestamp.
+    required DateTime updatedAt, /// AI generation keywords (if AI generated).
+    List<String>? keywords,
 
     /// Estimated reading time in minutes.
     int? estimatedDurationMinutes,
@@ -40,12 +40,6 @@ class Story with _$Story {
 
     /// Whether the story is available offline.
     @Default(false) bool isDownloaded,
-
-    /// Creation timestamp.
-    required DateTime createdAt,
-
-    /// Last update timestamp.
-    required DateTime updatedAt,
 
     /// Sync status for offline support.
     @Default(SyncStatus.synced) SyncStatus syncStatus,

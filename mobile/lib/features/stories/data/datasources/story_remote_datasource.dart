@@ -80,7 +80,8 @@ class StoryRemoteDataSourceImpl implements StoryRemoteDataSource {
     required String parentId,
     required List<String> keywords,
   }) async {
-    final request = GenerateStoryRequest(parentId: parentId, keywords: keywords);
+    final request =
+        GenerateStoryRequest(parentId: parentId, keywords: keywords);
     final response = await apiClient.post<Map<String, dynamic>>(
       '/stories/generate',
       data: request.toJson(),

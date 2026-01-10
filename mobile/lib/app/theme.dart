@@ -94,17 +94,14 @@ class AppTheme {
         brightness: Brightness.light,
         colorScheme: const ColorScheme.light(
           primary: AppColors.primary,
-          onPrimary: Colors.white,
           primaryContainer: AppColors.primaryLight,
           onPrimaryContainer: AppColors.primaryDark,
           secondary: AppColors.secondary,
           onSecondary: Colors.white,
           secondaryContainer: AppColors.secondaryLight,
           onSecondaryContainer: AppColors.secondaryDark,
-          surface: AppColors.lightSurface,
           onSurface: AppColors.lightOnSurface,
           error: AppColors.error,
-          onError: Colors.white,
         ),
         scaffoldBackgroundColor: AppColors.lightBackground,
         appBarTheme: const AppBarTheme(
@@ -203,7 +200,6 @@ class AppTheme {
           primaryContainer: AppColors.primary,
           onPrimaryContainer: Colors.white,
           secondary: AppColors.secondary,
-          onSecondary: Colors.black,
           secondaryContainer: AppColors.secondaryDark,
           onSecondaryContainer: Colors.white,
           surface: AppColors.darkSurface,
@@ -266,7 +262,8 @@ class AppTheme {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.primaryLight, width: 2),
+            borderSide:
+                const BorderSide(color: AppColors.primaryLight, width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

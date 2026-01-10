@@ -87,7 +87,8 @@ class PlaybackLocalDataSourceImpl implements PlaybackLocalDataSource {
     }
 
     // Decrypt to temporary file for playback
-    final decryptedPath = await audioCacheManager.getDecryptedTempFile(encryptedPath);
+    final decryptedPath =
+        await audioCacheManager.getDecryptedTempFile(encryptedPath);
     if (decryptedPath == null) {
       throw Exception('Failed to decrypt audio file');
     }

@@ -61,7 +61,7 @@ void main() {
             .thenAnswer((_) async => [
                   ConnectivityResult.wifi,
                   ConnectivityResult.mobile,
-                ]);
+                ],);
 
         // Act
         final result = await service.isConnected;

@@ -40,7 +40,7 @@ void main() {
       });
 
       test('should return new instance with updated language', () {
-        const original = AppSettings(language: 'zh-TW');
+        const original = AppSettings();
         final updated = original.copyWith(language: 'en-US');
 
         expect(updated.language, 'en-US');
@@ -48,7 +48,7 @@ void main() {
       });
 
       test('should return new instance with updated autoPlayNext', () {
-        const original = AppSettings(autoPlayNext: true);
+        const original = AppSettings();
         final updated = original.copyWith(autoPlayNext: false);
 
         expect(updated.autoPlayNext, false);
@@ -56,7 +56,7 @@ void main() {
       });
 
       test('should return new instance with updated qaPromptEnabled', () {
-        const original = AppSettings(qaPromptEnabled: true);
+        const original = AppSettings();
         final updated = original.copyWith(qaPromptEnabled: false);
 
         expect(updated.qaPromptEnabled, false);

@@ -319,7 +319,7 @@ class StoryDetailPage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           '故事內容',
           style: AppTextStyles.headlineSmall,
         ),
@@ -348,7 +348,7 @@ class StoryDetailPage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           '關鍵字',
           style: AppTextStyles.headlineSmall,
         ),

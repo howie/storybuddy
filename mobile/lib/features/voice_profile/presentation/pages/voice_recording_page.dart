@@ -63,7 +63,7 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
 
   Future<void> _showPrivacyConsent() async {
     if (_isDialogShowing) return;
-    
+
     setState(() {
       _isDialogShowing = true;
     });
@@ -116,7 +116,7 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
     );
 
     if (mounted) {
-      if (result == true) {
+      if (result ?? false) {
         setState(() {
           _hasShownPrivacyConsent = true;
           _isDialogShowing = false;
@@ -160,7 +160,9 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
           if (recordingState.state == RecordingState.recording)
             TextButton(
               onPressed: () {
-                ref.read(voiceRecordingNotifierProvider.notifier).cancelRecording();
+                ref
+                    .read(voiceRecordingNotifierProvider.notifier)
+                    .cancelRecording();
               },
               child: const Text('取消'),
             ),
@@ -213,7 +215,7 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
             color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
           ),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             '錄製您的聲音樣本',
             style: AppTextStyles.headlineSmall,
             textAlign: TextAlign.center,
@@ -238,7 +240,6 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
             height: 80,
             child: WaveformVisualizer(
               amplitudeStream: service.amplitudeStream,
-              isRecording: true,
             ),
           ),
           const SizedBox(height: 16),
@@ -250,7 +251,9 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
                   .updateElapsedTime(seconds);
               // Auto-stop at max duration
               if (seconds >= VoiceProfile.maxDurationSeconds) {
-                ref.read(voiceRecordingNotifierProvider.notifier).stopRecording();
+                ref
+                    .read(voiceRecordingNotifierProvider.notifier)
+                    .stopRecording();
               }
             },
           ),
@@ -264,7 +267,7 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
             color: Theme.of(context).colorScheme.tertiary,
           ),
           const SizedBox(height: 24),
-          Text(
+          const Text(
             '錄音完成',
             style: AppTextStyles.headlineMedium,
           ),
@@ -298,7 +301,7 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
           const SizedBox(height: 24),
           if (recordingState.uploadProgress > 0) ...[
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 48.0),
+              padding: const EdgeInsets.symmetric(horizontal: 48),
               child: LinearProgressIndicator(
                 value: recordingState.uploadProgress,
               ),
@@ -309,7 +312,7 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
               style: AppTextStyles.bodyMedium,
             ),
           ] else
-            Text(
+            const Text(
               '正在上傳...',
               style: AppTextStyles.bodyMedium,
             ),
@@ -340,8 +343,8 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
     final isStopped = recordingState.state == RecordingState.stopped;
     final isInitial = recordingState.state == RecordingState.initial;
     final isError = recordingState.state == RecordingState.error;
-    final canStop =
-        isRecording && recordingState.elapsedSeconds >= VoiceProfile.minDurationSeconds;
+    final canStop = isRecording &&
+        recordingState.elapsedSeconds >= VoiceProfile.minDurationSeconds;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -351,11 +354,13 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
           const SizedBox(height: 16),
           _RecordButton(
             onTap: () {
-              ref.read(voiceRecordingNotifierProvider.notifier).startRecording();
+              ref
+                  .read(voiceRecordingNotifierProvider.notifier)
+                  .startRecording();
             },
           ),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             '點擊開始錄音',
             style: AppTextStyles.labelLarge,
           ),
@@ -368,7 +373,9 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
             enabled: canStop,
             onTap: canStop
                 ? () {
-                    ref.read(voiceRecordingNotifierProvider.notifier).stopRecording();
+                    ref
+                        .read(voiceRecordingNotifierProvider.notifier)
+                        .stopRecording();
                   }
                 : null,
           ),
@@ -396,7 +403,9 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
               Expanded(
                 child: FilledButton.icon(
                   onPressed: () {
-                    ref.read(voiceRecordingNotifierProvider.notifier).uploadRecording(
+                    ref
+                        .read(voiceRecordingNotifierProvider.notifier)
+                        .uploadRecording(
                           name: _nameController.text.trim().isEmpty
                               ? '我的聲音'
                               : _nameController.text.trim(),
@@ -416,7 +425,10 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
   Widget _buildScriptCard() {
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+      color: Theme.of(context)
+          .colorScheme
+          .surfaceContainerHighest
+          .withOpacity(0.5),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(

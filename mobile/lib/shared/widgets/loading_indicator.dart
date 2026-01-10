@@ -30,7 +30,10 @@ class LoadingIndicator extends StatelessWidget {
             Text(
               message!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.7),
                   ),
               textAlign: TextAlign.center,
             ),
@@ -44,9 +47,7 @@ class LoadingIndicator extends StatelessWidget {
 /// A full-screen loading overlay.
 class LoadingOverlay extends StatelessWidget {
   const LoadingOverlay({
-    super.key,
-    required this.isLoading,
-    required this.child,
+    required this.isLoading, required this.child, super.key,
     this.message,
   });
 
@@ -65,7 +66,7 @@ class LoadingOverlay extends StatelessWidget {
       children: [
         child,
         if (isLoading)
-          Container(
+          ColoredBox(
             color: Colors.black.withOpacity(0.3),
             child: LoadingIndicator(message: message),
           ),

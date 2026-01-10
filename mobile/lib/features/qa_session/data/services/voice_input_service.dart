@@ -63,9 +63,6 @@ class VoiceInputService {
 
     // Configure recording
     const config = RecordConfig(
-      encoder: AudioEncoder.aacLc,
-      sampleRate: 44100,
-      bitRate: 128000,
       numChannels: 1,
     );
 
@@ -77,7 +74,7 @@ class VoiceInputService {
     _startAmplitudeStream();
 
     // Auto-stop after max duration
-    Future.delayed(Duration(seconds: maxRecordingSeconds), () async {
+    Future.delayed(const Duration(seconds: maxRecordingSeconds), () async {
       if (await _recorder.isRecording()) {
         await stopRecording();
       }
@@ -209,8 +206,8 @@ class VoiceInputService {
     const minDb = -60.0;
     const maxDb = 0.0;
 
-    if (dB < minDb) return 0.0;
-    if (dB > maxDb) return 1.0;
+    if (dB < minDb) return 0;
+    if (dB > maxDb) return 1;
 
     return (dB - minDb) / (maxDb - minDb);
   }

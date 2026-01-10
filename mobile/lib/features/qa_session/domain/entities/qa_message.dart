@@ -20,7 +20,9 @@ class QAMessage with _$QAMessage {
     /// Message text content.
     required String content,
 
-    /// Whether the question was in scope of the story.
+    /// Message sequence number within the session.
+    required int sequence, /// Creation timestamp.
+    required DateTime createdAt, /// Whether the question was in scope of the story.
     /// Only applicable for child messages.
     bool? isInScope,
 
@@ -29,12 +31,6 @@ class QAMessage with _$QAMessage {
 
     /// Local audio path for offline playback.
     String? localAudioPath,
-
-    /// Message sequence number within the session.
-    required int sequence,
-
-    /// Creation timestamp.
-    required DateTime createdAt,
 
     /// Sync status for offline support.
     @Default(SyncStatus.synced) SyncStatus syncStatus,
@@ -78,7 +74,6 @@ class QAMessage with _$QAMessage {
       audioUrl: audioUrl,
       sequence: sequence,
       createdAt: DateTime.now(),
-      syncStatus: SyncStatus.synced,
     );
   }
 

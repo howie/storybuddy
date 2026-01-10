@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:storybuddy/core/database/enums.dart';
-import 'package:storybuddy/features/stories/domain/entities/story.dart';
 import 'package:storybuddy/features/stories/presentation/widgets/story_card.dart';
 import 'package:storybuddy/features/stories/presentation/widgets/story_empty_state.dart';
 
@@ -29,7 +25,8 @@ void main() {
       expect(find.text('匯入'), findsOneWidget);
     });
 
-    testWidgets('StoryCard shows AI generated label for AI stories', (tester) async {
+    testWidgets('StoryCard shows AI generated label for AI stories',
+        (tester) async {
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -46,7 +43,8 @@ void main() {
       expect(find.text('AI 生成'), findsOneWidget);
     });
 
-    testWidgets('StoryCard shows download icon when audio available', (tester) async {
+    testWidgets('StoryCard shows download icon when audio available',
+        (tester) async {
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -63,7 +61,8 @@ void main() {
       expect(find.byIcon(Icons.download_outlined), findsOneWidget);
     });
 
-    testWidgets('StoryCard shows downloaded icon when story is downloaded', (tester) async {
+    testWidgets('StoryCard shows downloaded icon when story is downloaded',
+        (tester) async {
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -80,7 +79,7 @@ void main() {
     });
 
     testWidgets('StoryCard calls onTap when tapped', (tester) async {
-      bool tapped = false;
+      var tapped = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -99,7 +98,8 @@ void main() {
       expect(tapped, true);
     });
 
-    testWidgets('StoryCard shows play button when audio available', (tester) async {
+    testWidgets('StoryCard shows play button when audio available',
+        (tester) async {
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -116,7 +116,8 @@ void main() {
       expect(find.byIcon(Icons.play_circle_outline), findsOneWidget);
     });
 
-    testWidgets('StoryEmptyState shows import and generate options', (tester) async {
+    testWidgets('StoryEmptyState shows import and generate options',
+        (tester) async {
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -134,7 +135,7 @@ void main() {
     });
 
     testWidgets('StoryEmptyState calls onImportTap', (tester) async {
-      bool called = false;
+      var called = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -154,7 +155,7 @@ void main() {
     });
 
     testWidgets('StoryEmptyState calls onGenerateTap', (tester) async {
-      bool called = false;
+      var called = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(

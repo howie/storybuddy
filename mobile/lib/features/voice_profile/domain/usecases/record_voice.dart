@@ -53,8 +53,7 @@ class RecordingTooShortException implements Exception {
   final int actualDuration;
 
   @override
-  String toString() =>
-      '錄音時間太短：至少需要 $minDuration 秒，目前只有 $actualDuration 秒';
+  String toString() => '錄音時間太短：至少需要 $minDuration 秒，目前只有 $actualDuration 秒';
 }
 
 /// Exception thrown when recording is too long.
@@ -68,6 +67,5 @@ class RecordingTooLongException implements Exception {
   final int actualDuration;
 
   @override
-  String toString() =>
-      '錄音時間太長：最多 $maxDuration 秒，目前有 $actualDuration 秒';
+  String toString() => '錄音時間太長：最多 $maxDuration 秒，目前有 $actualDuration 秒';
 }

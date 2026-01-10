@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:storybuddy/core/database/enums.dart';
 import 'package:storybuddy/features/playback/domain/entities/story_playback.dart';
 import 'package:storybuddy/features/playback/presentation/providers/playback_provider.dart';
 import 'package:storybuddy/features/stories/domain/entities/story.dart';
@@ -131,15 +130,14 @@ void main() {
         expect(find.text('錄製聲音'), findsOneWidget);
       });
 
-      testWidgets(
-          'shows "錄製聲音" FAB when voice profile exists but not ready',
+      testWidgets('shows "錄製聲音" FAB when voice profile exists but not ready',
           (tester) async {
         await tester.pumpWidget(
           createTestWidget(
             storyId: TestData.storyNoAudio.id,
             story: TestData.storyNoAudio, // No audio
             voiceProfiles: [
-              TestData.voiceProfileProcessing
+              TestData.voiceProfileProcessing,
             ], // Processing, not ready
           ),
         );
@@ -235,7 +233,8 @@ void main() {
 
           expect(find.byType(CircularProgressIndicator), findsOneWidget);
         },
-        skip: true, // Loading state test with async delay causes timer issues in test framework
+        skip:
+            true, // Loading state test with async delay causes timer issues in test framework
       );
 
       testWidgets('shows error widget when story fails to load',
@@ -306,7 +305,6 @@ class _FakePlaybackNotifier extends PlaybackNotifier {
         const StoryPlayback(
           storyId: '',
           storyTitle: '',
-          state: PlaybackState.idle,
         );
   }
 

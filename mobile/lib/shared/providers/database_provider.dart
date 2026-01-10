@@ -8,9 +8,7 @@ import '../../core/database/database.dart';
 final databaseProvider = Provider<AppDatabase>((ref) {
   final database = AppDatabase();
 
-  ref.onDispose(() {
-    database.close();
-  });
+  ref.onDispose(database.close);
 
   return database;
 });

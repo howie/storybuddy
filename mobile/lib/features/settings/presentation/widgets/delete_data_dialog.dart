@@ -34,24 +34,24 @@ class _DeleteDataDialogState extends State<DeleteDataDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             '此操作將刪除以下資料：',
             style: AppTextStyles.bodyMedium,
           ),
           const SizedBox(height: 12),
-          _DataItem(
+          const _DataItem(
             icon: Icons.auto_stories,
             text: '所有快取的故事',
           ),
-          _DataItem(
+          const _DataItem(
             icon: Icons.audiotrack,
             text: '所有快取的語音檔案',
           ),
-          _DataItem(
+          const _DataItem(
             icon: Icons.chat,
             text: '所有 Q&A 記錄',
           ),
-          _DataItem(
+          const _DataItem(
             icon: Icons.help_outline,
             text: '所有待回答問題',
           ),
@@ -91,7 +91,7 @@ class _DeleteDataDialogState extends State<DeleteDataDialog> {
                       _confirmed = value ?? false;
                     });
                   },
-            title: Text(
+            title: const Text(
               '我了解此操作無法復原',
               style: AppTextStyles.labelLarge,
             ),

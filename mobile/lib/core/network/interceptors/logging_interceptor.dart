@@ -13,8 +13,6 @@ class LoggingInterceptor extends Interceptor {
                 methodCount: 0,
                 errorMethodCount: 5,
                 lineLength: 80,
-                colors: true,
-                printEmojis: true,
               ),
             );
 
@@ -33,7 +31,8 @@ class LoggingInterceptor extends Interceptor {
   }
 
   @override
-  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
+  void onResponse(
+      Response<dynamic> response, ResponseInterceptorHandler handler,) {
     if (!Env.isProduction) {
       _logger.d(
         '← ${response.statusCode} ${response.requestOptions.uri}\n'

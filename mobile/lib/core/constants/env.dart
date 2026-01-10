@@ -11,7 +11,6 @@ abstract class Env {
   /// Whether the app is running in production mode.
   static const bool isProduction = bool.fromEnvironment(
     'PRODUCTION',
-    defaultValue: false,
   );
 
   /// Connection timeout for API requests in seconds.

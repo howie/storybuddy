@@ -28,13 +28,13 @@ class NoiseDetectionService {
   final AudioRecorder _recorder;
 
   /// Threshold in dB for quiet environment.
-  static const double quietThreshold = -50.0;
+  static const double quietThreshold = -50;
 
   /// Threshold in dB for moderate noise.
-  static const double moderateThreshold = -35.0;
+  static const double moderateThreshold = -35;
 
   /// Threshold in dB for loud environment.
-  static const double loudThreshold = -20.0;
+  static const double loudThreshold = -20;
 
   /// Number of samples to take for noise detection.
   static const int sampleCount = 10;
@@ -52,8 +52,8 @@ class NoiseDetectionService {
     if (!hasPermission) {
       return const NoiseDetectionResult(
         level: NoiseLevel.moderate,
-        averageDb: -40.0,
-        peakDb: -40.0,
+        averageDb: -40,
+        peakDb: -40,
         isReliable: false,
         message: '需要麥克風權限才能檢測噪音',
       );
@@ -61,11 +61,8 @@ class NoiseDetectionService {
 
     try {
       // Start a brief recording to sample ambient noise
-      final path = await _getTemporaryPath();
+      final path = _getTemporaryPath();
       const config = RecordConfig(
-        encoder: AudioEncoder.aacLc,
-        sampleRate: 44100,
-        bitRate: 128000,
         numChannels: 1,
       );
 
@@ -99,8 +96,8 @@ class NoiseDetectionService {
       // Return moderate level if detection fails
       return NoiseDetectionResult(
         level: NoiseLevel.moderate,
-        averageDb: -40.0,
-        peakDb: -40.0,
+        averageDb: -40,
+        peakDb: -40,
         isReliable: false,
         message: '無法檢測噪音等級: $e',
       );
@@ -115,8 +112,8 @@ class NoiseDetectionService {
     if (!hasPermission) {
       yield const NoiseDetectionResult(
         level: NoiseLevel.moderate,
-        averageDb: -40.0,
-        peakDb: -40.0,
+        averageDb: -40,
+        peakDb: -40,
         isReliable: false,
         message: '需要麥克風權限才能監測噪音',
       );
@@ -124,11 +121,8 @@ class NoiseDetectionService {
     }
 
     try {
-      final path = await _getTemporaryPath();
+      final path = _getTemporaryPath();
       const config = RecordConfig(
-        encoder: AudioEncoder.aacLc,
-        sampleRate: 44100,
-        bitRate: 128000,
         numChannels: 1,
       );
 
@@ -167,8 +161,8 @@ class NoiseDetectionService {
     } catch (e) {
       yield NoiseDetectionResult(
         level: NoiseLevel.moderate,
-        averageDb: -40.0,
-        peakDb: -40.0,
+        averageDb: -40,
+        peakDb: -40,
         isReliable: false,
         message: '監測中斷: $e',
       );
@@ -193,12 +187,12 @@ class NoiseDetectionService {
   }
 
   double _calculateAverage(List<double> samples) {
-    if (samples.isEmpty) return -60.0;
+    if (samples.isEmpty) return -60;
     return samples.reduce((a, b) => a + b) / samples.length;
   }
 
   double _calculatePeak(List<double> samples) {
-    if (samples.isEmpty) return -60.0;
+    if (samples.isEmpty) return -60;
     return samples.reduce((a, b) => a > b ? a : b);
   }
 

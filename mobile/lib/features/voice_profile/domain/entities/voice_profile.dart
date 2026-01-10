@@ -20,7 +20,9 @@ class VoiceProfile with _$VoiceProfile {
     /// Voice cloning status.
     required VoiceProfileStatus status,
 
-    /// Duration of the voice sample in seconds.
+    /// Creation timestamp.
+    required DateTime createdAt, /// Last update timestamp.
+    required DateTime updatedAt, /// Duration of the voice sample in seconds.
     int? sampleDurationSeconds,
 
     /// Local path to the recorded audio file.
@@ -31,12 +33,6 @@ class VoiceProfile with _$VoiceProfile {
 
     /// Error message if cloning failed.
     String? errorMessage,
-
-    /// Creation timestamp.
-    required DateTime createdAt,
-
-    /// Last update timestamp.
-    required DateTime updatedAt,
 
     /// Sync status for offline support.
     @Default(SyncStatus.synced) SyncStatus syncStatus,

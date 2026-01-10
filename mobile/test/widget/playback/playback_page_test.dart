@@ -6,6 +6,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:storybuddy/features/playback/presentation/pages/playback_page.dart';
 
 class MockPlaybackRepository extends Mock {}
+
 class MockAudioHandler extends Mock {}
 
 void main() {
@@ -20,9 +21,6 @@ void main() {
 
     Widget createTestWidget({required String storyId}) {
       return ProviderScope(
-        overrides: [
-          // Override providers as needed for testing
-        ],
         child: MaterialApp(
           home: PlaybackPage(storyId: storyId),
         ),

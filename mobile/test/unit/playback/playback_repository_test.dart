@@ -3,9 +3,13 @@ import 'package:mocktail/mocktail.dart';
 
 // Mock classes
 class MockPlaybackRemoteDataSource extends Mock {}
+
 class MockPlaybackLocalDataSource extends Mock {}
+
 class MockAudioHandler extends Mock {}
+
 class MockAudioCacheManager extends Mock {}
+
 class MockConnectivityService extends Mock {}
 
 void main() {

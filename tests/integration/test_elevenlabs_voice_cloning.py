@@ -14,7 +14,6 @@ Run with:
     pytest tests/integration/test_elevenlabs_voice_cloning.py -v -m "elevenlabs_paid"
 """
 
-import os
 import struct
 import tempfile
 import wave

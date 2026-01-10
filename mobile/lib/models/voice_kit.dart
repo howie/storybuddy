@@ -1,25 +1,15 @@
-
 enum Gender { male, female, neutral }
+
 enum AgeGroup { child, adult, senior }
+
 enum VoiceStyle { narrator, character, both }
 
 class VoiceKit {
-  final String id;
-  final String name;
-  final String? description;
-  final String provider;
-  final String version;
-  final int downloadSize;
-  final bool isBuiltin;
-  final bool isDownloaded;
-  final List<VoiceCharacter> voices;
 
   VoiceKit({
     required this.id,
     required this.name,
-    this.description,
-    required this.provider,
-    required this.version,
+    required this.provider, required this.version, this.description,
     this.downloadSize = 0,
     this.isBuiltin = true,
     this.isDownloaded = false,
@@ -42,6 +32,15 @@ class VoiceKit {
           [],
     );
   }
+  final String id;
+  final String name;
+  final String? description;
+  final String provider;
+  final String version;
+  final int downloadSize;
+  final bool isBuiltin;
+  final bool isDownloaded;
+  final List<VoiceCharacter> voices;
 
   Map<String, dynamic> toJson() {
     return {
@@ -59,26 +58,13 @@ class VoiceKit {
 }
 
 class VoiceCharacter {
-  final String id;
-  final String kitId;
-  final String name;
-  final String providerVoiceId;
-  final Map<String, dynamic>? ssmlOptions;
-  final Gender gender;
-  final AgeGroup ageGroup;
-  final VoiceStyle style;
-  final String? previewUrl;
-  final String? previewText;
 
   VoiceCharacter({
     required this.id,
     required this.kitId,
     required this.name,
     required this.providerVoiceId,
-    this.ssmlOptions,
-    required this.gender,
-    required this.ageGroup,
-    required this.style,
+    required this.gender, required this.ageGroup, required this.style, this.ssmlOptions,
     this.previewUrl,
     this.previewText,
   });
@@ -106,6 +92,16 @@ class VoiceCharacter {
       previewText: json['preview_text'] as String?,
     );
   }
+  final String id;
+  final String kitId;
+  final String name;
+  final String providerVoiceId;
+  final Map<String, dynamic>? ssmlOptions;
+  final Gender gender;
+  final AgeGroup ageGroup;
+  final VoiceStyle style;
+  final String? previewUrl;
+  final String? previewText;
 
   Map<String, dynamic> toJson() {
     return {

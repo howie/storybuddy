@@ -66,25 +66,16 @@ sealed class Failure with _$Failure {
 
   /// Returns a user-friendly error message.
   String get userMessage => when(
-        server: (message, statusCode, details) =>
-            '伺服器錯誤：$message',
-        network: (message, exception) =>
-            '網路連線失敗，請檢查網路設定',
-        cache: (message, exception) =>
-            '本地資料錯誤：$message',
-        auth: (message, isExpired) => isExpired
-            ? '登入已過期，請重新登入'
-            : '認證失敗：$message',
-        validation: (message, fieldErrors) =>
-            '輸入驗證失敗：$message',
-        permission: (message, permission) =>
-            '權限不足：$message',
-        audio: (message, exception) =>
-            '音訊錯誤：$message',
-        file: (message, path, exception) =>
-            '檔案操作失敗：$message',
-        unknown: (message, error, stackTrace) =>
-            '發生未知錯誤，請稍後再試',
+        server: (message, statusCode, details) => '伺服器錯誤：$message',
+        network: (message, exception) => '網路連線失敗，請檢查網路設定',
+        cache: (message, exception) => '本地資料錯誤：$message',
+        auth: (message, isExpired) =>
+            isExpired ? '登入已過期，請重新登入' : '認證失敗：$message',
+        validation: (message, fieldErrors) => '輸入驗證失敗：$message',
+        permission: (message, permission) => '權限不足：$message',
+        audio: (message, exception) => '音訊錯誤：$message',
+        file: (message, path, exception) => '檔案操作失敗：$message',
+        unknown: (message, error, stackTrace) => '發生未知錯誤，請稍後再試',
       );
 
   /// Returns true if this failure is recoverable.

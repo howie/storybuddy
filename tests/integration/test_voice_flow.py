@@ -7,7 +7,7 @@ through voice sample upload and status transitions.
 import io
 import struct
 import wave
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
@@ -107,7 +107,7 @@ class TestVoiceRecordingFlow:
 
         # List profiles for parent
         list_response = await client.get(
-            f"/api/v1/voice-profiles",
+            "/api/v1/voice-profiles",
             params={"parent_id": sample_parent["id"]},
         )
         assert list_response.status_code == 200

@@ -135,9 +135,7 @@ class ClaudeService:
             logger.error(f"Claude API error: {e}")
             raise RuntimeError(f"Failed to generate story: {e}") from e
 
-    async def answer_question(
-        self, story_content: str, question: str
-    ) -> QAResult:
+    async def answer_question(self, story_content: str, question: str) -> QAResult:
         """Answer a child's question about a story.
 
         Args:

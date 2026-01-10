@@ -248,7 +248,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
                   mainAxisSize: MainAxisSize.min,
                   children: List.generate(3, (index) {
                     final delay = index * 0.2;
-                    final value = ((_controller.value + delay) % 1.0);
+                    final value = (_controller.value + delay) % 1.0;
                     final opacity = 0.3 + (0.7 * (1 - (value - 0.5).abs() * 2));
 
                     return Container(

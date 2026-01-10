@@ -4,12 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 /// A widget that guides users to grant a permission.
 class PermissionRequestWidget extends StatelessWidget {
   const PermissionRequestWidget({
-    super.key,
-    required this.permission,
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.onGranted,
+    required this.permission, required this.title, required this.description, required this.icon, required this.onGranted, super.key,
     this.onDenied,
   });
 
@@ -127,8 +122,7 @@ class PermissionRequestWidget extends StatelessWidget {
 /// A widget specifically for microphone permission.
 class MicrophonePermissionRequest extends StatelessWidget {
   const MicrophonePermissionRequest({
-    super.key,
-    required this.onGranted,
+    required this.onGranted, super.key,
     this.onDenied,
   });
 

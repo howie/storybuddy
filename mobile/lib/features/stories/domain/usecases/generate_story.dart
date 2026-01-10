@@ -22,10 +22,8 @@ class GenerateStoryUseCase {
     required List<String> keywords,
   }) async {
     // Validate keywords
-    final trimmedKeywords = keywords
-        .map((k) => k.trim())
-        .where((k) => k.isNotEmpty)
-        .toList();
+    final trimmedKeywords =
+        keywords.map((k) => k.trim()).where((k) => k.isNotEmpty).toList();
 
     if (trimmedKeywords.isEmpty) {
       throw NoKeywordsException();
@@ -63,10 +61,8 @@ class GenerateStoryUseCase {
 
   /// Validates keywords without generating.
   KeywordValidationResult validateKeywords(List<String> keywords) {
-    final trimmed = keywords
-        .map((k) => k.trim())
-        .where((k) => k.isNotEmpty)
-        .toList();
+    final trimmed =
+        keywords.map((k) => k.trim()).where((k) => k.isNotEmpty).toList();
 
     if (trimmed.isEmpty) {
       return KeywordValidationResult(
@@ -113,8 +109,7 @@ class GenerateStoryUseCase {
 class KeywordValidationResult {
   KeywordValidationResult({
     required this.isValid,
-    this.message,
-    required this.keywordCount,
+    required this.keywordCount, this.message,
   });
 
   final bool isValid;

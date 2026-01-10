@@ -1,10 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-
 // Mock classes
 class MockStoryRemoteDataSource extends Mock {}
+
 class MockStoryLocalDataSource extends Mock {}
+
 class MockConnectivityService extends Mock {}
 
 void main() {

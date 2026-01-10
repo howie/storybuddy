@@ -109,7 +109,8 @@ class _StoryTextInputState extends State<StoryTextInput> {
               borderRadius: BorderRadius.circular(12),
             ),
             filled: true,
-            fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            fillColor:
+                theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
           ),
           style: AppTextStyles.bodyMedium.copyWith(
             height: 1.6,

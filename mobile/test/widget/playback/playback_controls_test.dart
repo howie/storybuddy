@@ -15,7 +15,6 @@ void main() {
               playbackState: const StoryPlayback(
                 storyId: 'story-1',
                 storyTitle: 'Test Story',
-                state: PlaybackState.idle,
               ),
               onPlayPause: () {},
               onSeekBackward: () {},
@@ -127,7 +126,7 @@ void main() {
 
     testWidgets('calls onPlayPause when play/pause button tapped',
         (tester) async {
-      bool called = false;
+      var called = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -155,7 +154,7 @@ void main() {
 
     testWidgets('calls onSeekBackward when backward button tapped',
         (tester) async {
-      bool called = false;
+      var called = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -183,7 +182,7 @@ void main() {
 
     testWidgets('calls onSeekForward when forward button tapped',
         (tester) async {
-      bool called = false;
+      var called = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -210,7 +209,7 @@ void main() {
     });
 
     testWidgets('calls onStop when stop button tapped', (tester) async {
-      bool called = false;
+      var called = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -237,8 +236,8 @@ void main() {
     });
 
     testWidgets('disables seek buttons when idle', (tester) async {
-      bool seekBackwardCalled = false;
-      bool seekForwardCalled = false;
+      var seekBackwardCalled = false;
+      var seekForwardCalled = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -246,7 +245,6 @@ void main() {
               playbackState: const StoryPlayback(
                 storyId: 'story-1',
                 storyTitle: 'Test Story',
-                state: PlaybackState.idle,
               ),
               onPlayPause: () {},
               onSeekBackward: () => seekBackwardCalled = true,
@@ -288,7 +286,6 @@ void main() {
               onSeekForward: () {},
               onStop: () {},
               onSpeedChange: (_) {},
-              currentSpeed: 1.0,
             ),
           ),
         ),
@@ -313,7 +310,6 @@ void main() {
               onSeekForward: () {},
               onStop: () {},
               onSpeedChange: (_) {},
-              currentSpeed: 1.0,
             ),
           ),
         ),
@@ -348,7 +344,6 @@ void main() {
               onSeekForward: () {},
               onStop: () {},
               onSpeedChange: (speed) => selectedSpeed = speed,
-              currentSpeed: 1.0,
             ),
           ),
         ),
@@ -427,7 +422,7 @@ void main() {
     });
 
     testWidgets('calls onPlayPause when tapped', (tester) async {
-      bool called = false;
+      var called = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -492,7 +487,7 @@ void main() {
     });
 
     testWidgets('calls onClose when close button tapped', (tester) async {
-      bool called = false;
+      var called = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -533,7 +528,6 @@ void main() {
         storyId: 'story-1',
         storyTitle: 'Test',
         position: Duration(seconds: 30),
-        duration: Duration.zero,
       );
       expect(playback.progress, 0.0);
     });
@@ -598,9 +592,13 @@ void main() {
     });
 
     test('formatDuration formats correctly', () {
-      expect(StoryPlayback.formatDuration(const Duration(seconds: 0)), '00:00');
-      expect(StoryPlayback.formatDuration(const Duration(seconds: 65)), '01:05');
-      expect(StoryPlayback.formatDuration(const Duration(minutes: 10, seconds: 30)), '10:30');
+      expect(StoryPlayback.formatDuration(const Duration()), '00:00');
+      expect(
+          StoryPlayback.formatDuration(const Duration(seconds: 65)), '01:05',);
+      expect(
+          StoryPlayback.formatDuration(
+              const Duration(minutes: 10, seconds: 30),),
+          '10:30',);
     });
 
     test('formattedPosition returns correct format', () {

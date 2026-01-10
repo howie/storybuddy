@@ -14,14 +14,10 @@ class Parent with _$Parent {
     /// Display name.
     required String name,
 
-    /// Optional email address.
-    String? email,
-
     /// Creation timestamp.
-    required DateTime createdAt,
-
-    /// Last update timestamp.
-    required DateTime updatedAt,
+    required DateTime createdAt, /// Last update timestamp.
+    required DateTime updatedAt, /// Optional email address.
+    String? email,
 
     /// Sync status for offline support.
     @Default(SyncStatus.synced) SyncStatus syncStatus,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:storybuddy/main.dart' as app;
@@ -49,7 +48,9 @@ void main() {
       final emptyState = find.text('還沒有故事');
       final storyList = find.byType(ListView);
 
-      expect(emptyState.evaluate().isNotEmpty || storyList.evaluate().isNotEmpty, true);
+      expect(
+          emptyState.evaluate().isNotEmpty || storyList.evaluate().isNotEmpty,
+          true,);
     });
 
     testWidgets('can open add story bottom sheet', (tester) async {
@@ -87,7 +88,8 @@ void main() {
       }
     });
 
-    testWidgets('can enter story title and content in import page', (tester) async {
+    testWidgets('can enter story title and content in import page',
+        (tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 3));
 

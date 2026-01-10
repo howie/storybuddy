@@ -28,7 +28,7 @@ class TestCreateVoiceProfile:
         """VP-001: Create voice profile successfully."""
         response = await client.post(
             "/api/v1/voice-profiles",
-            json={"parent_id": created_parent["id"], **sample_voice_profile_data}
+            json={"parent_id": created_parent["id"], **sample_voice_profile_data},
         )
 
         assert response.status_code == 201
@@ -56,7 +56,7 @@ class TestCreateVoiceProfile:
         """VP-002: Create voice profile with name > 100 chars fails."""
         response = await client.post(
             "/api/v1/voice-profiles",
-            json={"parent_id": created_parent["id"], "name": long_string_100}
+            json={"parent_id": created_parent["id"], "name": long_string_100},
         )
 
         assert response.status_code == 422
@@ -73,8 +73,7 @@ class TestCreateVoiceProfile:
     ) -> None:
         """VP-003: Create voice profile with non-existent parent_id fails."""
         response = await client.post(
-            "/api/v1/voice-profiles",
-            json={"parent_id": random_uuid, **sample_voice_profile_data}
+            "/api/v1/voice-profiles", json={"parent_id": random_uuid, **sample_voice_profile_data}
         )
 
         assert response.status_code == 404
@@ -95,9 +94,7 @@ class TestListVoiceProfiles:
         created_voice_profile: dict[str, Any],
     ) -> None:
         """VP-004: List voice profiles for parent."""
-        response = await client.get(
-            f"/api/v1/voice-profiles?parent_id={created_parent['id']}"
-        )
+        response = await client.get(f"/api/v1/voice-profiles?parent_id={created_parent['id']}")
 
         assert response.status_code == 200
         data = response.json()
@@ -109,9 +106,7 @@ class TestListVoiceProfiles:
     # VP-005: Missing parent_id parameter
     # =========================================================================
 
-    async def test_list_voice_profiles_missing_parent_id(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_list_voice_profiles_missing_parent_id(self, client: AsyncClient) -> None:
         """VP-005: List voice profiles without parent_id fails."""
         response = await client.get("/api/v1/voice-profiles")
 
@@ -128,13 +123,11 @@ class TestListVoiceProfiles:
         # Use a fresh parent without any voice profiles
         new_parent_response = await client.post(
             "/api/v1/parents",
-            json={"name": "New Parent", "email": f"new_{uuid4().hex[:8]}@example.com"}
+            json={"name": "New Parent", "email": f"new_{uuid4().hex[:8]}@example.com"},
         )
         new_parent_id = new_parent_response.json()["id"]
 
-        response = await client.get(
-            f"/api/v1/voice-profiles?parent_id={new_parent_id}"
-        )
+        response = await client.get(f"/api/v1/voice-profiles?parent_id={new_parent_id}")
 
         assert response.status_code == 200
         data = response.json()
@@ -172,9 +165,7 @@ class TestGetVoiceProfile:
     # VP-008: Non-existent profile_id
     # =========================================================================
 
-    async def test_get_voice_profile_not_found(
-        self, client: AsyncClient, random_uuid: str
-    ) -> None:
+    async def test_get_voice_profile_not_found(self, client: AsyncClient, random_uuid: str) -> None:
         """VP-008: Get non-existent voice profile returns 404."""
         response = await client.get(f"/api/v1/voice-profiles/{random_uuid}")
 
@@ -198,7 +189,7 @@ class TestDeleteVoiceProfile:
         # Create a voice profile to delete
         create_response = await client.post(
             "/api/v1/voice-profiles",
-            json={"parent_id": created_parent["id"], "name": "Voice to Delete"}
+            json={"parent_id": created_parent["id"], "name": "Voice to Delete"},
         )
         profile_id = create_response.json()["id"]
 
@@ -242,7 +233,7 @@ class TestUploadVoiceSample:
 
         response = await client.post(
             f"/api/v1/voice-profiles/{profile_id}/upload",
-            files={"audio": ("sample.wav", mock_wav_file_30s, "audio/wav")}
+            files={"audio": ("sample.wav", mock_wav_file_30s, "audio/wav")},
         )
 
         # Should succeed and update status to processing
@@ -266,7 +257,7 @@ class TestUploadVoiceSample:
 
         response = await client.post(
             f"/api/v1/voice-profiles/{profile_id}/upload",
-            files={"audio": ("sample.mp3", mock_mp3_file, "audio/mpeg")}
+            files={"audio": ("sample.mp3", mock_mp3_file, "audio/mpeg")},
         )
 
         # May succeed or fail depending on audio validation
@@ -287,7 +278,7 @@ class TestUploadVoiceSample:
 
         response = await client.post(
             f"/api/v1/voice-profiles/{profile_id}/upload",
-            files={"audio": ("sample.txt", mock_invalid_audio_file, "text/plain")}
+            files={"audio": ("sample.txt", mock_invalid_audio_file, "text/plain")},
         )
 
         assert response.status_code == 400
@@ -308,7 +299,7 @@ class TestUploadVoiceSample:
 
         response = await client.post(
             f"/api/v1/voice-profiles/{profile_id}/upload",
-            files={"audio": ("sample.wav", mock_wav_file_too_short, "audio/wav")}
+            files={"audio": ("sample.wav", mock_wav_file_too_short, "audio/wav")},
         )
 
         assert response.status_code == 400
@@ -326,7 +317,7 @@ class TestUploadVoiceSample:
         """VP-018: Upload to non-existent profile fails."""
         response = await client.post(
             f"/api/v1/voice-profiles/{random_uuid}/upload",
-            files={"audio": ("sample.wav", mock_wav_file_30s, "audio/wav")}
+            files={"audio": ("sample.wav", mock_wav_file_30s, "audio/wav")},
         )
 
         assert response.status_code == 404
@@ -350,7 +341,7 @@ class TestVoicePreview:
 
         response = await client.post(
             f"/api/v1/voice-profiles/{profile_id}/preview",
-            json={"text": "Hello, this is a preview of the voice."}
+            json={"text": "Hello, this is a preview of the voice."},
         )
 
         # API returns placeholder - feature not fully implemented
@@ -374,8 +365,7 @@ class TestVoicePreview:
         profile_id = ready_voice_profile["id"]
 
         response = await client.post(
-            f"/api/v1/voice-profiles/{profile_id}/preview",
-            json={"text": long_string_500}
+            f"/api/v1/voice-profiles/{profile_id}/preview", json={"text": long_string_500}
         )
 
         assert response.status_code == 422
@@ -393,8 +383,7 @@ class TestVoicePreview:
         profile_id = ready_voice_profile["id"]
 
         response = await client.post(
-            f"/api/v1/voice-profiles/{profile_id}/preview",
-            json={"text": ""}
+            f"/api/v1/voice-profiles/{profile_id}/preview", json={"text": ""}
         )
 
         assert response.status_code == 422
@@ -412,8 +401,7 @@ class TestVoicePreview:
         profile_id = created_voice_profile["id"]
 
         response = await client.post(
-            f"/api/v1/voice-profiles/{profile_id}/preview",
-            json={"text": "Test preview text"}
+            f"/api/v1/voice-profiles/{profile_id}/preview", json={"text": "Test preview text"}
         )
 
         assert response.status_code == 400
@@ -427,8 +415,7 @@ class TestVoicePreview:
     ) -> None:
         """Preview with non-existent profile returns 404."""
         response = await client.post(
-            f"/api/v1/voice-profiles/{random_uuid}/preview",
-            json={"text": "Test preview text"}
+            f"/api/v1/voice-profiles/{random_uuid}/preview", json={"text": "Test preview text"}
         )
 
         assert response.status_code == 404

@@ -69,8 +69,7 @@ class PendingQuestionLocalDataSourceImpl
 
     if (!includeAnswered) {
       query = query
-        ..where(
-            (q) => q.status.equalsValue(PendingQuestionStatus.pending));
+        ..where((q) => q.status.equalsValue(PendingQuestionStatus.pending));
     }
 
     query = query
@@ -92,7 +91,8 @@ class PendingQuestionLocalDataSourceImpl
   }
 
   @override
-  Future<List<entity.PendingQuestionSummary>> getPendingQuestionSummaries() async {
+  Future<List<entity.PendingQuestionSummary>>
+      getPendingQuestionSummaries() async {
     // Get all pending questions grouped by story
     final query = database.select(database.pendingQuestions)
       ..where((q) => q.status.equalsValue(PendingQuestionStatus.pending));
@@ -187,8 +187,7 @@ class PendingQuestionLocalDataSourceImpl
 
     if (!includeAnswered) {
       query = query
-        ..where(
-            (q) => q.status.equalsValue(PendingQuestionStatus.pending));
+        ..where((q) => q.status.equalsValue(PendingQuestionStatus.pending));
     }
 
     query = query
@@ -226,7 +225,8 @@ class PendingQuestionLocalDataSourceImpl
   }
 
   /// Converts a domain entity to a database companion for insert/update.
-  PendingQuestionsCompanion _entityToCompanion(entity.PendingQuestion question) {
+  PendingQuestionsCompanion _entityToCompanion(
+      entity.PendingQuestion question,) {
     return PendingQuestionsCompanion(
       id: Value(question.id),
       storyId: Value(question.storyId),

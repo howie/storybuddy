@@ -35,7 +35,7 @@ class SettingsPage extends ConsumerWidget {
     return ListView(
       children: [
         // Appearance section
-        _SectionHeader(title: '外觀'),
+        const _SectionHeader(title: '外觀'),
         _ThemeModeTile(
           currentMode: settings.themeMode,
           onChanged: (mode) {
@@ -45,7 +45,7 @@ class SettingsPage extends ConsumerWidget {
         const Divider(height: 1),
 
         // Playback section
-        _SectionHeader(title: '播放'),
+        const _SectionHeader(title: '播放'),
         SwitchListTile(
           title: const Text('自動播放下一篇'),
           subtitle: const Text('故事結束後自動播放下一個故事'),
@@ -68,7 +68,7 @@ class SettingsPage extends ConsumerWidget {
         const Divider(height: 1),
 
         // Data section
-        _SectionHeader(title: '資料管理'),
+        const _SectionHeader(title: '資料管理'),
         ListTile(
           leading: Icon(
             Icons.delete_outline,
@@ -84,7 +84,7 @@ class SettingsPage extends ConsumerWidget {
         const Divider(height: 1),
 
         // About section
-        _SectionHeader(title: '關於'),
+        const _SectionHeader(title: '關於'),
         ListTile(
           leading: const Icon(Icons.info_outline),
           title: const Text('版本'),

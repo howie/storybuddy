@@ -14,7 +14,7 @@ void main() {
       role: MessageRole.child,
       content: '為什麼天空是藍色的？',
       sequence: 1,
-      createdAt: DateTime(2024, 1, 1),
+      createdAt: DateTime(2024),
     );
 
     final aiMessage = QAMessage(
@@ -23,7 +23,7 @@ void main() {
       role: MessageRole.assistant,
       content: '天空看起來是藍色的，是因為陽光穿過大氣層時發生了散射。',
       sequence: 2,
-      createdAt: DateTime(2024, 1, 1),
+      createdAt: DateTime(2024),
       audioUrl: 'https://example.com/audio.mp3',
     );
 
@@ -33,7 +33,7 @@ void main() {
       role: MessageRole.child,
       content: '恐龍為什麼會滅絕？',
       sequence: 3,
-      createdAt: DateTime(2024, 1, 1),
+      createdAt: DateTime(2024),
       isInScope: false,
     );
 
@@ -165,7 +165,7 @@ void main() {
     });
 
     testWidgets('calls onPlayAudio when play button tapped', (tester) async {
-      bool called = false;
+      var called = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -430,7 +430,6 @@ void main() {
         content: 'Test',
         sequence: 1,
         createdAt: DateTime.now(),
-        syncStatus: SyncStatus.synced,
       );
       expect(synced.hasPendingChanges, false);
 

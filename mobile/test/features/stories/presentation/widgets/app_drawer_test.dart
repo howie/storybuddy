@@ -213,7 +213,7 @@ void main() {
 
       testWidgets('hides badge when there are no pending questions',
           (tester) async {
-        await tester.pumpWidget(buildTestWidget(pendingQuestionCount: 0));
+        await tester.pumpWidget(buildTestWidget());
         await tester.tap(find.text('Open Drawer'));
         await tester.pumpAndSettle();
 

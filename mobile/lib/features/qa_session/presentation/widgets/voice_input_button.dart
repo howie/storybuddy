@@ -30,7 +30,7 @@ class VoiceInputButton extends StatefulWidget {
 class _VoiceInputButtonState extends State<VoiceInputButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
-  double _currentAmplitude = 0.0;
+  double _currentAmplitude = 0;
   StreamSubscription<double>? _amplitudeSubscription;
 
   @override
@@ -122,7 +122,9 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
             animation: _pulseController,
             builder: (context, child) {
               final pulseScale = widget.isRecording
-                  ? 1.0 + (_pulseController.value * 0.1) + (_currentAmplitude * 0.2)
+                  ? 1.0 +
+                      (_pulseController.value * 0.1) +
+                      (_currentAmplitude * 0.2)
                   : 1.0;
 
               return Transform.scale(
@@ -169,7 +171,9 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
 
         // Hint text
         Text(
-          widget.isRecording ? '點擊停止，長按取消' : (widget.enabled ? '點擊開始提問' : '已達問答上限'),
+          widget.isRecording
+              ? '點擊停止，長按取消'
+              : (widget.enabled ? '點擊開始提問' : '已達問答上限'),
           style: AppTextStyles.labelLarge.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

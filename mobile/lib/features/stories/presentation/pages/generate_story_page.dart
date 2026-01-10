@@ -58,12 +58,11 @@ class _GenerateStoryPageState extends ConsumerState<GenerateStoryPage> {
         throw Exception('請先設定家長資料');
       }
 
-      final story = await ref
-          .read(storyListNotifierProvider.notifier)
-          .generateStory(
-            parentId: parent.id,
-            keywords: _keywords,
-          );
+      final story =
+          await ref.read(storyListNotifierProvider.notifier).generateStory(
+                parentId: parent.id,
+                keywords: _keywords,
+              );
 
       setState(() {
         _generatedStory = story;
@@ -130,7 +129,7 @@ class _GenerateStoryPageState extends ConsumerState<GenerateStoryPage> {
         const SizedBox(height: 24),
 
         // Keyword input
-        Text(
+        const Text(
           '輸入關鍵字',
           style: AppTextStyles.headlineSmall,
         ),

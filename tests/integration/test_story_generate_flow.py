@@ -207,10 +207,11 @@ class TestStoryGenerationFlow:
         sample_parent: dict,
     ) -> None:
         """Test that generated stories can have audio generated."""
+        from uuid import UUID
+
         from src.db.repository import VoiceProfileRepository
         from src.models import VoiceProfileStatus
         from src.models.voice import VoiceProfileCreate, VoiceProfileUpdate
-        from uuid import UUID
 
         # Create ready voice profile
         profile = await VoiceProfileRepository.create(

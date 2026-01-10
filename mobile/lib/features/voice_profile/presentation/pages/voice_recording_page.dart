@@ -19,10 +19,19 @@ class VoiceRecordingPage extends ConsumerStatefulWidget {
 
 class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
   bool _hasShownPrivacyConsent = false;
+  bool _isDialogShowing = false;
   bool _hasPermission = false;
   final TextEditingController _nameController = TextEditingController(
     text: '我的聲音',
   );
+
+  static const String _sampleText = '''
+從前從前，在一個遙遠的森林盡頭，住著一位可愛的小女孩。因為她總是穿著外婆送給她的紅色連帽斗篷，所以大家都叫她「小紅帽」。
+
+有一天，媽媽對小紅帽說：「外婆生病了，身體不太舒服。你幫我把這籃剛烤好的蛋糕和一瓶葡萄酒送去給外婆，讓她補補身子。」媽媽特別叮嚀說：「路上要小心，專心走路，不要在森林裡貪玩，也不要隨便跟陌生人說話喔。」
+
+小紅帽乖巧地點點頭，答應了媽媽。她提著籃子，踏著輕快的步伐出門了。森林裡的空氣好清新，金色的陽光透過樹葉的縫隙灑在草地上，像是一顆顆發亮的寶石。五顏六色的野花開滿了路邊，小鳥也在枝頭開心地唱歌。小紅帽看著美麗的風景，心裡覺得好溫暖，忍不住開心地哼起了歌來。
+''';
 
   @override
   void initState() {
@@ -52,8 +61,14 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
     });
   }
 
-  void _showPrivacyConsent() {
-    showDialog(
+  Future<void> _showPrivacyConsent() async {
+    if (_isDialogShowing) return;
+    
+    setState(() {
+      _isDialogShowing = true;
+    });
+
+    final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
@@ -86,43 +101,55 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              context.pop();
+              Navigator.pop(context, false);
             },
             child: const Text('取消'),
           ),
           FilledButton(
             onPressed: () {
-              Navigator.pop(context);
-              setState(() {
-                _hasShownPrivacyConsent = true;
-              });
+              Navigator.pop(context, true);
             },
             child: const Text('同意'),
           ),
         ],
       ),
     );
+
+    if (mounted) {
+      if (result == true) {
+        setState(() {
+          _hasShownPrivacyConsent = true;
+          _isDialogShowing = false;
+        });
+      } else {
+        // User cancelled
+        context.pop();
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<VoiceRecordingState>(
+      voiceRecordingNotifierProvider,
+      (previous, next) {
+        if (next.state == RecordingState.uploaded &&
+            next.uploadedProfileId != null) {
+          if (mounted) {
+            context.pushReplacement(
+              '/voice-profile/status/${next.uploadedProfileId}',
+            );
+          }
+        }
+      },
+    );
+
     final recordingState = ref.watch(voiceRecordingNotifierProvider);
 
     // Show privacy consent on first load
-    if (!_hasShownPrivacyConsent) {
+    if (!_hasShownPrivacyConsent && !_isDialogShowing) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showPrivacyConsent();
-      });
-    }
-
-    // Handle upload completion
-    if (recordingState.state == RecordingState.uploaded &&
-        recordingState.uploadedProfileId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.pushReplacement(
-          '/voice-profiles/${recordingState.uploadedProfileId}/status',
-        );
       });
     }
 
@@ -182,32 +209,39 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
         if (recordingState.state == RecordingState.initial) ...[
           Icon(
             Icons.record_voice_over,
-            size: 80,
+            size: 64,
             color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           Text(
             '錄製您的聲音樣本',
-            style: AppTextStyles.headlineMedium,
+            style: AppTextStyles.headlineSmall,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            '請用正常語速朗讀一段文字\n建議 30-60 秒',
+            '請朗讀以下文字（約 45 秒）',
             style: AppTextStyles.bodyMedium.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 16),
+          Expanded(child: _buildScriptCard()),
         ],
 
         // Recording in progress
         if (isRecording) ...[
-          WaveformVisualizer(
-            amplitudeStream: service.amplitudeStream,
-            isRecording: true,
+          Expanded(child: _buildScriptCard()),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 80,
+            child: WaveformVisualizer(
+              amplitudeStream: service.amplitudeStream,
+              isRecording: true,
+            ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
           RecordingTimer(
             isRecording: true,
             onTick: (seconds) {
@@ -255,12 +289,30 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
 
         // Uploading
         if (recordingState.state == RecordingState.uploading) ...[
-          const CircularProgressIndicator(),
-          const SizedBox(height: 24),
-          Text(
-            '正在上傳...',
-            style: AppTextStyles.bodyMedium,
+          const SizedBox(height: 16),
+          CircularProgressIndicator(
+            value: recordingState.uploadProgress > 0
+                ? recordingState.uploadProgress
+                : null,
           ),
+          const SizedBox(height: 24),
+          if (recordingState.uploadProgress > 0) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 48.0),
+              child: LinearProgressIndicator(
+                value: recordingState.uploadProgress,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '正在上傳... ${(recordingState.uploadProgress * 100).toInt()}%',
+              style: AppTextStyles.bodyMedium,
+            ),
+          ] else
+            Text(
+              '正在上傳...',
+              style: AppTextStyles.bodyMedium,
+            ),
         ],
 
         // Error
@@ -296,6 +348,7 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
       children: [
         // Record button
         if (isInitial || isError) ...[
+          const SizedBox(height: 16),
           _RecordButton(
             onTap: () {
               ref.read(voiceRecordingNotifierProvider.notifier).startRecording();
@@ -310,6 +363,7 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
 
         // Stop button
         if (isRecording) ...[
+          // Spacer/SizedBox handled in recording area
           _StopButton(
             enabled: canStop,
             onTap: canStop
@@ -356,6 +410,26 @@ class _VoiceRecordingPageState extends ConsumerState<VoiceRecordingPage> {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildScriptCard() {
+    return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Text(
+          _sampleText,
+          style: AppTextStyles.bodyLarge.copyWith(height: 1.8),
+        ),
+      ),
     );
   }
 }

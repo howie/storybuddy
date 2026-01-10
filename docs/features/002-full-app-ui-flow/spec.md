@@ -147,3 +147,34 @@ StoryBuddy 行動應用程式目前缺少主導航結構，導致多個已實作
 
 - 依賴 001-flutter-mobile-app 的現有頁面實作
 - 依賴 000-StoryBuddy-mvp 的後端 API（語音生成、聲音模型狀態）
+
+## Learnings & Notes
+
+### ElevenLabs Voice Cloning Requirements (2026-01-10)
+
+**問題發現**：Voice Profile 上傳功能在後端呼叫 ElevenLabs API 時失敗。
+
+**根本原因**：
+1. **API Key 權限**：需要 `voices_write` 權限才能建立自訂聲音
+2. **訂閱方案限制**：即使有 `voices_write` 權限，免費方案不支援 Instant Voice Cloning
+
+**ElevenLabs 錯誤訊息**：
+```json
+{"detail":{"status":"can_not_use_instant_voice_cloning","message":"Your subscription has no access to use instant voice cloning, please upgrade."}}
+```
+
+**解決方案**：
+- 升級 ElevenLabs 訂閱至 **Creator 方案**（$22/月）或更高
+- Creator 方案包含：
+  - Instant Voice Cloning（即時聲音克隆）
+  - Professional Voice Cloning（專業聲音克隆）
+  - 每月 100,000 字元額度
+
+**測試檔案**：
+- `tests/integration/test_elevenlabs_voice_cloning.py` - ElevenLabs 整合測試
+- 使用 `@elevenlabs_paid` marker 標記需要付費訂閱的測試
+- 執行方式：`pytest tests/integration/test_elevenlabs_voice_cloning.py -m "not elevenlabs_paid"`
+
+**影響範圍**：
+- User Story 2（家長為故事生成語音）需要 ElevenLabs 付費訂閱才能完整運作
+- App 端的 UI 流程已完成，但後端聲音克隆功能需要訂閱升級

@@ -5,7 +5,6 @@ import 'package:storybuddy/features/voice_kits/presentation/providers/voice_kit_
 import 'package:storybuddy/models/voice_kit.dart';
 
 class VoiceConfigurationPage extends ConsumerWidget {
-
   const VoiceConfigurationPage({required this.storyId, super.key});
   final String storyId;
 
@@ -22,9 +21,11 @@ class VoiceConfigurationPage extends ConsumerWidget {
     }
 
     final voiceKitsAsync = ref.watch(voiceKitsProvider);
-    final mappingsAsync = ref.watch(storyVoiceMappingsProvider(
-      StoryVoiceMappingParams(userId, storyId),
-    ),);
+    final mappingsAsync = ref.watch(
+      storyVoiceMappingsProvider(
+        StoryVoiceMappingParams(userId, storyId),
+      ),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -137,9 +138,11 @@ class VoiceConfigurationPage extends ConsumerWidget {
                       voice.id,
                     );
                 // Refresh mappings
-                ref.refresh(storyVoiceMappingsProvider(
-                  StoryVoiceMappingParams(userId, storyId),
-                ),);
+                ref.refresh(
+                  storyVoiceMappingsProvider(
+                    StoryVoiceMappingParams(userId, storyId),
+                  ),
+                );
               },
             );
           },

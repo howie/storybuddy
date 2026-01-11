@@ -35,6 +35,12 @@ dependencies = [
     "httpx>=0.26.0",
     "aiofiles>=23.2.0",
     "google-cloud-texttospeech>=2.0.0",
+    # 006-interactive-story-mode dependencies
+    "google-cloud-speech>=2.23.0",
+    "webrtcvad>=2.0.10",
+    "jinja2>=3.1.0",
+    "aiosmtplib>=3.0.0",
+    "websockets>=12.0",
 ]
 
 [project.optional-dependencies]

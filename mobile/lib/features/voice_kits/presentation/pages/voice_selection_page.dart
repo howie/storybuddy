@@ -49,7 +49,9 @@ class VoiceSelectionPage extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                   side: isSelected
                       ? BorderSide(
-                          color: Theme.of(context).primaryColor, width: 2,)
+                          color: Theme.of(context).primaryColor,
+                          width: 2,
+                        )
                       : BorderSide.none,
                 ),
                 margin: const EdgeInsets.only(bottom: 12),
@@ -65,8 +67,10 @@ class VoiceSelectionPage extends ConsumerWidget {
                           : Colors.grey,
                     ),
                   ),
-                  title: Text(voice.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),),
+                  title: Text(
+                    voice.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Text(voice.previewText ?? '點擊試聽'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,

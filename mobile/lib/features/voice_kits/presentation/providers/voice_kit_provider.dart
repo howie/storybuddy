@@ -15,7 +15,6 @@ final selectedVoiceIdProvider = StateProvider<String?>((ref) => null);
 
 // -- Voice Preview Notifier --
 class VoicePreviewNotifier extends StateNotifier<String?> {
-
   VoicePreviewNotifier() : super(null);
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -64,7 +63,6 @@ final voiceKitsProvider = FutureProvider<List<VoiceKit>>((ref) async {
 
 // -- Download Kit Controller --
 class DownloadKitController extends StateNotifier<AsyncValue<void>> {
-
   DownloadKitController(this._repository) : super(const AsyncValue.data(null));
   final VoiceKitRepository _repository;
 
@@ -93,7 +91,6 @@ final voicePreferencesProvider =
 });
 
 class VoicePreferencesController extends StateNotifier<AsyncValue<void>> {
-
   VoicePreferencesController(this._repository)
       : super(const AsyncValue.data(null));
   final VoiceKitRepository _repository;
@@ -119,7 +116,6 @@ final voicePreferencesControllerProvider =
 
 // Tuple for family arguments? Or a custom class.
 class StoryVoiceMappingParams {
-
   StoryVoiceMappingParams(this.userId, this.storyId);
   final String userId;
   final String storyId;
@@ -142,13 +138,16 @@ final storyVoiceMappingsProvider =
 });
 
 class StoryVoiceMapController extends StateNotifier<AsyncValue<void>> {
-
   StoryVoiceMapController(this._repository)
       : super(const AsyncValue.data(null));
   final VoiceKitRepository _repository;
 
   Future<void> updateMapping(
-      String userId, String storyId, String role, String voiceId,) async {
+    String userId,
+    String storyId,
+    String role,
+    String voiceId,
+  ) async {
     state = const AsyncValue.loading();
     try {
       await _repository.updateStoryVoiceMapping(userId, storyId, role, voiceId);

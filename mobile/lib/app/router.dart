@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../core/storage/secure_storage_service.dart';
 import '../features/auth/presentation/providers/parent_provider.dart';
 import '../features/pending_questions/presentation/pages/pending_questions_page.dart';
+import '../features/interaction/presentation/pages/interactive_playback_page.dart';
 import '../features/playback/presentation/pages/playback_page.dart';
 import '../features/qa_session/presentation/pages/qa_session_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
@@ -24,6 +25,7 @@ abstract class AppRoutes {
   static const String storyList = '/stories';
   static const String storyDetail = '/stories/:id';
   static const String storyPlay = '/stories/:id/play';
+  static const String storyPlayInteractive = '/stories/:id/play/interactive';
   static const String storyImport = '/stories/import';
   static const String storyGenerate = '/stories/generate';
   static const String voiceProfile = '/voice-profile';
@@ -113,6 +115,17 @@ final routerProvider = Provider<GoRouter>((ref) {
                   final id = state.pathParameters['id']!;
                   return PlaybackPage(storyId: id);
                 },
+                routes: [
+                  // Interactive Playback (T046)
+                  GoRoute(
+                    path: 'interactive',
+                    name: 'storyPlayInteractive',
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      return InteractivePlaybackPage(storyId: id);
+                    },
+                  ),
+                ],
               ),
               // Q&A Session
               GoRoute(

@@ -1,3 +1,8 @@
+"""Azure Cognitive Services TTS provider.
+
+T054 [US2] Extended for AI response audio generation.
+"""
+
 import logging
 from typing import Any
 
@@ -9,6 +14,23 @@ from src.models.voice import TTSProvider as TTSProviderEnum
 from src.services.tts.base import TTSProvider
 from src.services.tts.cache import TTSCache
 from src.services.tts.ssml_utils import create_ssml
+
+logger = logging.getLogger(__name__)
+
+# Default voice for AI responses (Taiwan Mandarin)
+DEFAULT_AI_RESPONSE_VOICE = "zh-TW-HsiaoChenNeural"
+
+# Recommended voices for AI responses (child-friendly)
+AI_RESPONSE_VOICES = {
+    "zh-TW": {
+        "female": "zh-TW-HsiaoChenNeural",
+        "male": "zh-TW-YunJheNeural",
+    },
+    "en-US": {
+        "female": "en-US-JennyNeural",
+        "male": "en-US-GuyNeural",
+    },
+}
 
 
 class AzureTTSProvider(TTSProvider):
@@ -165,3 +187,66 @@ class AzureTTSProvider(TTSProvider):
             raise RuntimeError(f"Get voices canceled: {result.cancellation_details.error_details}")
         else:
             raise RuntimeError(f"Get voices failed: {result.reason}")
+
+    async def synthesize_ai_response(
+        self,
+        text: str,
+        voice_id: str | None = None,
+        story_voice_id: str | None = None,
+        style: str | None = None,
+        language: str = "zh-TW",
+    ) -> bytes:
+        """Synthesize AI response audio (T054 [US2]).
+
+        Generates TTS audio for AI responses in interactive mode.
+        Uses the same voice as the story when available (FR-010).
+
+        Args:
+            text: AI response text to synthesize.
+            voice_id: Specific voice ID to use.
+            story_voice_id: Voice ID from the story (for consistency).
+            style: Voice style (e.g., "friendly", "cheerful").
+            language: Language code.
+
+        Returns:
+            Audio data as bytes.
+        """
+        # Use story voice if provided, otherwise use default AI voice
+        effective_voice_id = voice_id or story_voice_id or DEFAULT_AI_RESPONSE_VOICE
+
+        # Default to friendly style for AI responses to children
+        effective_style = style or "friendly"
+
+        logger.debug(f"Synthesizing AI response with voice {effective_voice_id}")
+
+        try:
+            audio_bytes = await self.synthesize(
+                text=text,
+                voice_id=effective_voice_id,
+                options={
+                    "language": language,
+                    "style": effective_style,
+                    "rate": "-5%",  # Slightly slower for children
+                    "pitch": "+5%",  # Slightly higher for friendlier tone
+                },
+            )
+            logger.info(f"AI response audio generated: {len(audio_bytes)} bytes")
+            return audio_bytes
+
+        except Exception as e:
+            logger.error(f"Failed to synthesize AI response: {e}")
+            raise
+
+    @staticmethod
+    def get_recommended_voice(language: str = "zh-TW", gender: str = "female") -> str:
+        """Get recommended voice for AI responses.
+
+        Args:
+            language: Language code.
+            gender: Preferred gender ("female" or "male").
+
+        Returns:
+            Recommended voice ID.
+        """
+        voices = AI_RESPONSE_VOICES.get(language, AI_RESPONSE_VOICES["zh-TW"])
+        return voices.get(gender, voices["female"])

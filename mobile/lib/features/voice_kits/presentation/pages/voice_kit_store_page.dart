@@ -23,7 +23,9 @@ class VoiceKitStorePage extends ConsumerWidget {
           if (previous?.isLoading ?? false) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: Text('下載成功！'), backgroundColor: Colors.green,),
+                content: Text('下載成功！'),
+                backgroundColor: Colors.green,
+              ),
             );
             // Refresh list to update status
             ref.refresh(voiceKitsProvider);
@@ -53,22 +55,30 @@ class VoiceKitStorePage extends ConsumerWidget {
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
-                  title: Text(kit.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),),
+                  title: Text(
+                    kit.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(kit.description ?? kit.version),
                       const SizedBox(height: 4),
-                      Text('Provider: ${kit.provider}',
-                          style: TextStyle(
-                              fontSize: 12, color: Colors.grey.shade600,),),
+                      Text(
+                        'Provider: ${kit.provider}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
                     ],
                   ),
                   trailing: kit.isDownloaded
                       ? const Chip(
-                          label: Text('已安裝',
-                              style: TextStyle(color: Colors.green),),
+                          label: Text(
+                            '已安裝',
+                            style: TextStyle(color: Colors.green),
+                          ),
                           backgroundColor: Colors.white,
                           avatar:
                               Icon(Icons.check, size: 16, color: Colors.green),
@@ -78,8 +88,9 @@ class VoiceKitStorePage extends ConsumerWidget {
                               ? null
                               : () {
                                   ref
-                                      .read(downloadKitControllerProvider
-                                          .notifier,)
+                                      .read(
+                                        downloadKitControllerProvider.notifier,
+                                      )
                                       .downloadKit(kit.id);
                                 },
                           child: isDownloading
@@ -87,7 +98,8 @@ class VoiceKitStorePage extends ConsumerWidget {
                                   width: 16,
                                   height: 16,
                                   child:
-                                      CircularProgressIndicator(strokeWidth: 2),)
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
                               : const Text('下載'),
                         ),
                 ),

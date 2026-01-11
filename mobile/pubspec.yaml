@@ -1,7 +1,7 @@
 name: storybuddy
 description: AI-powered storytelling app with parent voice cloning
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+1
 
 environment:
   sdk: '>=3.1.0 <4.0.0'
@@ -47,11 +47,19 @@ dependencies:
   # Utilities
   freezed_annotation: ^2.4.0
   json_annotation: ^4.8.0
+  dartz: ^0.10.1  # Functional programming utilities (Either, Option)
   intl: ^0.19.0
   logger: ^2.0.0
   permission_handler: ^11.0.0
   uuid: ^4.0.0
   path: ^1.9.0
+
+  # 006-interactive-story-mode dependencies
+  web_socket_channel: ^3.0.0
+  opus_flutter: ^3.0.3
+  opus_dart: ^3.0.0  # Required by opus_flutter for codec operations
+  share_plus: ^12.0.1
+  battery_plus: ^6.0.0  # T099 Battery monitoring
 
 dev_dependencies:
   flutter_test:

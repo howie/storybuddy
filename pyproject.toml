@@ -117,6 +117,7 @@ module = [
     "azure.cognitiveservices.speech.*",
     "google.cloud.*",
     "uvicorn.*",
+    "aiofiles.*",
 ]
 ignore_missing_imports = true
 

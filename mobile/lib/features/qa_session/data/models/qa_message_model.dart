@@ -13,10 +13,10 @@ class QAMessageModel {
     required this.sessionId,
     required this.role,
     required this.content,
-    this.isInScope,
-    this.audioUrl,
     required this.sequence,
     required this.createdAt,
+    this.isInScope,
+    this.audioUrl,
   });
 
   factory QAMessageModel.fromJson(Map<String, dynamic> json) =>

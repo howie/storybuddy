@@ -4,7 +4,8 @@ import 'package:storybuddy/features/interaction/presentation/widgets/connection_
 
 void main() {
   group('ConnectionStatusWidget', () {
-    testWidgets('should show nothing when connected with no error', (tester) async {
+    testWidgets('should show nothing when connected with no error',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -21,7 +22,8 @@ void main() {
       expect(find.text('連線已中斷'), findsNothing);
     });
 
-    testWidgets('should show reconnecting banner with progress', (tester) async {
+    testWidgets('should show reconnecting banner with progress',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -41,7 +43,8 @@ void main() {
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('should show disconnected banner with retry button', (tester) async {
+    testWidgets('should show disconnected banner with retry button',
+        (tester) async {
       bool retryPressed = false;
 
       await tester.pumpWidget(
@@ -99,7 +102,8 @@ void main() {
   });
 
   group('SessionLoadingOverlay', () {
-    testWidgets('should show loading message with indeterminate progress', (tester) async {
+    testWidgets('should show loading message with indeterminate progress',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -115,7 +119,8 @@ void main() {
       expect(find.byType(LinearProgressIndicator), findsNothing);
     });
 
-    testWidgets('should show loading message with determinate progress', (tester) async {
+    testWidgets('should show loading message with determinate progress',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -135,7 +140,8 @@ void main() {
   });
 
   group('InteractionErrorDialog', () {
-    testWidgets('should show recoverable error with retry option', (tester) async {
+    testWidgets('should show recoverable error with retry option',
+        (tester) async {
       bool retryPressed = false;
       bool dismissPressed = false;
 
@@ -177,7 +183,8 @@ void main() {
       expect(find.text('連線錯誤'), findsNothing);
     });
 
-    testWidgets('should show non-recoverable error without retry', (tester) async {
+    testWidgets('should show non-recoverable error without retry',
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

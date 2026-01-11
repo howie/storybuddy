@@ -139,8 +139,7 @@ class _InteractivePlaybackPageState
 
                           // Transcription display
                           if (interactionState.currentTranscript.isNotEmpty ||
-                              interactionState
-                                  .currentAIResponseText.isNotEmpty)
+                              interactionState.currentAIResponseText.isNotEmpty)
                             _buildTranscriptionCard(interactionState),
 
                           // Story preview
@@ -157,14 +156,20 @@ class _InteractivePlaybackPageState
                               child: ConnectionStatusWidget(
                                 isConnected: interactionState.isConnected,
                                 isReconnecting: interactionState.isReconnecting,
-                                reconnectAttempts: interactionState.reconnectAttempts,
-                                maxReconnectAttempts: interactionState.maxReconnectAttempts,
+                                reconnectAttempts:
+                                    interactionState.reconnectAttempts,
+                                maxReconnectAttempts:
+                                    interactionState.maxReconnectAttempts,
                                 errorMessage: interactionState.errorMessage,
                                 onRetry: () {
-                                  ref.read(interactionProvider.notifier).reconnect();
+                                  ref
+                                      .read(interactionProvider.notifier)
+                                      .reconnect();
                                 },
                                 onDismiss: () {
-                                  ref.read(interactionProvider.notifier).dismissError();
+                                  ref
+                                      .read(interactionProvider.notifier)
+                                      .dismissError();
                                 },
                               ),
                             ),
@@ -383,10 +388,9 @@ class _InteractivePlaybackPageState
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: indicators
-          .expand((w) => [w, const SizedBox(width: 16)])
-          .toList()
-        ..removeLast(),
+      children:
+          indicators.expand((w) => [w, const SizedBox(width: 16)]).toList()
+            ..removeLast(),
     );
   }
 
@@ -430,9 +434,7 @@ class _InteractivePlaybackPageState
                     return Transform.scale(
                       scale: progress < 1.0 ? value : 1.0,
                       child: Icon(
-                        progress >= 1.0
-                            ? Icons.check_circle
-                            : Icons.hearing,
+                        progress >= 1.0 ? Icons.check_circle : Icons.hearing,
                         size: 48,
                         color: progress >= 1.0
                             ? Colors.green

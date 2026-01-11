@@ -32,9 +32,7 @@ class _ImportStoryPageState extends ConsumerState<ImportStoryPage> {
   }
 
   bool get _canSave =>
-      _titleController.text.trim().isNotEmpty &&
-      _isContentValid &&
-      !_isLoading;
+      _titleController.text.trim().isNotEmpty && _isContentValid && !_isLoading;
 
   Future<void> _saveStory() async {
     if (!_canSave) return;
@@ -159,7 +157,7 @@ class _ImportStoryPageState extends ConsumerState<ImportStoryPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           '故事標題',
           style: AppTextStyles.headlineSmall,
         ),
@@ -184,7 +182,7 @@ class _ImportStoryPageState extends ConsumerState<ImportStoryPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           '故事內容',
           style: AppTextStyles.headlineSmall,
         ),

@@ -64,7 +64,7 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
     _currentStoryId = storyId;
     _currentStoryTitle = story.title;
 
-    bool isOffline = false;
+    var isOffline = false;
 
     // Try local cache first
     final localPath = await localDataSource.getLocalAudioPath(storyId);
@@ -87,10 +87,7 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
         storyId: storyId,
         storyTitle: story.title,
         state: PlaybackState.loading,
-        position: Duration.zero,
         duration: Duration(minutes: story.estimatedDurationMinutes ?? 5),
-        bufferedPosition: Duration.zero,
-        speed: 1.0,
         isOffline: isOffline,
       ),
     );
@@ -101,10 +98,7 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
         storyId: storyId,
         storyTitle: story.title,
         state: PlaybackState.playing,
-        position: Duration.zero,
         duration: Duration(minutes: story.estimatedDurationMinutes ?? 5),
-        bufferedPosition: Duration.zero,
-        speed: 1.0,
         isOffline: isOffline,
       ),
     );
@@ -119,10 +113,6 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
         storyId: _currentStoryId!,
         storyTitle: _currentStoryTitle ?? '',
         state: PlaybackState.paused,
-        position: Duration.zero,
-        duration: Duration.zero,
-        bufferedPosition: Duration.zero,
-        speed: 1.0,
       ),
     );
   }
@@ -136,10 +126,6 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
         storyId: _currentStoryId!,
         storyTitle: _currentStoryTitle ?? '',
         state: PlaybackState.playing,
-        position: Duration.zero,
-        duration: Duration.zero,
-        bufferedPosition: Duration.zero,
-        speed: 1.0,
       ),
     );
   }
@@ -156,11 +142,6 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
         StoryPlayback(
           storyId: _currentStoryId!,
           storyTitle: _currentStoryTitle ?? '',
-          state: PlaybackState.idle,
-          position: Duration.zero,
-          duration: Duration.zero,
-          bufferedPosition: Duration.zero,
-          speed: 1.0,
         ),
       );
     }
@@ -189,20 +170,24 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
     _downloadProgressControllers[storyId] = controller;
 
     try {
-      controller.add(AudioDownloadProgress(storyId: storyId, progress: 0.0));
+      controller.add(AudioDownloadProgress(storyId: storyId));
 
       await localDataSource.cacheAudio(storyId, story!.audioUrl!);
 
-      controller.add(AudioDownloadProgress(
-        storyId: storyId,
-        progress: 1.0,
-        isComplete: true,
-      ));
+      controller.add(
+        AudioDownloadProgress(
+          storyId: storyId,
+          progress: 1,
+          isComplete: true,
+        ),
+      );
     } catch (e) {
-      controller.add(AudioDownloadProgress(
-        storyId: storyId,
-        errorMessage: e.toString(),
-      ));
+      controller.add(
+        AudioDownloadProgress(
+          storyId: storyId,
+          errorMessage: e.toString(),
+        ),
+      );
       rethrow;
     } finally {
       await controller.close();

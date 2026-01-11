@@ -6,7 +6,8 @@ import 'package:storybuddy/features/interaction/domain/entities/interaction_sett
 import 'package:storybuddy/features/interaction/domain/repositories/interaction_settings_repository.dart';
 
 /// T066 [US3] Implement settings repository.
-class InteractionSettingsRepositoryImpl implements InteractionSettingsRepository {
+class InteractionSettingsRepositoryImpl
+    implements InteractionSettingsRepository {
   InteractionSettingsRepositoryImpl({
     required Dio dio,
     required InteractionLocalDatasource localDatasource,

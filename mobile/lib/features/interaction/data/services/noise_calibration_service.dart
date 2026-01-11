@@ -38,12 +38,12 @@ class CalibrationResult {
   bool get isNoisyEnvironment => noiseFloorDb > -25;
 
   Map<String, dynamic> toJson() => {
-    'noiseFloorDb': noiseFloorDb,
-    'percentile90': percentile90,
-    'sampleCount': sampleCount,
-    'calibrationDurationMs': calibrationDurationMs,
-    'calibratedAt': calibratedAt.toIso8601String(),
-  };
+        'noiseFloorDb': noiseFloorDb,
+        'percentile90': percentile90,
+        'sampleCount': sampleCount,
+        'calibrationDurationMs': calibrationDurationMs,
+        'calibratedAt': calibratedAt.toIso8601String(),
+      };
 
   factory CalibrationResult.fromJson(Map<String, dynamic> json) {
     return CalibrationResult(
@@ -188,8 +188,8 @@ class NoiseCalibrationService {
 
   /// Calculate energy of an audio frame in dB.
   double _calculateFrameEnergy(Uint8List frame) {
-    final samples = Int16List.view(frame.buffer, frame.offsetInBytes,
-        frame.lengthInBytes ~/ 2);
+    final samples = Int16List.view(
+        frame.buffer, frame.offsetInBytes, frame.lengthInBytes ~/ 2);
 
     if (samples.isEmpty) return -100.0;
 

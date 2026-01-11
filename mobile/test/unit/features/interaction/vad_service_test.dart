@@ -52,7 +52,8 @@ void main() {
       for (var i = 0; i < samplesPerFrame; i++) {
         // Simulate speech with a simple sine wave
         final t = i / 16000.0;
-        samples[i] = (sin(2 * pi * 300 * t) * amplitude).toInt().clamp(-32767, 32767);
+        samples[i] =
+            (sin(2 * pi * 300 * t) * amplitude).toInt().clamp(-32767, 32767);
       }
 
       return samples.buffer.asUint8List();

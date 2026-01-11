@@ -53,7 +53,7 @@ class _KeywordInputState extends State<KeywordInput> {
     // Check keyword length
     if (trimmed.length > GenerateStoryUseCase.maxKeywordLength) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('關鍵字不能超過 ${GenerateStoryUseCase.maxKeywordLength} 字'),
         ),
       );

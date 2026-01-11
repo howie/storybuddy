@@ -165,7 +165,8 @@ class TranscriptViewer extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: entries.map((entry) => _buildEntry(context, theme, entry)).toList(),
+        children:
+            entries.map((entry) => _buildEntry(context, theme, entry)).toList(),
       ),
     );
   }

@@ -23,20 +23,20 @@ void main() {
     content: '從前有一隻小熊住在森林裡...',
     wordCount: 500,
     source: StorySource.aiGenerated,
-    createdAt: DateTime(2024, 1, 1),
-    updatedAt: DateTime(2024, 1, 1),
-    syncStatus: SyncStatus.synced,
-    isDownloaded: false,
+    createdAt: DateTime(2024),
+    updatedAt: DateTime(2024),
   );
 
   group('GenerateStoryUseCase', () {
     group('call', () {
       test('generates story with valid keywords', () async {
         // Arrange
-        when(() => mockRepository.generateStory(
-              parentId: any(named: 'parentId'),
-              keywords: any(named: 'keywords'),
-            )).thenAnswer((_) async => testStory);
+        when(
+          () => mockRepository.generateStory(
+            parentId: any(named: 'parentId'),
+            keywords: any(named: 'keywords'),
+          ),
+        ).thenAnswer((_) async => testStory);
 
         // Act
         final result = await useCase.call(
@@ -48,18 +48,22 @@ void main() {
         expect(result.id, 'generated-story-1');
         expect(result.title, '小熊的森林冒險');
         expect(result.source, StorySource.aiGenerated);
-        verify(() => mockRepository.generateStory(
-              parentId: 'parent-1',
-              keywords: ['小熊', '森林', '冒險'],
-            )).called(1);
+        verify(
+          () => mockRepository.generateStory(
+            parentId: 'parent-1',
+            keywords: ['小熊', '森林', '冒險'],
+          ),
+        ).called(1);
       });
 
       test('trims whitespace from keywords', () async {
         // Arrange
-        when(() => mockRepository.generateStory(
-              parentId: any(named: 'parentId'),
-              keywords: any(named: 'keywords'),
-            )).thenAnswer((_) async => testStory);
+        when(
+          () => mockRepository.generateStory(
+            parentId: any(named: 'parentId'),
+            keywords: any(named: 'keywords'),
+          ),
+        ).thenAnswer((_) async => testStory);
 
         // Act
         await useCase.call(
@@ -68,18 +72,22 @@ void main() {
         );
 
         // Assert
-        verify(() => mockRepository.generateStory(
-              parentId: 'parent-1',
-              keywords: ['小熊', '森林', '冒險'],
-            )).called(1);
+        verify(
+          () => mockRepository.generateStory(
+            parentId: 'parent-1',
+            keywords: ['小熊', '森林', '冒險'],
+          ),
+        ).called(1);
       });
 
       test('filters empty keywords', () async {
         // Arrange
-        when(() => mockRepository.generateStory(
-              parentId: any(named: 'parentId'),
-              keywords: any(named: 'keywords'),
-            )).thenAnswer((_) async => testStory);
+        when(
+          () => mockRepository.generateStory(
+            parentId: any(named: 'parentId'),
+            keywords: any(named: 'keywords'),
+          ),
+        ).thenAnswer((_) async => testStory);
 
         // Act
         await useCase.call(
@@ -88,10 +96,12 @@ void main() {
         );
 
         // Assert
-        verify(() => mockRepository.generateStory(
-              parentId: 'parent-1',
-              keywords: ['小熊', '森林'],
-            )).called(1);
+        verify(
+          () => mockRepository.generateStory(
+            parentId: 'parent-1',
+            keywords: ['小熊', '森林'],
+          ),
+        ).called(1);
       });
 
       test('throws NoKeywordsException when all keywords are empty', () async {
@@ -100,10 +110,12 @@ void main() {
           () => useCase.call(parentId: 'parent-1', keywords: ['', '   ', '  ']),
           throwsA(isA<NoKeywordsException>()),
         );
-        verifyNever(() => mockRepository.generateStory(
-              parentId: any(named: 'parentId'),
-              keywords: any(named: 'keywords'),
-            ));
+        verifyNever(
+          () => mockRepository.generateStory(
+            parentId: any(named: 'parentId'),
+            keywords: any(named: 'keywords'),
+          ),
+        );
       });
 
       test('throws NoKeywordsException when keywords list is empty', () async {
@@ -114,7 +126,8 @@ void main() {
         );
       });
 
-      test('throws TooManyKeywordsException when more than 5 keywords', () async {
+      test('throws TooManyKeywordsException when more than 5 keywords',
+          () async {
         // Act & Assert
         expect(
           () => useCase.call(
@@ -127,10 +140,12 @@ void main() {
 
       test('accepts exactly 5 keywords', () async {
         // Arrange
-        when(() => mockRepository.generateStory(
-              parentId: any(named: 'parentId'),
-              keywords: any(named: 'keywords'),
-            )).thenAnswer((_) async => testStory);
+        when(
+          () => mockRepository.generateStory(
+            parentId: any(named: 'parentId'),
+            keywords: any(named: 'keywords'),
+          ),
+        ).thenAnswer((_) async => testStory);
 
         // Act
         await useCase.call(
@@ -139,16 +154,18 @@ void main() {
         );
 
         // Assert
-        verify(() => mockRepository.generateStory(
-              parentId: 'parent-1',
-              keywords: ['一', '二', '三', '四', '五'],
-            )).called(1);
+        verify(
+          () => mockRepository.generateStory(
+            parentId: 'parent-1',
+            keywords: ['一', '二', '三', '四', '五'],
+          ),
+        ).called(1);
       });
 
       test('throws KeywordTooLongException when keyword exceeds 20 characters',
           () async {
         // Keyword with 21 characters
-        final longKeyword = '一二三四五六七八九十一二三四五六七八九十一';
+        const longKeyword = '一二三四五六七八九十一二三四五六七八九十一';
 
         // Act & Assert
         expect(
@@ -162,12 +179,14 @@ void main() {
 
       test('accepts keyword with exactly 20 characters', () async {
         // Arrange
-        when(() => mockRepository.generateStory(
-              parentId: any(named: 'parentId'),
-              keywords: any(named: 'keywords'),
-            )).thenAnswer((_) async => testStory);
+        when(
+          () => mockRepository.generateStory(
+            parentId: any(named: 'parentId'),
+            keywords: any(named: 'keywords'),
+          ),
+        ).thenAnswer((_) async => testStory);
         // Exactly 20 characters
-        final keyword20Chars = '一二三四五六七八九十一二三四五六七八九十';
+        const keyword20Chars = '一二三四五六七八九十一二三四五六七八九十';
 
         // Act
         await useCase.call(
@@ -176,10 +195,12 @@ void main() {
         );
 
         // Assert
-        verify(() => mockRepository.generateStory(
-              parentId: 'parent-1',
-              keywords: [keyword20Chars],
-            )).called(1);
+        verify(
+          () => mockRepository.generateStory(
+            parentId: 'parent-1',
+            keywords: [keyword20Chars],
+          ),
+        ).called(1);
       });
     });
 
@@ -216,7 +237,7 @@ void main() {
 
       test('returns invalid result for long keyword', () {
         // Keyword with 21 characters
-        final longKeyword = '一二三四五六七八九十一二三四五六七八九十一';
+        const longKeyword = '一二三四五六七八九十一二三四五六七八九十一';
 
         // Act
         final result = useCase.validateKeywords([longKeyword]);

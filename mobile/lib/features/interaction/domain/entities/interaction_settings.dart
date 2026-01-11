@@ -37,7 +37,8 @@ class InteractionSettings with _$InteractionSettings {
     @Default(true) bool emailNotifications,
 
     /// T084 [US4] Notification frequency for transcript emails.
-    @Default(NotificationFrequency.daily) NotificationFrequency notificationFrequency,
+    @Default(NotificationFrequency.daily)
+    NotificationFrequency notificationFrequency,
 
     /// T084 [US4] Email address for notifications.
     String? notificationEmail,

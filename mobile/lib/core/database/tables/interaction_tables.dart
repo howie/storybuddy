@@ -10,7 +10,8 @@ class InteractionSessions extends Table {
   DateTimeColumn get startedAt => dateTime()();
   DateTimeColumn get endedAt => dateTime().nullable()();
   TextColumn get mode => text()(); // 'interactive' | 'passive'
-  TextColumn get status => text()(); // 'calibrating' | 'active' | 'paused' | 'completed' | 'error'
+  TextColumn get status =>
+      text()(); // 'calibrating' | 'active' | 'paused' | 'completed' | 'error'
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -44,11 +45,14 @@ class VoiceSegments extends Table {
 class AIResponses extends Table {
   TextColumn get id => text()();
   TextColumn get sessionId => text().references(InteractionSessions, #id)();
-  TextColumn get voiceSegmentId => text().nullable().references(VoiceSegments, #id)();
+  TextColumn get voiceSegmentId =>
+      text().nullable().references(VoiceSegments, #id)();
   TextColumn get responseText => text()();
   TextColumn get audioUrl => text().nullable()();
-  TextColumn get triggerType => text()(); // 'child_speech' | 'story_prompt' | 'timeout'
-  BoolColumn get wasInterrupted => boolean().withDefault(const Constant(false))();
+  TextColumn get triggerType =>
+      text()(); // 'child_speech' | 'story_prompt' | 'timeout'
+  BoolColumn get wasInterrupted =>
+      boolean().withDefault(const Constant(false))();
   IntColumn get interruptedAtMs => integer().nullable()();
   IntColumn get responseLatencyMs => integer()();
   DateTimeColumn get createdAt => dateTime()();
@@ -65,7 +69,8 @@ class AIResponses extends Table {
 /// Complete interaction transcript for a session.
 class InteractionTranscripts extends Table {
   TextColumn get id => text()();
-  TextColumn get sessionId => text().unique().references(InteractionSessions, #id)();
+  TextColumn get sessionId =>
+      text().unique().references(InteractionSessions, #id)();
   TextColumn get plainText => text()();
   TextColumn get htmlContent => text()();
   IntColumn get turnCount => integer()();
@@ -83,11 +88,15 @@ class InteractionTranscripts extends Table {
 class InteractionSettingsTable extends Table {
   TextColumn get id => text()();
   TextColumn get parentId => text().unique()();
-  BoolColumn get recordingEnabled => boolean().withDefault(const Constant(false))();
-  BoolColumn get emailNotifications => boolean().withDefault(const Constant(true))();
+  BoolColumn get recordingEnabled =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get emailNotifications =>
+      boolean().withDefault(const Constant(true))();
   TextColumn get notificationEmail => text().nullable()();
-  TextColumn get notificationFrequency => text().withDefault(const Constant('daily'))(); // 'instant' | 'daily' | 'weekly'
-  IntColumn get interruptionThresholdMs => integer().withDefault(const Constant(500))();
+  TextColumn get notificationFrequency => text()
+      .withDefault(const Constant('daily'))(); // 'instant' | 'daily' | 'weekly'
+  IntColumn get interruptionThresholdMs =>
+      integer().withDefault(const Constant(500))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -103,7 +112,8 @@ class InteractionSettingsTable extends Table {
 /// Environment noise calibration data for a session.
 class NoiseCalibrations extends Table {
   TextColumn get id => text()();
-  TextColumn get sessionId => text().unique().references(InteractionSessions, #id)();
+  TextColumn get sessionId =>
+      text().unique().references(InteractionSessions, #id)();
   RealColumn get noiseFloorDb => real()();
   DateTimeColumn get calibratedAt => dateTime()();
   IntColumn get sampleCount => integer()();

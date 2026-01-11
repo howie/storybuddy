@@ -59,13 +59,13 @@ class StoryPlayback with _$StoryPlayback {
 
   /// Returns the progress as a value between 0.0 and 1.0.
   double get progress {
-    if (duration.inMilliseconds == 0) return 0.0;
+    if (duration.inMilliseconds == 0) return 0;
     return (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
   }
 
   /// Returns the buffered progress as a value between 0.0 and 1.0.
   double get bufferedProgress {
-    if (duration.inMilliseconds == 0) return 0.0;
+    if (duration.inMilliseconds == 0) return 0;
     return (bufferedPosition.inMilliseconds / duration.inMilliseconds)
         .clamp(0.0, 1.0);
   }

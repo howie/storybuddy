@@ -25,7 +25,10 @@ class PendingQuestionRepositoryImpl implements PendingQuestionRepository {
     // Try to sync with remote if online
     if (await connectivityService.isConnected) {
       try {
-        await _syncFromRemote(storyId: storyId, includeAnswered: includeAnswered);
+        await _syncFromRemote(
+          storyId: storyId,
+          includeAnswered: includeAnswered,
+        );
       } catch (_) {
         // Continue with local data if sync fails
       }
@@ -182,9 +185,8 @@ class PendingQuestionRepositoryImpl implements PendingQuestionRepository {
       includeAnswered: includeAnswered,
     );
 
-    final questions = response.questions
-        .map((model) => model.toEntity())
-        .toList();
+    final questions =
+        response.questions.map((model) => model.toEntity()).toList();
 
     await localDataSource.saveQuestions(questions);
   }

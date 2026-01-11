@@ -32,8 +32,11 @@ class VADConfig {
     this.silenceThresholdDb = -50,
     this.minSpeechDurationMs = 100,
     this.minSilenceDurationMs = 300,
-  }) : assert(frameDurationMs == 10 || frameDurationMs == 20 || frameDurationMs == 30,
-           'Frame duration must be 10, 20, or 30 ms');
+  }) : assert(
+            frameDurationMs == 10 ||
+                frameDurationMs == 20 ||
+                frameDurationMs == 30,
+            'Frame duration must be 10, 20, or 30 ms');
 
   /// Number of samples per frame.
   int get samplesPerFrame => (sampleRate * frameDurationMs) ~/ 1000;
@@ -69,7 +72,8 @@ class VADEvent {
   });
 
   @override
-  String toString() => 'VADEvent(type: $type, timestamp: $timestamp, durationMs: $durationMs)';
+  String toString() =>
+      'VADEvent(type: $type, timestamp: $timestamp, durationMs: $durationMs)';
 }
 
 /// Voice Activity Detection service.
@@ -120,7 +124,8 @@ class VADService {
     final energyDb = calculateFrameEnergy(audioFrame);
     _totalFrames++;
 
-    final currentTimestamp = Duration(milliseconds: _totalFrames * config.frameDurationMs);
+    final currentTimestamp =
+        Duration(milliseconds: _totalFrames * config.frameDurationMs);
     final speechThreshold = _noiseFloorDb! + 15; // 15dB above noise floor
 
     final isSpeech = energyDb > speechThreshold;
@@ -132,7 +137,8 @@ class VADService {
 
       // Check for speech start
       if (!_isSpeaking) {
-        final minSpeechFrames = config.minSpeechDurationMs ~/ config.frameDurationMs;
+        final minSpeechFrames =
+            config.minSpeechDurationMs ~/ config.frameDurationMs;
         if (_speechFrames >= minSpeechFrames) {
           _isSpeaking = true;
           _speechStartFrame = _totalFrames - _speechFrames;
@@ -147,15 +153,18 @@ class VADService {
 
       // Check for speech end
       if (_isSpeaking) {
-        final minSilenceFrames = config.minSilenceDurationMs ~/ config.frameDurationMs;
+        final minSilenceFrames =
+            config.minSilenceDurationMs ~/ config.frameDurationMs;
         if (_silenceFrames >= minSilenceFrames) {
           _isSpeaking = false;
-          final durationFrames = _totalFrames - _speechStartFrame - _silenceFrames;
+          final durationFrames =
+              _totalFrames - _speechStartFrame - _silenceFrames;
           final durationMs = durationFrames * config.frameDurationMs;
           event = VADEvent(
             type: VADEventType.speechEnded,
             timestamp: currentTimestamp,
-            durationMs: durationMs > 0 ? durationMs : config.minSpeechDurationMs,
+            durationMs:
+                durationMs > 0 ? durationMs : config.minSpeechDurationMs,
           );
           _speechFrames = 0;
         }

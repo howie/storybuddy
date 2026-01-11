@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import 'enums.dart';
 import 'tables/interaction_tables.dart';
@@ -151,7 +151,7 @@ class AppDatabase extends _$AppDatabase {
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
-      onCreate: (Migrator m) async {
+      onCreate: (m) async {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {

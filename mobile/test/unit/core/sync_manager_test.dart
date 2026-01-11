@@ -58,7 +58,10 @@ void main() {
         final result = await syncManager.syncDataType('nonexistent');
 
         expect(result.success, false);
-        expect(result.errors, contains('No handler registered for nonexistent'));
+        expect(
+          result.errors,
+          contains('No handler registered for nonexistent'),
+        );
       });
     });
 
@@ -92,8 +95,8 @@ void main() {
         when(() => mockConnectivityService.isConnected)
             .thenAnswer((_) async => true);
 
-        int handler1Called = 0;
-        int handler2Called = 0;
+        var handler1Called = 0;
+        var handler2Called = 0;
 
         syncManager.registerHandler('type1', () async {
           handler1Called++;
@@ -279,7 +282,7 @@ void main() {
   group('SyncStatus', () {
     test('isSyncing should return true only when syncing', () {
       const syncing = SyncStatus(state: SyncState.syncing);
-      const idle = SyncStatus(state: SyncState.idle);
+      const idle = SyncStatus();
       const completed = SyncStatus(state: SyncState.completed);
 
       expect(syncing.isSyncing, true);
@@ -289,17 +292,14 @@ void main() {
 
     test('hasPendingChanges should return true when count > 0', () {
       const withPending = SyncStatus(pendingCount: 5);
-      const withoutPending = SyncStatus(pendingCount: 0);
+      const withoutPending = SyncStatus();
 
       expect(withPending.hasPendingChanges, true);
       expect(withoutPending.hasPendingChanges, false);
     });
 
     test('copyWith should create new instance with updated values', () {
-      const original = SyncStatus(
-        state: SyncState.idle,
-        pendingCount: 0,
-      );
+      const original = SyncStatus();
 
       final updated = original.copyWith(
         state: SyncState.syncing,

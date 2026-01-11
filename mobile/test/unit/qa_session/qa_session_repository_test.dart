@@ -3,8 +3,11 @@ import 'package:mocktail/mocktail.dart';
 
 // Mock classes
 class MockQASessionRemoteDataSource extends Mock {}
+
 class MockQASessionLocalDataSource extends Mock {}
+
 class MockVoiceInputService extends Mock {}
+
 class MockConnectivityService extends Mock {}
 
 void main() {

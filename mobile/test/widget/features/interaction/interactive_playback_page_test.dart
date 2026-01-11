@@ -76,7 +76,8 @@ void main() {
       expect(find.byType(ModeToggle), findsOneWidget);
     });
 
-    testWidgets('should show interactive mode indicator when in interactive mode',
+    testWidgets(
+        'should show interactive mode indicator when in interactive mode',
         (tester) async {
       // Arrange
       when(() => mockInteractionNotifier.state).thenReturn(
@@ -135,7 +136,8 @@ void main() {
       expect(find.text('正在校準環境噪音...'), findsOneWidget);
     });
 
-    testWidgets('should display microphone icon when listening', (tester) async {
+    testWidgets('should display microphone icon when listening',
+        (tester) async {
       // Arrange
       when(() => mockInteractionNotifier.state).thenReturn(
         InteractionState(
@@ -255,7 +257,8 @@ void main() {
   });
 
   group('InteractivePlaybackPage - User Interactions', () {
-    testWidgets('should toggle mode when mode toggle is tapped', (tester) async {
+    testWidgets('should toggle mode when mode toggle is tapped',
+        (tester) async {
       // Arrange
       when(() => mockInteractionNotifier.state).thenReturn(
         InteractionState(
@@ -333,8 +336,7 @@ void main() {
           status: SessionStatus.active,
         ),
       );
-      when(() => mockInteractionNotifier.endSession())
-          .thenAnswer((_) async {});
+      when(() => mockInteractionNotifier.endSession()).thenAnswer((_) async {});
 
       // Act
       await tester.pumpWidget(

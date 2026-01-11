@@ -123,11 +123,14 @@ class InteractionSettingsPage extends ConsumerWidget {
         subtitle: const Text('接收互動紀錄的電子郵件'),
         value: settings.emailNotifications,
         onChanged: (value) {
-          ref.read(interactionSettingsProvider.notifier)
+          ref
+              .read(interactionSettingsProvider.notifier)
               .updateEmailNotifications(value);
         },
         secondary: Icon(
-          settings.emailNotifications ? Icons.notifications_active : Icons.notifications_off,
+          settings.emailNotifications
+              ? Icons.notifications_active
+              : Icons.notifications_off,
           color: settings.emailNotifications
               ? Theme.of(context).colorScheme.primary
               : null,
@@ -190,7 +193,8 @@ class InteractionSettingsPage extends ConsumerWidget {
             groupValue: settings.notificationFrequency,
             onChanged: (value) {
               if (value != null) {
-                ref.read(interactionSettingsProvider.notifier)
+                ref
+                    .read(interactionSettingsProvider.notifier)
                     .updateNotificationFrequency(value);
                 Navigator.of(context).pop();
               }
@@ -234,7 +238,8 @@ class InteractionSettingsPage extends ConsumerWidget {
             onPressed: () {
               final email = controller.text.trim();
               if (email.isNotEmpty) {
-                ref.read(interactionSettingsProvider.notifier)
+                ref
+                    .read(interactionSettingsProvider.notifier)
                     .updateNotificationEmail(email);
               }
               Navigator.of(context).pop();
@@ -275,7 +280,8 @@ class InteractionSettingsPage extends ConsumerWidget {
             // Show confirmation dialog when enabling
             _showRecordingConfirmDialog(context, ref);
           } else {
-            ref.read(interactionSettingsProvider.notifier)
+            ref
+                .read(interactionSettingsProvider.notifier)
                 .updateRecordingEnabled(false);
           }
         },
@@ -301,7 +307,8 @@ class InteractionSettingsPage extends ConsumerWidget {
         subtitle: const Text('自動將錄音轉換為文字'),
         value: settings.autoTranscribe,
         onChanged: (value) {
-          ref.read(interactionSettingsProvider.notifier)
+          ref
+              .read(interactionSettingsProvider.notifier)
               .updateAutoTranscribe(value);
         },
         secondary: const Icon(Icons.text_snippet),
@@ -429,7 +436,8 @@ class InteractionSettingsPage extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () {
-              ref.read(interactionSettingsProvider.notifier)
+              ref
+                  .read(interactionSettingsProvider.notifier)
                   .updateRecordingEnabled(true);
               Navigator.of(context).pop();
             },
@@ -468,7 +476,8 @@ class InteractionSettingsPage extends ConsumerWidget {
   ) {
     return SimpleDialogOption(
       onPressed: () {
-        ref.read(interactionSettingsProvider.notifier)
+        ref
+            .read(interactionSettingsProvider.notifier)
             .updateRetentionDays(days);
         Navigator.of(context).pop();
       },

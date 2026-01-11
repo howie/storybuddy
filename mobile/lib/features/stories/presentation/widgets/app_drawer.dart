@@ -45,7 +45,8 @@ class AppDrawer extends ConsumerWidget {
   /// Extracts the voice profile status from the async value.
   /// Returns the status of the latest ready profile, or the latest profile's status.
   VoiceProfileStatus? _getVoiceStatus(
-      AsyncValue<List<VoiceProfile>> voiceProfilesAsync) {
+    AsyncValue<List<VoiceProfile>> voiceProfilesAsync,
+  ) {
     final profiles = voiceProfilesAsync.valueOrNull;
     if (profiles == null || profiles.isEmpty) {
       return null;
@@ -64,7 +65,9 @@ class AppDrawer extends ConsumerWidget {
   }
 
   Widget _buildDrawerHeader(
-      BuildContext context, VoiceProfileStatus? voiceStatus) {
+    BuildContext context,
+    VoiceProfileStatus? voiceStatus,
+  ) {
     return DrawerHeader(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primaryContainer,
@@ -93,7 +96,9 @@ class AppDrawer extends ConsumerWidget {
   }
 
   Widget _buildVoiceRecordingTile(
-      BuildContext context, VoiceProfileStatus? voiceStatus) {
+    BuildContext context,
+    VoiceProfileStatus? voiceStatus,
+  ) {
     return ListTile(
       leading: const Icon(Icons.mic),
       title: const Text('錄製聲音'),

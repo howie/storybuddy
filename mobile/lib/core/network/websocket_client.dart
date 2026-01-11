@@ -25,7 +25,8 @@ class WebSocketMessageType {
   static const String connectionEstablished = 'connection_established';
   static const String transcriptionProgress = 'transcription_progress';
   static const String transcriptionFinal = 'transcription_final';
-  static const String aiProcessingStarted = 'ai_processing_started'; // T055 [US2]
+  static const String aiProcessingStarted =
+      'ai_processing_started'; // T055 [US2]
   static const String aiResponse = 'ai_response'; // T055 [US2]
   static const String aiResponseStarted = 'ai_response_started';
   static const String aiResponseText = 'ai_response_text';
@@ -332,7 +333,8 @@ class WebSocketClient {
   void _handleIdleTimeout() {
     if (!_isConnected) return;
 
-    _errorController.add('Connection closed due to inactivity (${idleTimeout.inSeconds}s idle timeout)');
+    _errorController.add(
+        'Connection closed due to inactivity (${idleTimeout.inSeconds}s idle timeout)');
 
     // Send a message to inform the server before disconnecting
     try {
@@ -382,10 +384,12 @@ class WebSocketClient {
           await connect(sessionId: _sessionId!, token: _token!);
           _isReconnecting = false;
         } catch (e) {
-          _errorController.add('Reconnection failed (attempt $_reconnectAttempts/$_maxReconnectAttempts): $e');
+          _errorController.add(
+              'Reconnection failed (attempt $_reconnectAttempts/$_maxReconnectAttempts): $e');
           if (_reconnectAttempts >= _maxReconnectAttempts) {
             _isReconnecting = false;
-            _errorController.add('Max reconnection attempts reached. Please reconnect manually.');
+            _errorController.add(
+                'Max reconnection attempts reached. Please reconnect manually.');
           }
           // If connect fails, it will trigger _handleDisconnection again
         }

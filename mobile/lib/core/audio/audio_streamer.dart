@@ -126,7 +126,8 @@ class AudioStreamer {
     if (_isRecording) return;
 
     if (_recorder == null || _encoder == null) {
-      throw StateError('AudioStreamer not initialized. Call initialize() first.');
+      throw StateError(
+          'AudioStreamer not initialized. Call initialize() first.');
     }
 
     // Check microphone permission

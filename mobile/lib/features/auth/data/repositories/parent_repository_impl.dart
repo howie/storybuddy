@@ -173,7 +173,7 @@ class ParentRepositoryImpl implements ParentRepository {
   @override
   Future<void> syncParent(String id) async {
     if (!await connectivityService.isConnected) {
-      throw const NetworkException(message: 'No network connection');
+      throw const NetworkException();
     }
 
     final localParent = await localDataSource.getParent(id);

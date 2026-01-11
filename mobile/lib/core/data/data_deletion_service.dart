@@ -24,8 +24,8 @@ class DataDeletionService {
   /// Deletes all local data except authentication.
   Future<DataDeletionResult> deleteAllLocalData() async {
     final errors = <String>[];
-    int filesDeleted = 0;
-    int recordsDeleted = 0;
+    var filesDeleted = 0;
+    var recordsDeleted = 0;
 
     // Delete cached audio files
     try {
@@ -62,7 +62,7 @@ class DataDeletionService {
   }
 
   Future<int> _deleteCachedAudioFiles() async {
-    int count = 0;
+    var count = 0;
 
     // Delete voice recordings
     try {

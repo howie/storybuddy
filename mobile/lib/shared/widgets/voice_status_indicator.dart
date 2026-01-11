@@ -8,8 +8,8 @@ import '../../core/database/enums.dart';
 /// has been recorded, is being processed, or is ready to use.
 class VoiceStatusIndicator extends StatelessWidget {
   const VoiceStatusIndicator({
-    super.key,
     required this.status,
+    super.key,
     this.iconSize = 16,
     this.fontSize = 12,
   });
@@ -51,7 +51,11 @@ class VoiceStatusIndicator extends StatelessWidget {
   (IconData, String, Color) _getStatusDisplay() {
     return switch (status) {
       null => (Icons.mic_off, '尚未錄製', Colors.grey),
-      VoiceProfileStatus.pending => (Icons.hourglass_empty, '準備中', Colors.orange),
+      VoiceProfileStatus.pending => (
+          Icons.hourglass_empty,
+          '準備中',
+          Colors.orange
+        ),
       VoiceProfileStatus.processing => (Icons.sync, '處理中', Colors.orange),
       VoiceProfileStatus.ready => (Icons.check_circle, '已就緒', Colors.green),
       VoiceProfileStatus.failed => (Icons.error, '處理失敗', Colors.red),

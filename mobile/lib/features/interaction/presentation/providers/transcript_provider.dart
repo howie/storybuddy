@@ -120,9 +120,8 @@ class TranscriptListNotifier extends StateNotifier<TranscriptListState> {
   /// Remove a transcript from the list (after deletion).
   void removeTranscript(String transcriptId) {
     state = state.copyWith(
-      transcripts: state.transcripts
-          .where((t) => t.id != transcriptId)
-          .toList(),
+      transcripts:
+          state.transcripts.where((t) => t.id != transcriptId).toList(),
     );
   }
 }

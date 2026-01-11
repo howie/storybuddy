@@ -149,7 +149,6 @@ class InteractionNotifier extends StateNotifier<InteractionState> {
 
       // T094 [US5] Start calibration flow
       await _startCalibrationFlow();
-
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -217,7 +216,6 @@ class InteractionNotifier extends StateNotifier<InteractionState> {
       // Auto-proceed after brief delay to show result
       await Future.delayed(const Duration(milliseconds: 500));
       await completeCalibration();
-
     } catch (e) {
       // Calibration failed, use defaults and continue
       await completeCalibration();
@@ -383,7 +381,8 @@ class InteractionNotifier extends StateNotifier<InteractionState> {
     });
 
     _connectionSubscription?.cancel();
-    _connectionSubscription = _webSocketClient?.connectionState.listen((connected) {
+    _connectionSubscription =
+        _webSocketClient?.connectionState.listen((connected) {
       _handleConnectionStateChange(connected);
     });
 
@@ -494,7 +493,8 @@ class InteractionNotifier extends StateNotifier<InteractionState> {
   }
 
   /// T099 [P] Get estimated remaining interactive time.
-  Duration? get estimatedRemainingTime => _batteryMonitor.estimateRemainingTime();
+  Duration? get estimatedRemainingTime =>
+      _batteryMonitor.estimateRemainingTime();
 
   /// T099 [P] Check if battery is critically low.
   bool get isBatteryCritical => _batteryMonitor.isCriticallyLow;
@@ -716,7 +716,7 @@ class InteractionNotifier extends StateNotifier<InteractionState> {
     _webSocketClient?.dispose();
     _audioPlayer.dispose();
     _calibrationService.dispose();
-    _batteryMonitor.dispose();  // T099 [P]
+    _batteryMonitor.dispose(); // T099 [P]
     super.dispose();
   }
 }

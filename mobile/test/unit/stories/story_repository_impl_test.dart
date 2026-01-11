@@ -107,8 +107,8 @@ void main() {
           content: '從前從前...',
           source: StorySource.imported,
           wordCount: 500,
-          createdAt: DateTime(2024, 1, 1),
-          updatedAt: DateTime(2024, 1, 1),
+          createdAt: DateTime(2024),
+          updatedAt: DateTime(2024),
         );
         when(() => mockLocalDataSource.getStory('story-1'))
             .thenAnswer((_) async => null);
@@ -180,10 +180,12 @@ void main() {
             .thenAnswer((_) async {});
         when(() => mockConnectivityService.isConnected)
             .thenAnswer((_) async => true);
-        when(() => mockRemoteDataSource.importStory(
-              title: any(named: 'title'),
-              content: any(named: 'content'),
-            )).thenAnswer((_) async => remoteModel);
+        when(
+          () => mockRemoteDataSource.importStory(
+            title: any(named: 'title'),
+            content: any(named: 'content'),
+          ),
+        ).thenAnswer((_) async => remoteModel);
 
         // Act
         final result = await repository.importStory(
@@ -193,10 +195,12 @@ void main() {
 
         // Assert
         expect(result.id, 'remote-id');
-        verify(() => mockRemoteDataSource.importStory(
-              title: any(named: 'title'),
-              content: any(named: 'content'),
-            )).called(1);
+        verify(
+          () => mockRemoteDataSource.importStory(
+            title: any(named: 'title'),
+            content: any(named: 'content'),
+          ),
+        ).called(1);
       });
     });
 
@@ -208,7 +212,8 @@ void main() {
 
         // Act & Assert
         expect(
-          () => repository.generateStory(parentId: 'parent-1', keywords: ['小熊', '森林']),
+          () => repository
+              .generateStory(parentId: 'parent-1', keywords: ['小熊', '森林']),
           throwsException,
         );
       });
@@ -227,13 +232,18 @@ void main() {
         );
         when(() => mockConnectivityService.isConnected)
             .thenAnswer((_) async => true);
-        when(() => mockRemoteDataSource.generateStory(parentId: any(named: 'parentId'), keywords: any(named: 'keywords')))
-            .thenAnswer((_) async => remoteModel);
+        when(
+          () => mockRemoteDataSource.generateStory(
+            parentId: any(named: 'parentId'),
+            keywords: any(named: 'keywords'),
+          ),
+        ).thenAnswer((_) async => remoteModel);
         when(() => mockLocalDataSource.saveStory(any()))
             .thenAnswer((_) async {});
 
         // Act
-        final result = await repository.generateStory(parentId: 'parent-1', keywords: ['小熊', '森林']);
+        final result = await repository
+            .generateStory(parentId: 'parent-1', keywords: ['小熊', '森林']);
 
         // Assert
         expect(result.id, 'generated-id');
@@ -258,8 +268,9 @@ void main() {
         await repository.deleteStory('story-2');
 
         // Assert
-        verify(() => mockAudioCacheManager.deleteCachedAudio('/cache/story-2.enc'))
-            .called(1);
+        verify(
+          () => mockAudioCacheManager.deleteCachedAudio('/cache/story-2.enc'),
+        ).called(1);
         verify(() => mockLocalDataSource.deleteStory('story-2')).called(1);
       });
 
@@ -287,26 +298,33 @@ void main() {
         // Arrange
         when(() => mockLocalDataSource.getStory('story-1'))
             .thenAnswer((_) async => TestData.story1);
-        when(() => mockAudioCacheManager.cacheAudioFromUrl(
-              any(),
-              storyId: any(named: 'storyId'),
-            )).thenAnswer((_) async => '/cache/story-1.enc');
-        when(() => mockLocalDataSource.updateLocalAudioPath(any(), any(), any()))
-            .thenAnswer((_) async {});
+        when(
+          () => mockAudioCacheManager.cacheAudioFromUrl(
+            any(),
+            storyId: any(named: 'storyId'),
+          ),
+        ).thenAnswer((_) async => '/cache/story-1.enc');
+        when(
+          () => mockLocalDataSource.updateLocalAudioPath(any(), any(), any()),
+        ).thenAnswer((_) async {});
 
         // Act
         await repository.downloadStoryAudio('story-1');
 
         // Assert
-        verify(() => mockAudioCacheManager.cacheAudioFromUrl(
-              'https://example.com/audio/story-1.mp3',
-              storyId: 'story-1',
-            )).called(1);
-        verify(() => mockLocalDataSource.updateLocalAudioPath(
-              'story-1',
-              '/cache/story-1.enc',
-              true,
-            )).called(1);
+        verify(
+          () => mockAudioCacheManager.cacheAudioFromUrl(
+            'https://example.com/audio/story-1.mp3',
+            storyId: 'story-1',
+          ),
+        ).called(1);
+        verify(
+          () => mockLocalDataSource.updateLocalAudioPath(
+            'story-1',
+            '/cache/story-1.enc',
+            true,
+          ),
+        ).called(1);
       });
 
       test('throws when story not found', () async {
@@ -351,11 +369,13 @@ void main() {
             .thenAnswer((_) async => true);
         when(() => mockLocalDataSource.getStory('story-3'))
             .thenAnswer((_) async => TestData.storyPendingSync);
-        when(() => mockRemoteDataSource.updateStory(
-              id: any(named: 'id'),
-              title: any(named: 'title'),
-              content: any(named: 'content'),
-            )).thenAnswer((_) async => remoteModel);
+        when(
+          () => mockRemoteDataSource.updateStory(
+            id: any(named: 'id'),
+            title: any(named: 'title'),
+            content: any(named: 'content'),
+          ),
+        ).thenAnswer((_) async => remoteModel);
         when(() => mockLocalDataSource.saveStory(any()))
             .thenAnswer((_) async {});
 
@@ -363,11 +383,13 @@ void main() {
         await repository.syncStory('story-3');
 
         // Assert
-        verify(() => mockRemoteDataSource.updateStory(
-              id: 'story-3',
-              title: '等待同步的故事',
-              content: '這是一個等待同步的故事...',
-            )).called(1);
+        verify(
+          () => mockRemoteDataSource.updateStory(
+            id: 'story-3',
+            title: '等待同步的故事',
+            content: '這是一個等待同步的故事...',
+          ),
+        ).called(1);
       });
     });
 

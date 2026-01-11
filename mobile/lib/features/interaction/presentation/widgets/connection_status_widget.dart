@@ -90,7 +90,8 @@ class ConnectionStatusWidget extends StatelessWidget {
                 Text(
                   '嘗試 $reconnectAttempts / $maxReconnectAttempts',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onTertiaryContainer.withOpacity(0.7),
+                    color:
+                        theme.colorScheme.onTertiaryContainer.withOpacity(0.7),
                   ),
                 ),
               ],
@@ -101,7 +102,8 @@ class ConnectionStatusWidget extends StatelessWidget {
             width: 40,
             child: LinearProgressIndicator(
               value: reconnectAttempts / maxReconnectAttempts,
-              backgroundColor: theme.colorScheme.onTertiaryContainer.withOpacity(0.2),
+              backgroundColor:
+                  theme.colorScheme.onTertiaryContainer.withOpacity(0.2),
               color: theme.colorScheme.onTertiaryContainer,
             ),
           ),

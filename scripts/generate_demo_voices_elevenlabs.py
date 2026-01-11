@@ -119,8 +119,14 @@ def list_available_voices(client):
     print()
 
 
-def synthesize_to_file(client, text: str, voice_id: str, output_path: Path,
-                       stability: float = 0.5, similarity_boost: float = 0.75) -> bool:
+def synthesize_to_file(
+    client,
+    text: str,
+    voice_id: str,
+    output_path: Path,
+    stability: float = 0.5,
+    similarity_boost: float = 0.75,
+) -> bool:
     """Synthesize speech and save to file."""
     try:
         audio = client.text_to_speech.convert(
@@ -180,16 +186,16 @@ def main():
 
         if synthesize_to_file(
             client,
-            text=char['preview_text'],
-            voice_id=char['voice_id'],
+            text=char["preview_text"],
+            voice_id=char["voice_id"],
             output_path=output_path,
-            stability=char['stability'],
-            similarity_boost=char['similarity_boost'],
+            stability=char["stability"],
+            similarity_boost=char["similarity_boost"],
         ):
             print(f"  ✓ Saved: {output_path}")
             success_count += 1
         else:
-            print(f"  ✗ Failed to generate")
+            print("  ✗ Failed to generate")
 
     # Generate sample story
     print("\n" + "-" * 40)

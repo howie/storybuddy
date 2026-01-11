@@ -16,11 +16,9 @@ class TestData {
     content: '從前從前，有一個小女孩叫做小紅帽...',
     wordCount: 500,
     source: StorySource.imported,
-    createdAt: DateTime(2024, 1, 1),
-    updatedAt: DateTime(2024, 1, 1),
-    syncStatus: SyncStatus.synced,
+    createdAt: DateTime(2024),
+    updatedAt: DateTime(2024),
     audioUrl: 'https://example.com/audio/story-1.mp3',
-    isDownloaded: false,
   );
 
   static final story2 = Story(
@@ -32,7 +30,6 @@ class TestData {
     source: StorySource.aiGenerated,
     createdAt: DateTime(2024, 1, 2),
     updatedAt: DateTime(2024, 1, 2),
-    syncStatus: SyncStatus.synced,
     audioUrl: 'https://example.com/audio/story-2.mp3',
     isDownloaded: true,
     localAudioPath: '/cache/story-2.enc',
@@ -48,7 +45,6 @@ class TestData {
     createdAt: DateTime(2024, 1, 3),
     updatedAt: DateTime(2024, 1, 3),
     syncStatus: SyncStatus.pendingSync,
-    isDownloaded: false,
   );
 
   static final storyNoAudio = Story(
@@ -60,11 +56,10 @@ class TestData {
     source: StorySource.imported,
     createdAt: DateTime(2024, 1, 4),
     updatedAt: DateTime(2024, 1, 4),
-    syncStatus: SyncStatus.synced,
-    isDownloaded: false,
   );
 
-  static List<Story> get allStories => [story1, story2, storyPendingSync, storyNoAudio];
+  static List<Story> get allStories =>
+      [story1, story2, storyPendingSync, storyNoAudio];
 
   // Voice Profiles
   static final voiceProfile1 = VoiceProfile(
@@ -73,11 +68,10 @@ class TestData {
     name: '爸爸的聲音',
     status: VoiceProfileStatus.ready,
     sampleDurationSeconds: 45,
-    createdAt: DateTime(2024, 1, 1),
-    updatedAt: DateTime(2024, 1, 1),
+    createdAt: DateTime(2024),
+    updatedAt: DateTime(2024),
     localAudioPath: '/recordings/voice-1.wav',
     remoteVoiceModelUrl: 'https://example.com/voices/voice-1.wav',
-    syncStatus: SyncStatus.synced,
   );
 
   static final voiceProfileProcessing = VoiceProfile(
@@ -102,7 +96,6 @@ class TestData {
     updatedAt: DateTime(2024, 1, 3),
     localAudioPath: '/recordings/voice-3.wav',
     errorMessage: '錄音品質不足',
-    syncStatus: SyncStatus.synced,
   );
 
   // Q&A Sessions
@@ -118,9 +111,8 @@ class TestData {
   static final qaSessionActive = QASession(
     id: 'qa-session-2',
     storyId: 'story-2',
-    startedAt: DateTime(2024, 1, 6, 10, 0),
+    startedAt: DateTime(2024, 1, 6, 10),
     messageCount: 1,
-    status: QASessionStatus.active,
   );
 
   // Pending Questions
@@ -145,8 +137,8 @@ class TestData {
     storyId: 'story-1',
     question: '狼是好人還是壞人？',
     status: PendingQuestionStatus.answered,
-    askedAt: DateTime(2024, 1, 4, 9, 0),
-    answeredAt: DateTime(2024, 1, 4, 20, 0),
+    askedAt: DateTime(2024, 1, 4, 9),
+    answeredAt: DateTime(2024, 1, 4, 20),
   );
 
   static List<PendingQuestion> get allPendingQuestions =>

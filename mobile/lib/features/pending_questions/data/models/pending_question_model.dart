@@ -17,6 +17,20 @@ class PendingQuestionModel {
     this.answeredAt,
   });
 
+  /// Creates API model from domain entity.
+  factory PendingQuestionModel.fromEntity(PendingQuestion entity) {
+    return PendingQuestionModel(
+      id: entity.id,
+      storyId: entity.storyId,
+      question: entity.question,
+      status: entity.status == PendingQuestionStatus.answered
+          ? 'answered'
+          : 'pending',
+      askedAt: entity.askedAt,
+      answeredAt: entity.answeredAt,
+    );
+  }
+
   factory PendingQuestionModel.fromJson(Map<String, dynamic> json) =>
       _$PendingQuestionModelFromJson(json);
 
@@ -62,18 +76,6 @@ class PendingQuestionModel {
       default:
         return PendingQuestionStatus.pending;
     }
-  }
-
-  /// Creates API model from domain entity.
-  factory PendingQuestionModel.fromEntity(PendingQuestion entity) {
-    return PendingQuestionModel(
-      id: entity.id,
-      storyId: entity.storyId,
-      question: entity.question,
-      status: entity.status == PendingQuestionStatus.answered ? 'answered' : 'pending',
-      askedAt: entity.askedAt,
-      answeredAt: entity.answeredAt,
-    );
   }
 }
 

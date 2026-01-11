@@ -38,10 +38,7 @@ class TestCompleteStoryLifecycle:
         # Step 1: Create parent
         parent_response = await client.post(
             "/api/v1/parents",
-            json={
-                "name": "E2E Test Parent",
-                "email": f"e2e_{uuid4().hex[:8]}@example.com"
-            }
+            json={"name": "E2E Test Parent", "email": f"e2e_{uuid4().hex[:8]}@example.com"},
         )
         assert parent_response.status_code == 201
         parent = parent_response.json()
@@ -59,7 +56,7 @@ class TestCompleteStoryLifecycle:
                     "She had many friends including Oliver the wise owl and Danny the deer. "
                     "One sunny morning, Ruby decided to go on an adventure to find the legendary Rainbow Bridge."
                 ),
-            }
+            },
         )
         assert story_response.status_code == 201
         story = story_response.json()
@@ -72,8 +69,7 @@ class TestCompleteStoryLifecycle:
 
         # Step 3: Create voice profile
         voice_profile_response = await client.post(
-            "/api/v1/voice-profiles",
-            json={"parent_id": parent_id, "name": "Dad's Voice"}
+            "/api/v1/voice-profiles", json={"parent_id": parent_id, "name": "Dad's Voice"}
         )
         assert voice_profile_response.status_code == 201
         voice_profile = voice_profile_response.json()
@@ -83,7 +79,7 @@ class TestCompleteStoryLifecycle:
         # Step 4: Upload voice sample
         upload_response = await client.post(
             f"/api/v1/voice-profiles/{profile_id}/upload",
-            files={"audio": ("sample.wav", mock_wav_file_30s, "audio/wav")}
+            files={"audio": ("sample.wav", mock_wav_file_30s, "audio/wav")},
         )
         # May succeed or require longer duration depending on validation
         if upload_response.status_code == 200:
@@ -93,10 +89,11 @@ class TestCompleteStoryLifecycle:
 
         # Step 5: Generate story audio (requires ready voice profile)
         # Update voice profile to ready status for testing
+        from uuid import UUID
+
         from src.db.repository import VoiceProfileRepository
         from src.models import VoiceProfileStatus
         from src.models.voice import VoiceProfileUpdate
-        from uuid import UUID
 
         await VoiceProfileRepository.update(
             UUID(profile_id),
@@ -107,17 +104,13 @@ class TestCompleteStoryLifecycle:
         )
 
         audio_response = await client.post(
-            f"/api/v1/stories/{story_id}/audio",
-            json={"voice_profile_id": profile_id}
+            f"/api/v1/stories/{story_id}/audio", json={"voice_profile_id": profile_id}
         )
         assert audio_response.status_code == 202
         assert audio_response.json()["status"] == "processing"
 
         # Step 6: Create Q&A session
-        qa_session_response = await client.post(
-            "/api/v1/qa/sessions",
-            json={"story_id": story_id}
-        )
+        qa_session_response = await client.post("/api/v1/qa/sessions", json={"story_id": story_id})
         assert qa_session_response.status_code == 201
         qa_session = qa_session_response.json()
         session_id = qa_session["id"]
@@ -132,8 +125,7 @@ class TestCompleteStoryLifecycle:
 
         for question in questions:
             msg_response = await client.post(
-                f"/api/v1/qa/sessions/{session_id}/messages",
-                json={"content": question}
+                f"/api/v1/qa/sessions/{session_id}/messages", json={"content": question}
             )
             assert msg_response.status_code == 200
             data = msg_response.json()
@@ -146,8 +138,7 @@ class TestCompleteStoryLifecycle:
 
         # Step 8: End session
         end_response = await client.patch(
-            f"/api/v1/qa/sessions/{session_id}",
-            json={"status": "completed"}
+            f"/api/v1/qa/sessions/{session_id}", json={"status": "completed"}
         )
         assert end_response.status_code == 200
         assert end_response.json()["status"] == "completed"
@@ -158,9 +149,7 @@ class TestCompleteStoryLifecycle:
 class TestCascadeDeleteResources:
     """E2E-002: Resource cascade deletion tests."""
 
-    async def test_delete_parent_cascades_to_stories(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_delete_parent_cascades_to_stories(self, client: AsyncClient) -> None:
         """
         E2E-002: Delete parent cascades to all associated resources.
 
@@ -175,8 +164,8 @@ class TestCascadeDeleteResources:
             "/api/v1/parents",
             json={
                 "name": "Cascade Delete Parent",
-                "email": f"cascade_{uuid4().hex[:8]}@example.com"
-            }
+                "email": f"cascade_{uuid4().hex[:8]}@example.com",
+            },
         )
         parent_id = parent_response.json()["id"]
 
@@ -190,7 +179,7 @@ class TestCascadeDeleteResources:
                     "title": f"Story {i + 1}",
                     "content": f"Content for story {i + 1}",
                     "source": "imported",
-                }
+                },
             )
             story_ids.append(story_response.json()["id"])
 
@@ -198,8 +187,7 @@ class TestCascadeDeleteResources:
         profile_ids = []
         for name in ["Dad", "Mom"]:
             profile_response = await client.post(
-                "/api/v1/voice-profiles",
-                json={"parent_id": parent_id, "name": name}
+                "/api/v1/voice-profiles", json={"parent_id": parent_id, "name": name}
             )
             profile_ids.append(profile_response.json()["id"])
 
@@ -241,8 +229,7 @@ class TestQAMessageLimitEnforcement:
         """
         # Create Q&A session
         session_response = await client.post(
-            "/api/v1/qa/sessions",
-            json={"story_id": created_story["id"]}
+            "/api/v1/qa/sessions", json={"story_id": created_story["id"]}
         )
         session_id = session_response.json()["id"]
 
@@ -250,7 +237,7 @@ class TestQAMessageLimitEnforcement:
         for i in range(5):
             response = await client.post(
                 f"/api/v1/qa/sessions/{session_id}/messages",
-                json={"content": f"Question number {i + 1}?"}
+                json={"content": f"Question number {i + 1}?"},
             )
             assert response.status_code == 200, f"Exchange {i + 1} failed"
 
@@ -260,8 +247,7 @@ class TestQAMessageLimitEnforcement:
 
         # 6th exchange should fail
         response = await client.post(
-            f"/api/v1/qa/sessions/{session_id}/messages",
-            json={"content": "This should fail?"}
+            f"/api/v1/qa/sessions/{session_id}/messages", json={"content": "This should fail?"}
         )
         assert response.status_code == 400
         assert "limit" in response.json()["detail"].lower()
@@ -275,9 +261,7 @@ class TestPerformance:
     # PERF-001: Health check response time
     # =========================================================================
 
-    async def test_health_check_response_time(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_health_check_response_time(self, client: AsyncClient) -> None:
         """PERF-001: Health check responds in < 100ms."""
         times = []
         for _ in range(5):
@@ -295,14 +279,12 @@ class TestPerformance:
     # PERF-002: List API pagination performance
     # =========================================================================
 
-    async def test_list_pagination_performance(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_list_pagination_performance(self, client: AsyncClient) -> None:
         """PERF-002: List API with pagination handles 100 items efficiently."""
         # Create parent
         parent_response = await client.post(
             "/api/v1/parents",
-            json={"name": "Perf Test Parent", "email": f"perf_{uuid4().hex[:8]}@example.com"}
+            json={"name": "Perf Test Parent", "email": f"perf_{uuid4().hex[:8]}@example.com"},
         )
         parent_id = parent_response.json()["id"]
 
@@ -315,14 +297,13 @@ class TestPerformance:
                     "title": f"Perf Story {i + 1}",
                     "content": f"Content {i + 1}",
                     "source": "imported",
-                }
+                },
             )
 
         # Measure list performance
         start = time.time()
         response = await client.get(
-            "/api/v1/stories",
-            params={"parent_id": parent_id, "limit": 100}
+            "/api/v1/stories", params={"parent_id": parent_id, "limit": 100}
         )
         elapsed = (time.time() - start) * 1000
 
@@ -335,9 +316,7 @@ class TestPerformance:
     # PERF-003: Concurrent request handling
     # =========================================================================
 
-    async def test_concurrent_requests(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_concurrent_requests(self, client: AsyncClient) -> None:
         """PERF-003: Handle 10 concurrent requests correctly."""
         import asyncio
 
@@ -358,20 +337,18 @@ class TestPerformance:
 class TestMultiParentIsolation:
     """Test data isolation between different parents."""
 
-    async def test_parent_data_isolation(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_parent_data_isolation(self, client: AsyncClient) -> None:
         """Verify one parent cannot see another parent's data."""
         # Create two parents
         parent1_response = await client.post(
             "/api/v1/parents",
-            json={"name": "Parent 1", "email": f"p1_{uuid4().hex[:8]}@example.com"}
+            json={"name": "Parent 1", "email": f"p1_{uuid4().hex[:8]}@example.com"},
         )
         parent1_id = parent1_response.json()["id"]
 
         parent2_response = await client.post(
             "/api/v1/parents",
-            json={"name": "Parent 2", "email": f"p2_{uuid4().hex[:8]}@example.com"}
+            json={"name": "Parent 2", "email": f"p2_{uuid4().hex[:8]}@example.com"},
         )
         parent2_id = parent2_response.json()["id"]
 
@@ -384,7 +361,7 @@ class TestMultiParentIsolation:
                     "title": f"Parent1 Story {i}",
                     "content": f"Content {i}",
                     "source": "imported",
-                }
+                },
             )
 
         # Create stories for parent2
@@ -396,23 +373,17 @@ class TestMultiParentIsolation:
                     "title": f"Parent2 Story {i}",
                     "content": f"Content {i}",
                     "source": "imported",
-                }
+                },
             )
 
         # Verify parent1 only sees their stories
-        parent1_stories = await client.get(
-            "/api/v1/stories",
-            params={"parent_id": parent1_id}
-        )
+        parent1_stories = await client.get("/api/v1/stories", params={"parent_id": parent1_id})
         assert parent1_stories.json()["total"] == 3
         for story in parent1_stories.json()["items"]:
             assert story["parent_id"] == parent1_id
 
         # Verify parent2 only sees their stories
-        parent2_stories = await client.get(
-            "/api/v1/stories",
-            params={"parent_id": parent2_id}
-        )
+        parent2_stories = await client.get("/api/v1/stories", params={"parent_id": parent2_id})
         assert parent2_stories.json()["total"] == 2
         for story in parent2_stories.json()["items"]:
             assert story["parent_id"] == parent2_id
@@ -431,7 +402,7 @@ class TestErrorRecovery:
         # Try invalid update
         await client.put(
             f"/api/v1/stories/{story_id}",
-            json={"content": "a" * 10000}  # Too long
+            json={"content": "a" * 10000},  # Too long
         )
 
         # Verify story is still intact
@@ -439,9 +410,7 @@ class TestErrorRecovery:
         assert get_response.status_code == 200
         assert get_response.json()["content"] == created_story["content"]
 
-    async def test_partial_operation_rollback(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_partial_operation_rollback(self, client: AsyncClient) -> None:
         """Verify failed operations don't leave partial data."""
         # Try to create story with non-existent parent
         random_parent_id = str(uuid4())
@@ -453,15 +422,12 @@ class TestErrorRecovery:
                 "title": "Orphan Story",
                 "content": "This should not be created",
                 "source": "imported",
-            }
+            },
         )
         assert response.status_code == 404
 
         # Verify no orphan story exists (list should be empty for this parent)
-        list_response = await client.get(
-            "/api/v1/stories",
-            params={"parent_id": random_parent_id}
-        )
+        list_response = await client.get("/api/v1/stories", params={"parent_id": random_parent_id})
         # Should return 200 with empty list or 404 (depending on implementation)
         if list_response.status_code == 200:
             assert list_response.json()["total"] == 0

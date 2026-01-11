@@ -236,6 +236,89 @@ paths:
         '404':
           description: Story or voice not found
 
+  /stories/{story_id}/voices:
+    get:
+      summary: Get story voice mappings
+      description: Returns specific voice assignments for roles in a story
+      operationId: getStoryVoiceMappings
+      tags:
+        - Story Audio
+      parameters:
+        - name: story_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          description: User ID to fetch mappings for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of voice mappings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    story_id:
+                      type: string
+                    user_id:
+                      type: string
+                    role:
+                      type: string
+                    voice_id:
+                      type: string
+    post:
+      summary: Update story voice mapping
+      description: Assigns a specific voice to a role in a story
+      operationId: updateStoryVoiceMapping
+      tags:
+        - Story Audio
+      parameters:
+        - name: story_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                role:
+                  type: string
+                voice_id:
+                  type: string
+              required:
+                - user_id
+                - role
+                - voice_id
+      responses:
+        '200':
+          description: Mapping updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  story_id:
+                    type: string
+                  user_id:
+                    type: string
+                  role:
+                    type: string
+                  voice_id:
+                    type: string
+
   /users/{user_id}/voice-preference:
     get:
       summary: Get user's voice preference

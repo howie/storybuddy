@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/schema/agent-config.schema.json",
+  "version": "1.0",
+  "description": "Claude Agent configuration for StoryBuddy CI/CD automation",
+
+  "profiles": {
+    "ci-auto-fix-python": {
+      "model": "sonnet",
+      "max_iterations": 5,
+      "allowed_tools": ["Read", "Edit", "Bash"],
+      "allowed_commands": ["ruff", "mypy", "pytest", "git", "pip", "python"],
+      "system_prompt": "You are a CI automation agent for Python code. Your goal is to fix linting, formatting, type errors, and test failures. Make minimal, focused changes. Do not refactor or add features."
+    },
+
+    "ci-auto-fix-flutter": {
+      "model": "sonnet",
+      "max_iterations": 5,
+      "allowed_tools": ["Read", "Edit", "Bash"],
+      "allowed_commands": ["flutter", "dart", "git"],
+      "system_prompt": "You are a CI automation agent for Flutter/Dart code. Your goal is to fix formatting, analyzer issues, and test failures. Make minimal, focused changes in the mobile/ directory."
+    },
+
+    "code-review": {
+      "model": "sonnet",
+      "max_iterations": 3,
+      "allowed_tools": ["Read", "Grep", "Glob", "Bash"],
+      "allowed_commands": ["git"],
+      "system_prompt": "You are a code review agent. Analyze code changes for quality, security, performance, and best practices. Be constructive and specific in your feedback."
+    },
+
+    "quick-fix": {
+      "model": "haiku",
+      "max_iterations": 3,
+      "allowed_tools": ["Read", "Edit"],
+      "system_prompt": "You are a quick-fix agent for simple formatting and linting issues. Make fast, minimal changes."
+    }
+  },
+
+  "rules": {
+    "security": {
+      "prevent_destructive_operations": true,
+      "require_confirmation_for": [
+        "git reset --hard",
+        "git push --force",
+        "rm -rf",
+        "DROP TABLE",
+        "DELETE FROM"
+      ],
+      "blocked_file_patterns": [
+        ".env",
+        "*.key",
+        "*.pem",
+        "credentials.json",
+        "secrets.yaml"
+      ]
+    },
+
+    "best_practices": {
+      "max_file_size_kb": 500,
+      "require_tests_for_new_code": true,
+      "enforce_type_hints": true,
+      "prefer_minimal_changes": true
+    }
+  },
+
+  "ci_integration": {
+    "github_actions": {
+      "auto_fix_on_failure": true,
+      "auto_commit": true,
+      "commit_message_template": "fix(ci): auto-fix {error_type} errors\n\n🤖 Automated fixes by Claude Agent\nModel: {model}\nError type: {error_type}",
+      "max_retries": 3,
+      "retry_delay_seconds": 10
+    },
+
+    "reporting": {
+      "create_issue_on_failure": true,
+      "upload_logs_as_artifact": true,
+      "artifact_retention_days": 30
+    }
+  },
+
+  "cost_optimization": {
+    "model_selection_strategy": {
+      "formatting_errors": "haiku",
+      "linting_errors": "sonnet",
+      "type_errors": "sonnet",
+      "complex_bugs": "sonnet",
+      "architecture_review": "opus"
+    },
+    "cache_enabled": true,
+    "max_tokens_per_request": 100000
+  }
+}

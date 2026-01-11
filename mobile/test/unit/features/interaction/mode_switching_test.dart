@@ -297,8 +297,7 @@ void main() {
           ));
     });
 
-    test('should handle network error during mode switch gracefully',
-        () async {
+    test('should handle network error during mode switch gracefully', () async {
       // Arrange
       when(() => mockWebSocketClient.disconnect())
           .thenThrow(Exception('Network error'));
@@ -361,7 +360,8 @@ void main() {
   });
 
   group('Mode Switching - State Transitions', () {
-    test('state transitions should be: active -> switching -> calibrating/active',
+    test(
+        'state transitions should be: active -> switching -> calibrating/active',
         () async {
       // Arrange
       final states = <SessionStatus>[];

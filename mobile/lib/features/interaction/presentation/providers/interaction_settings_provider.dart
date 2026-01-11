@@ -129,7 +129,8 @@ class InteractionSettingsNotifier
   }
 
   /// T084 [US4] Update notification frequency setting.
-  Future<void> updateNotificationFrequency(NotificationFrequency frequency) async {
+  Future<void> updateNotificationFrequency(
+      NotificationFrequency frequency) async {
     final currentSettings = state.valueOrNull;
     if (currentSettings == null) return;
 

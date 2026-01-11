@@ -19,7 +19,7 @@ part 'voice_profile_provider.g.dart';
 @riverpod
 AudioRecordingService audioRecordingService(AudioRecordingServiceRef ref) {
   final service = AudioRecordingService();
-  ref.onDispose(() => service.dispose());
+  ref.onDispose(service.dispose);
   return service;
 }
 
@@ -223,8 +223,10 @@ class VoiceRecordingNotifier extends _$VoiceRecordingNotifier {
   /// Uploads the recording.
   Future<void> uploadRecording({required String name}) async {
     print('VoiceRecordingNotifier: uploadRecording called with name: $name');
-    print('VoiceRecordingNotifier: Current recordingPath: ${state.recordingPath}');
-    
+    print(
+      'VoiceRecordingNotifier: Current recordingPath: ${state.recordingPath}',
+    );
+
     if (state.recordingPath == null) {
       print('VoiceRecordingNotifier: Error - recordingPath is null');
       state = state.copyWith(
@@ -236,7 +238,7 @@ class VoiceRecordingNotifier extends _$VoiceRecordingNotifier {
 
     state = state.copyWith(
       state: RecordingState.uploading,
-      uploadProgress: 0.0,
+      uploadProgress: 0,
     );
     print('VoiceRecordingNotifier: State updated to uploading');
 
@@ -269,9 +271,11 @@ class VoiceRecordingNotifier extends _$VoiceRecordingNotifier {
       state = state.copyWith(
         state: RecordingState.uploaded,
         uploadedProfileId: profile.id,
-        uploadProgress: 1.0,
+        uploadProgress: 1,
       );
-      print('VoiceRecordingNotifier: State updated to uploaded. ProfileId: ${profile.id}');
+      print(
+        'VoiceRecordingNotifier: State updated to uploaded. ProfileId: ${profile.id}',
+      );
 
       // Refresh list
       ref.invalidate(voiceProfileListNotifierProvider);

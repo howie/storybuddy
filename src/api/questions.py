@@ -9,11 +9,11 @@ from fastapi.responses import FileResponse
 
 from src.config import get_settings
 from src.db.repository import PendingQuestionRepository
+from src.models import PendingQuestionStatus
 from src.models.question import (
     PendingQuestion,
     PendingQuestionAnswer,
     PendingQuestionResponse,
-    PendingQuestionStatus,
 )
 
 router = APIRouter(prefix="/questions", tags=["questions"])

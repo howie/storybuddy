@@ -46,7 +46,7 @@ PlaybackRepository playbackRepository(PlaybackRepositoryRef ref) {
     connectivityService: ref.watch(connectivityServiceProvider),
   );
 
-  ref.onDispose(() => repository.dispose());
+  ref.onDispose(repository.dispose);
 
   return repository;
 }
@@ -89,7 +89,6 @@ class PlaybackNotifier extends _$PlaybackNotifier {
     return const StoryPlayback(
       storyId: '',
       storyTitle: '',
-      state: PlaybackState.idle,
     );
   }
 
@@ -140,7 +139,6 @@ class PlaybackNotifier extends _$PlaybackNotifier {
     state = const StoryPlayback(
       storyId: '',
       storyTitle: '',
-      state: PlaybackState.idle,
     );
   }
 

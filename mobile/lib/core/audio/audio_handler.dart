@@ -95,7 +95,7 @@ class StoryAudioHandler extends BaseAudioHandler with SeekHandler {
       PlaybackState(
         controls: [
           MediaControl.rewind,
-          _player.playing ? MediaControl.pause : MediaControl.play,
+          if (_player.playing) MediaControl.pause else MediaControl.play,
           MediaControl.stop,
           MediaControl.fastForward,
         ],
@@ -149,9 +149,7 @@ class StoryAudioHandler extends BaseAudioHandler with SeekHandler {
 final audioHandlerProvider = Provider<StoryAudioHandler>((ref) {
   final handler = StoryAudioHandler();
 
-  ref.onDispose(() {
-    handler.dispose();
-  });
+  ref.onDispose(handler.dispose);
 
   return handler;
 });
@@ -174,7 +172,6 @@ Future<StoryAudioHandler?> initAudioService() async {
         androidNotificationChannelId: 'com.storybuddy.storybuddy.audio',
         androidNotificationChannelName: 'StoryBuddy Audio',
         androidNotificationOngoing: true,
-        androidStopForegroundOnPause: true,
       ),
     );
   } catch (e) {

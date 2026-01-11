@@ -222,7 +222,8 @@ void main() {
         createdAt: DateTime.now(),
       );
 
-      await tester.pumpWidget(buildTestWidget(transcript: interruptedTranscript));
+      await tester
+          .pumpWidget(buildTestWidget(transcript: interruptedTranscript));
 
       // Should show interruption indicator
       expect(find.textContaining('中斷'), findsOneWidget);
@@ -233,7 +234,8 @@ void main() {
 
       // Check for semantic widgets
       expect(
-        find.bySemanticsLabel(RegExp(r'.*互動紀錄.*|.*transcript.*', caseSensitive: false)),
+        find.bySemanticsLabel(
+            RegExp(r'.*互動紀錄.*|.*transcript.*', caseSensitive: false)),
         findsWidgets,
       );
     });

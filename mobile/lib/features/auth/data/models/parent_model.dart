@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../../core/database/enums.dart';
 import '../../domain/entities/parent.dart';
 
 part 'parent_model.freezed.dart';
@@ -12,10 +11,21 @@ class ParentModel with _$ParentModel {
   const factory ParentModel({
     required String id,
     required String name,
-    String? email,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @JsonKey(name: 'updated_at') required DateTime updatedAt,
+    String? email,
   }) = _ParentModel;
+
+  /// Creates from domain entity.
+  factory ParentModel.fromEntity(Parent entity) {
+    return ParentModel(
+      id: entity.id,
+      name: entity.name,
+      email: entity.email,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    );
+  }
 
   const ParentModel._();
 
@@ -30,18 +40,6 @@ class ParentModel with _$ParentModel {
       email: email,
       createdAt: createdAt,
       updatedAt: updatedAt,
-      syncStatus: SyncStatus.synced,
-    );
-  }
-
-  /// Creates from domain entity.
-  factory ParentModel.fromEntity(Parent entity) {
-    return ParentModel(
-      id: entity.id,
-      name: entity.name,
-      email: entity.email,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
     );
   }
 }

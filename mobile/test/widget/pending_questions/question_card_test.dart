@@ -218,7 +218,7 @@ void main() {
     });
 
     testWidgets('calls onMarkAnswered when button tapped', (tester) async {
-      bool called = false;
+      var called = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -275,7 +275,7 @@ void main() {
     });
 
     testWidgets('calls onTap when card tapped', (tester) async {
-      bool called = false;
+      var called = false;
       await tester.pumpWidget(
         TestHelpers.createTestApp(
           child: Scaffold(
@@ -414,7 +414,9 @@ void main() {
 
     test('test fixture pendingQuestionAnswered has correct values', () {
       expect(
-          TestData.pendingQuestionAnswered.status, PendingQuestionStatus.answered);
+        TestData.pendingQuestionAnswered.status,
+        PendingQuestionStatus.answered,
+      );
       expect(TestData.pendingQuestionAnswered.answeredAt, isNotNull);
     });
 

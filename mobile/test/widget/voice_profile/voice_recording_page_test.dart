@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:storybuddy/core/database/enums.dart';
 import 'package:storybuddy/features/voice_profile/data/services/audio_recording_service.dart';
-import 'package:storybuddy/features/voice_profile/domain/entities/voice_profile.dart'; 
+import 'package:storybuddy/features/voice_profile/domain/entities/voice_profile.dart';
 import 'package:storybuddy/features/voice_profile/domain/usecases/record_voice.dart';
 import 'package:storybuddy/features/voice_profile/domain/usecases/upload_voice.dart';
 import 'package:storybuddy/features/voice_profile/presentation/pages/voice_recording_page.dart';
@@ -15,7 +15,9 @@ import 'package:storybuddy/features/voice_profile/presentation/providers/voice_p
 
 // Mocks
 class MockAudioRecordingService extends Mock implements AudioRecordingService {}
+
 class MockRecordVoiceUseCase extends Mock implements RecordVoiceUseCase {}
+
 class MockUploadVoiceUseCase extends Mock implements UploadVoiceUseCase {}
 
 // Fake VoiceProfile for return values
@@ -26,7 +28,6 @@ final _fakeProfile = VoiceProfile(
   status: VoiceProfileStatus.processing,
   createdAt: DateTime.now(),
   updatedAt: DateTime.now(),
-  syncStatus: SyncStatus.synced,
 );
 
 void main() {
@@ -43,38 +44,51 @@ void main() {
       amplitudeController = StreamController<double>.broadcast();
 
       // Default behaviors
-      when(() => mockRecordingService.hasPermission()).thenAnswer((_) async => true);
-      when(() => mockRecordingService.amplitudeStream).thenAnswer((_) => amplitudeController.stream);
-      when(() => mockRecordingService.startRecording()).thenAnswer((_) async => '/tmp/audio.wav');
-      
-      when(() => mockRecordingService.stopRecording()).thenAnswer((_) async => 
-          RecordingResult(
-            path: '/tmp/audio.wav',
-            durationSeconds: 45,
-            fileSizeBytes: 1024,
-          ));
-      
-      when(() => mockRecordUseCase.call(
-        name: any(named: 'name'),
-        localAudioPath: any(named: 'localAudioPath'),
-        sampleDurationSeconds: any(named: 'sampleDurationSeconds'),
-      )).thenAnswer((_) async => _fakeProfile);
+      when(() => mockRecordingService.hasPermission())
+          .thenAnswer((_) async => true);
+      when(() => mockRecordingService.amplitudeStream)
+          .thenAnswer((_) => amplitudeController.stream);
+      when(() => mockRecordingService.startRecording())
+          .thenAnswer((_) async => '/tmp/audio.wav');
 
-      when(() => mockUploadUseCase.call(any(), onSendProgress: any(named: 'onSendProgress')))
-          .thenAnswer((invocation) async {
-            final progressCallback = invocation.namedArguments[const Symbol('onSendProgress')] as void Function(int, int)?;
-            if (progressCallback != null) {
-              progressCallback(50, 100);
-            }
-            return _fakeProfile;
-          });
+      when(() => mockRecordingService.stopRecording()).thenAnswer(
+        (_) async => RecordingResult(
+          path: '/tmp/audio.wav',
+          durationSeconds: 45,
+          fileSizeBytes: 1024,
+        ),
+      );
+
+      when(
+        () => mockRecordUseCase.call(
+          name: any(named: 'name'),
+          localAudioPath: any(named: 'localAudioPath'),
+          sampleDurationSeconds: any(named: 'sampleDurationSeconds'),
+        ),
+      ).thenAnswer((_) async => _fakeProfile);
+
+      when(
+        () => mockUploadUseCase.call(
+          any(),
+          onSendProgress: any(named: 'onSendProgress'),
+        ),
+      ).thenAnswer((invocation) async {
+        final progressCallback =
+            invocation.namedArguments[const Symbol('onSendProgress')] as void
+                Function(int, int)?;
+        if (progressCallback != null) {
+          progressCallback(50, 100);
+        }
+        return _fakeProfile;
+      });
     });
 
     tearDown(() {
       amplitudeController.close();
     });
 
-    testWidgets('Full flow: Record -> Stop -> Upload -> Navigate', (tester) async {
+    testWidgets('Full flow: Record -> Stop -> Upload -> Navigate',
+        (tester) async {
       // Setup Router
       final router = GoRouter(
         initialLocation: '/',
@@ -85,7 +99,9 @@ void main() {
           ),
           GoRoute(
             path: '/voice-profile/status/:id',
-            builder: (context, state) => Scaffold(body: Text('Status Page: ${state.pathParameters["id"]}')),
+            builder: (context, state) => Scaffold(
+              body: Text('Status Page: ${state.pathParameters["id"]}'),
+            ),
           ),
         ],
       );
@@ -93,7 +109,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            audioRecordingServiceProvider.overrideWithValue(mockRecordingService),
+            audioRecordingServiceProvider
+                .overrideWithValue(mockRecordingService),
             recordVoiceUseCaseProvider.overrideWithValue(mockRecordUseCase),
             uploadVoiceUseCaseProvider.overrideWithValue(mockUploadUseCase),
           ],
@@ -112,12 +129,12 @@ void main() {
 
       // 2. Start Recording
       await tester.tap(find.byIcon(Icons.mic));
-      await tester.pump(); 
-      
+      await tester.pump();
+
       verify(() => mockRecordingService.startRecording()).called(1);
 
       // 3. Stop Recording
-      await tester.pump(const Duration(seconds: 35)); 
+      await tester.pump(const Duration(seconds: 35));
       await tester.tap(find.byIcon(Icons.stop));
       await tester.pumpAndSettle();
 
@@ -125,13 +142,13 @@ void main() {
 
       // 4. Upload
       await tester.tap(find.text('上傳'));
-      
+
       // Verification of upload flow
       await tester.pump(); // Initiate upload
       await tester.pump(); // Process upload future
 
       // 5. Verify Navigation
-      await tester.pumpAndSettle(); 
+      await tester.pumpAndSettle();
 
       // Check if router location updated
       // Since we can't easily access router.location property (private/protected in some versions or just not refreshed?)

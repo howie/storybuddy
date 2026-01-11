@@ -129,7 +129,8 @@ class TranscriptRemoteDatasourceImpl implements TranscriptRemoteDatasource {
 
   @override
   Future<InteractionTranscript> getTranscript(String transcriptId) async {
-    final response = await _dio.get('/v1/interaction/transcripts/$transcriptId');
+    final response =
+        await _dio.get('/v1/interaction/transcripts/$transcriptId');
 
     return InteractionTranscript.fromJson(
       response.data as Map<String, dynamic>,
@@ -188,7 +189,8 @@ class TranscriptRemoteDatasourceImpl implements TranscriptRemoteDatasource {
     final contentDisposition = response.headers.value('content-disposition');
     String filename = 'transcript.$format';
     if (contentDisposition != null) {
-      final match = RegExp(r'filename="([^"]+)"').firstMatch(contentDisposition);
+      final match =
+          RegExp(r'filename="([^"]+)"').firstMatch(contentDisposition);
       if (match != null) {
         filename = match.group(1)!;
       }

@@ -85,14 +85,11 @@ class _NoiseCalibrationDialogState extends ConsumerState<NoiseCalibrationDialog>
 
     _audioSubscription = widget.audioStream.listen(
       (audioData) {
-        final frame = audioData is List<int>
-            ? List<int>.from(audioData)
-            : audioData;
+        final frame =
+            audioData is List<int> ? List<int>.from(audioData) : audioData;
 
         final needsMore = _calibrationService.addFrame(
-          frame is List<int>
-              ? List<int>.from(frame).toList()
-              : frame,
+          frame is List<int> ? List<int>.from(frame).toList() : frame,
         );
 
         setState(() {
@@ -260,7 +257,8 @@ class _NoiseCalibrationDialogState extends ConsumerState<NoiseCalibrationDialog>
             const SizedBox(height: 16),
             LinearProgressIndicator(
               value: _progress,
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              backgroundColor:
+                  Theme.of(context).colorScheme.surfaceContainerHighest,
             ),
             const SizedBox(height: 8),
             Text(
@@ -282,8 +280,8 @@ class _NoiseCalibrationDialogState extends ConsumerState<NoiseCalibrationDialog>
               Text(
                 '噪音等級：${_result!.noiseFloorDb.toStringAsFixed(1)} dB',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
               ),
               const SizedBox(height: 8),
               _buildEnvironmentQuality(_result!),
@@ -304,8 +302,8 @@ class _NoiseCalibrationDialogState extends ConsumerState<NoiseCalibrationDialog>
               _errorMessage ?? '校準過程中發生錯誤',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.error,
-              ),
+                    color: Theme.of(context).colorScheme.error,
+                  ),
             ),
           ],
         );

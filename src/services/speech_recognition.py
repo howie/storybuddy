@@ -107,7 +107,7 @@ class SpeechRecognitionService:
                     recognition_status = result.get("RecognitionStatus")
 
                     if recognition_status == "Success":
-                        text = result.get("DisplayText", "")
+                        text: str = str(result.get("DisplayText", ""))
                         logger.info(f"Transcription successful: {len(text)} chars")
                         return text
                     elif recognition_status == "NoMatch":
@@ -162,7 +162,7 @@ class SpeechRecognitionService:
                     recognition_status = result.get("RecognitionStatus")
 
                     if recognition_status == "Success":
-                        text = result.get("DisplayText", "")
+                        text: str = str(result.get("DisplayText", ""))
                         logger.info(f"Transcription successful: {len(text)} chars")
                         return text
                     elif recognition_status == "NoMatch":

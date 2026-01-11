@@ -114,7 +114,9 @@ class ImportStoryUseCase {
 class ValidationResult {
   ValidationResult({
     required this.isValid,
-    required this.characterCount, required this.maxCharacters, this.message,
+    required this.characterCount,
+    required this.maxCharacters,
+    this.message,
     this.isWarning = false,
   });
 

@@ -226,7 +226,8 @@ class PendingQuestionLocalDataSourceImpl
 
   /// Converts a domain entity to a database companion for insert/update.
   PendingQuestionsCompanion _entityToCompanion(
-      entity.PendingQuestion question,) {
+    entity.PendingQuestion question,
+  ) {
     return PendingQuestionsCompanion(
       id: Value(question.id),
       storyId: Value(question.storyId),

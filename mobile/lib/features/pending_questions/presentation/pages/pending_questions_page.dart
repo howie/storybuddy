@@ -73,8 +73,10 @@ class _PendingQuestionsPageState extends ConsumerState<PendingQuestionsPage> {
     return RefreshIndicator(
       onRefresh: () async {
         await ref
-            .read(pendingQuestionsNotifierProvider(storyId: widget.storyId)
-                .notifier,)
+            .read(
+              pendingQuestionsNotifierProvider(storyId: widget.storyId)
+                  .notifier,
+            )
             .refresh();
       },
       child: ListView.builder(
@@ -128,9 +130,11 @@ class _PendingQuestionsPageState extends ConsumerState<PendingQuestionsPage> {
             FilledButton.icon(
               onPressed: () {
                 ref
-                    .read(pendingQuestionsNotifierProvider(
-                            storyId: widget.storyId,)
-                        .notifier,)
+                    .read(
+                      pendingQuestionsNotifierProvider(
+                        storyId: widget.storyId,
+                      ).notifier,
+                    )
                     .refresh();
               },
               icon: const Icon(Icons.refresh),
@@ -166,8 +170,10 @@ class _PendingQuestionsPageState extends ConsumerState<PendingQuestionsPage> {
         question: question,
         onAnswered: () {
           ref
-              .read(pendingQuestionsNotifierProvider(storyId: widget.storyId)
-                  .notifier,)
+              .read(
+                pendingQuestionsNotifierProvider(storyId: widget.storyId)
+                    .notifier,
+              )
               .refresh();
         },
       ),

@@ -49,8 +49,9 @@ void main() {
       final storyList = find.byType(ListView);
 
       expect(
-          emptyState.evaluate().isNotEmpty || storyList.evaluate().isNotEmpty,
-          true,);
+        emptyState.evaluate().isNotEmpty || storyList.evaluate().isNotEmpty,
+        true,
+      );
     });
 
     testWidgets('can open add story bottom sheet', (tester) async {

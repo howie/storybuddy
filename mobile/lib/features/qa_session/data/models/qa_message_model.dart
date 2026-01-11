@@ -13,7 +13,9 @@ class QAMessageModel {
     required this.sessionId,
     required this.role,
     required this.content,
-    required this.sequence, required this.createdAt, this.isInScope,
+    required this.sequence,
+    required this.createdAt,
+    this.isInScope,
     this.audioUrl,
   });
 

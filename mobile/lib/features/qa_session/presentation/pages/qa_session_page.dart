@@ -376,7 +376,8 @@ class _QASessionPageState extends ConsumerState<QASessionPage> {
             Text('狀態：${session.statusLabel}'),
             const SizedBox(height: 8),
             Text(
-                '已問問題：${session.messageCount ~/ 2} / ${QASession.maxMessages ~/ 2}',),
+              '已問問題：${session.messageCount ~/ 2} / ${QASession.maxMessages ~/ 2}',
+            ),
             const SizedBox(height: 8),
             Text('開始時間：${_formatTime(session.startedAt)}'),
           ],

@@ -14,7 +14,10 @@ class StoryModel {
     required this.title,
     required this.content,
     required this.source,
-    required this.wordCount, required this.createdAt, required this.updatedAt, this.keywords,
+    required this.wordCount,
+    required this.createdAt,
+    required this.updatedAt,
+    this.keywords,
     this.estimatedDurationMinutes,
     this.audioUrl,
   });

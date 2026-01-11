@@ -5,26 +5,25 @@
 
 ## Prerequisites
 
-1. **Google Cloud Account** with Billing enabled
+1. **Azure Account** with Cognitive Services Speech resource
 2. **Python 3.11+** with dependencies installed
 3. **StoryBuddy backend** running (from 000-StoryBuddy-mvp)
 
 ## Environment Setup
 
-### 1. Google Cloud Text-to-Speech
+### 1. Azure Cognitive Services Speech
 
-1. Create a project at [console.cloud.google.com](https://console.cloud.google.com)
-2. Enable the **Cloud Text-to-Speech API**
-3. Create a **Service Account** and download the JSON key file
-4. Place the JSON file in your project root (e.g., `service-account.json`) **(Do not commit this file!)**
+1. Create a Speech resource at [portal.azure.com](https://portal.azure.com)
+2. Get your **Key** and **Region** (e.g., `eastus`)
 
 ### 2. Environment Variables
 
 Add to your `.env` file:
 
 ```bash
-# Google Cloud TTS
-GOOGLE_APPLICATION_CREDENTIALS=service-account.json
+# Azure Speech Service
+AZURE_SPEECH_KEY=your_key_here
+AZURE_SPEECH_REGION=eastus
 
 # Optional: ElevenLabs (for premium character voices)
 ELEVENLABS_API_KEY=your_key_here
@@ -33,37 +32,35 @@ ELEVENLABS_API_KEY=your_key_here
 ### 3. Install Dependencies
 
 ```bash
-pip install google-cloud-texttospeech
+pip install azure-cognitiveservices-speech
 ```
 
 ## Quick Integration Guide
 
-### Backend: Generate Speech with Google TTS
+### Backend: Generate Speech with Azure TTS
 
 ```python
-from google.cloud import texttospeech
-import os
+import azure.cognitiveservices.speech as speechsdk
 
-def synthesize_speech(text: str, voice_id: str = "cmn-TW-Wavenet-A") -> bytes:
-    """Convert text to speech audio using Google Cloud TTS."""
-    client = texttospeech.TextToSpeechClient()
-
-    synthesis_input = texttospeech.SynthesisInput(text=text)
-
-    voice = texttospeech.VoiceSelectionParams(
-        language_code="cmn-TW",
-        name=voice_id
+def synthesize_speech(text: str, voice_id: str = "zh-TW-HsiaoChenNeural") -> bytes:
+    """Convert text to speech audio using Azure TTS."""
+    speech_config = speechsdk.SpeechConfig(
+        subscription=os.getenv("AZURE_SPEECH_KEY"),
+        region=os.getenv("AZURE_SPEECH_REGION")
     )
-
-    audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3
-    )
-
-    response = client.synthesize_speech(
-        input=synthesis_input, voice=voice, audio_config=audio_config
-    )
-
-    return response.audio_content
+    
+    # Set synthesis voice
+    speech_config.speech_synthesis_voice_name = voice_id
+    
+    # Output to memory (bytes)
+    synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=None)
+    
+    result = synthesizer.speak_text_async(text).get()
+    
+    if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+        return result.audio_data
+    else:
+         raise RuntimeError(f"Speech synthesis canceled: {result.cancellation_details.reason}")
 
 # Usage
 # audio_data = synthesize_speech("大家好，我是故事姐姐！")
@@ -74,41 +71,10 @@ def synthesize_speech(text: str, voice_id: str = "cmn-TW-Wavenet-A") -> bytes:
 ### Backend: Use SSML for Character Voices (Simulated)
 
 ```python
-def synthesize_with_role(text: str, pitch: str = "0st", rate: str = "1.0") -> bytes:
-    """Synthesize speech with character simulation using SSML prosody."""
-    client = texttospeech.TextToSpeechClient()
+from src.services.tts.ssml_utils import create_ssml
 
-    ssml = f"""
-    <speak>
-        <prosody pitch="{pitch}" rate="{rate}">
-            {text}
-        </prosody>
-    </speak>
-    """
-
-    synthesis_input = texttospeech.SynthesisInput(ssml=ssml)
-
-    voice = texttospeech.VoiceSelectionParams(
-        language_code="cmn-TW",
-        name="cmn-TW-Wavenet-A"  # Base voice
-    )
-
-    audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3
-    )
-
-    response = client.synthesize_speech(
-        input=synthesis_input, voice=voice, audio_config=audio_config
-    )
-
-    return response.audio_content
-
-# Usage: Child girl voice (simulated)
-# audio_data = synthesize_with_role(
-#     "哈囉！我是小美，我們一起來冒險吧！",
-#     pitch="+4st",
-#     rate="1.05"
-# )
+# Use the installed Azure provider which handles SSML
+# See src/services/tts/azure_tts.py for implementation details
 ```
 
 ### Flutter: Voice Selection UI

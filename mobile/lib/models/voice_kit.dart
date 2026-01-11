@@ -5,11 +5,12 @@ enum AgeGroup { child, adult, senior }
 enum VoiceStyle { narrator, character, both }
 
 class VoiceKit {
-
   VoiceKit({
     required this.id,
     required this.name,
-    required this.provider, required this.version, this.description,
+    required this.provider,
+    required this.version,
+    this.description,
     this.downloadSize = 0,
     this.isBuiltin = true,
     this.isDownloaded = false,
@@ -58,13 +59,15 @@ class VoiceKit {
 }
 
 class VoiceCharacter {
-
   VoiceCharacter({
     required this.id,
     required this.kitId,
     required this.name,
     required this.providerVoiceId,
-    required this.gender, required this.ageGroup, required this.style, this.ssmlOptions,
+    required this.gender,
+    required this.ageGroup,
+    required this.style,
+    this.ssmlOptions,
     this.previewUrl,
     this.previewText,
   });

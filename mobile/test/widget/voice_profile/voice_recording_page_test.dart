@@ -51,22 +51,28 @@ void main() {
       when(() => mockRecordingService.startRecording())
           .thenAnswer((_) async => '/tmp/audio.wav');
 
-      when(() => mockRecordingService.stopRecording())
-          .thenAnswer((_) async => RecordingResult(
-                path: '/tmp/audio.wav',
-                durationSeconds: 45,
-                fileSizeBytes: 1024,
-              ),);
+      when(() => mockRecordingService.stopRecording()).thenAnswer(
+        (_) async => RecordingResult(
+          path: '/tmp/audio.wav',
+          durationSeconds: 45,
+          fileSizeBytes: 1024,
+        ),
+      );
 
-      when(() => mockRecordUseCase.call(
-            name: any(named: 'name'),
-            localAudioPath: any(named: 'localAudioPath'),
-            sampleDurationSeconds: any(named: 'sampleDurationSeconds'),
-          ),).thenAnswer((_) async => _fakeProfile);
+      when(
+        () => mockRecordUseCase.call(
+          name: any(named: 'name'),
+          localAudioPath: any(named: 'localAudioPath'),
+          sampleDurationSeconds: any(named: 'sampleDurationSeconds'),
+        ),
+      ).thenAnswer((_) async => _fakeProfile);
 
-      when(() => mockUploadUseCase.call(any(),
-              onSendProgress: any(named: 'onSendProgress'),),)
-          .thenAnswer((invocation) async {
+      when(
+        () => mockUploadUseCase.call(
+          any(),
+          onSendProgress: any(named: 'onSendProgress'),
+        ),
+      ).thenAnswer((invocation) async {
         final progressCallback =
             invocation.namedArguments[const Symbol('onSendProgress')] as void
                 Function(int, int)?;
@@ -94,7 +100,8 @@ void main() {
           GoRoute(
             path: '/voice-profile/status/:id',
             builder: (context, state) => Scaffold(
-                body: Text('Status Page: ${state.pathParameters["id"]}'),),
+              body: Text('Status Page: ${state.pathParameters["id"]}'),
+            ),
           ),
         ],
       );

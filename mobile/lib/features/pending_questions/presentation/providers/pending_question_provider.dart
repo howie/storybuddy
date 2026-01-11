@@ -15,7 +15,8 @@ part 'pending_question_provider.g.dart';
 /// Provider for pending question repository.
 @riverpod
 PendingQuestionRepository pendingQuestionRepository(
-    PendingQuestionRepositoryRef ref,) {
+  PendingQuestionRepositoryRef ref,
+) {
   final apiClient = ref.watch(apiClientProvider);
   final database = ref.watch(databaseProvider);
   final connectivity = ref.watch(connectivityServiceProvider);
@@ -30,7 +31,8 @@ PendingQuestionRepository pendingQuestionRepository(
 /// Provider for get pending questions use case.
 @riverpod
 GetPendingQuestionsUseCase getPendingQuestionsUseCase(
-    GetPendingQuestionsUseCaseRef ref,) {
+  GetPendingQuestionsUseCaseRef ref,
+) {
   return GetPendingQuestionsUseCase(
     repository: ref.watch(pendingQuestionRepositoryProvider),
   );
@@ -39,7 +41,8 @@ GetPendingQuestionsUseCase getPendingQuestionsUseCase(
 /// Provider for mark question answered use case.
 @riverpod
 MarkQuestionAnsweredUseCase markQuestionAnsweredUseCase(
-    MarkQuestionAnsweredUseCaseRef ref,) {
+  MarkQuestionAnsweredUseCaseRef ref,
+) {
   return MarkQuestionAnsweredUseCase(
     repository: ref.watch(pendingQuestionRepositoryProvider),
   );
@@ -78,7 +81,8 @@ class PendingQuestionsNotifier extends _$PendingQuestionsNotifier {
 /// Provider for pending question summaries.
 @riverpod
 Future<List<PendingQuestionSummary>> pendingQuestionSummaries(
-    PendingQuestionSummariesRef ref,) async {
+  PendingQuestionSummariesRef ref,
+) async {
   final useCase = ref.watch(getPendingQuestionsUseCaseProvider);
   return useCase.getSummaries();
 }

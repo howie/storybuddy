@@ -59,7 +59,9 @@ void main() {
 
         expect(result.success, false);
         expect(
-            result.errors, contains('No handler registered for nonexistent'),);
+          result.errors,
+          contains('No handler registered for nonexistent'),
+        );
       });
     });
 
@@ -297,9 +299,7 @@ void main() {
     });
 
     test('copyWith should create new instance with updated values', () {
-      const original = SyncStatus(
-        
-      );
+      const original = SyncStatus();
 
       final updated = original.copyWith(
         state: SyncState.syncing,

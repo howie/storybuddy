@@ -19,10 +19,12 @@ void main() {
       test('generates audio with valid inputs', () async {
         // Arrange
         const expectedUrl = 'https://example.com/audio/generated.mp3';
-        when(() => mockRepository.generateAudio(
-              storyId: any(named: 'storyId'),
-              voiceProfileId: any(named: 'voiceProfileId'),
-            ),).thenAnswer((_) async => expectedUrl);
+        when(
+          () => mockRepository.generateAudio(
+            storyId: any(named: 'storyId'),
+            voiceProfileId: any(named: 'voiceProfileId'),
+          ),
+        ).thenAnswer((_) async => expectedUrl);
 
         // Act
         final result = await useCase.call(
@@ -32,10 +34,12 @@ void main() {
 
         // Assert
         expect(result, expectedUrl);
-        verify(() => mockRepository.generateAudio(
-              storyId: 'story-1',
-              voiceProfileId: 'voice-1',
-            ),).called(1);
+        verify(
+          () => mockRepository.generateAudio(
+            storyId: 'story-1',
+            voiceProfileId: 'voice-1',
+          ),
+        ).called(1);
       });
 
       test('throws InvalidStoryIdException when storyId is empty', () async {
@@ -44,10 +48,12 @@ void main() {
           () => useCase.call(storyId: '', voiceProfileId: 'voice-1'),
           throwsA(isA<InvalidStoryIdException>()),
         );
-        verifyNever(() => mockRepository.generateAudio(
-              storyId: any(named: 'storyId'),
-              voiceProfileId: any(named: 'voiceProfileId'),
-            ),);
+        verifyNever(
+          () => mockRepository.generateAudio(
+            storyId: any(named: 'storyId'),
+            voiceProfileId: any(named: 'voiceProfileId'),
+          ),
+        );
       });
 
       test('throws InvalidVoiceProfileIdException when voiceProfileId is empty',
@@ -57,10 +63,12 @@ void main() {
           () => useCase.call(storyId: 'story-1', voiceProfileId: ''),
           throwsA(isA<InvalidVoiceProfileIdException>()),
         );
-        verifyNever(() => mockRepository.generateAudio(
-              storyId: any(named: 'storyId'),
-              voiceProfileId: any(named: 'voiceProfileId'),
-            ),);
+        verifyNever(
+          () => mockRepository.generateAudio(
+            storyId: any(named: 'storyId'),
+            voiceProfileId: any(named: 'voiceProfileId'),
+          ),
+        );
       });
 
       test('throws InvalidStoryIdException before checking voiceProfileId',
@@ -75,10 +83,12 @@ void main() {
 
       test('propagates repository exceptions', () async {
         // Arrange
-        when(() => mockRepository.generateAudio(
-              storyId: any(named: 'storyId'),
-              voiceProfileId: any(named: 'voiceProfileId'),
-            ),).thenThrow(AudioGenerationException('Server error'));
+        when(
+          () => mockRepository.generateAudio(
+            storyId: any(named: 'storyId'),
+            voiceProfileId: any(named: 'voiceProfileId'),
+          ),
+        ).thenThrow(AudioGenerationException('Server error'));
 
         // Act & Assert
         expect(

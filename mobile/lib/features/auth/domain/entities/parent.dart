@@ -15,8 +15,12 @@ class Parent with _$Parent {
     required String name,
 
     /// Creation timestamp.
-    required DateTime createdAt, /// Last update timestamp.
-    required DateTime updatedAt, /// Optional email address.
+    required DateTime createdAt,
+
+    /// Last update timestamp.
+    required DateTime updatedAt,
+
+    /// Optional email address.
     String? email,
 
     /// Sync status for offline support.

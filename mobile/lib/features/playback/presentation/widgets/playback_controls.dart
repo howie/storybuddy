@@ -162,16 +162,17 @@ class _SpeedButton extends StatelessWidget {
       initialValue: speed,
       onSelected: onSpeedChange,
       itemBuilder: (context) => _speeds
-          .map((s) => PopupMenuItem(
-                value: s,
-                child: Text(
-                  '${s}x',
-                  style: TextStyle(
-                    fontWeight:
-                        s == speed ? FontWeight.bold : FontWeight.normal,
-                  ),
+          .map(
+            (s) => PopupMenuItem(
+              value: s,
+              child: Text(
+                '${s}x',
+                style: TextStyle(
+                  fontWeight: s == speed ? FontWeight.bold : FontWeight.normal,
                 ),
-              ),)
+              ),
+            ),
+          )
           .toList(),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

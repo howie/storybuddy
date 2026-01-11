@@ -11,7 +11,9 @@ class ParentModel with _$ParentModel {
   const factory ParentModel({
     required String id,
     required String name,
-    @JsonKey(name: 'created_at') required DateTime createdAt, @JsonKey(name: 'updated_at') required DateTime updatedAt, String? email,
+    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'updated_at') required DateTime updatedAt,
+    String? email,
   }) = _ParentModel;
 
   /// Creates from domain entity.

@@ -174,16 +174,20 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
 
       await localDataSource.cacheAudio(storyId, story!.audioUrl!);
 
-      controller.add(AudioDownloadProgress(
-        storyId: storyId,
-        progress: 1,
-        isComplete: true,
-      ),);
+      controller.add(
+        AudioDownloadProgress(
+          storyId: storyId,
+          progress: 1,
+          isComplete: true,
+        ),
+      );
     } catch (e) {
-      controller.add(AudioDownloadProgress(
-        storyId: storyId,
-        errorMessage: e.toString(),
-      ),);
+      controller.add(
+        AudioDownloadProgress(
+          storyId: storyId,
+          errorMessage: e.toString(),
+        ),
+      );
       rethrow;
     } finally {
       await controller.close();

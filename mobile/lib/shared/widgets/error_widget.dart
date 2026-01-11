@@ -5,14 +5,16 @@ import '../../core/errors/failures.dart';
 /// A widget that displays an error with a retry button.
 class AppErrorWidget extends StatelessWidget {
   const AppErrorWidget({
-    required this.message, super.key,
+    required this.message,
+    super.key,
     this.onRetry,
     this.icon,
   });
 
   /// Creates an error widget from a [Failure].
   factory AppErrorWidget.fromFailure({
-    required Failure failure, Key? key,
+    required Failure failure,
+    Key? key,
     VoidCallback? onRetry,
   }) {
     return AppErrorWidget(
@@ -78,7 +80,8 @@ class AppErrorWidget extends StatelessWidget {
 /// A widget that displays an empty state.
 class EmptyStateWidget extends StatelessWidget {
   const EmptyStateWidget({
-    required this.message, super.key,
+    required this.message,
+    super.key,
     this.icon,
     this.action,
     this.actionLabel,

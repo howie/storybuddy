@@ -242,8 +242,21 @@ class TestSelectableVoiceAPI:
             return
 
         voice_id = voices[0]["id"]
-        # Assuming preview takes text query param or uses default
-        response = await client.get(f"/api/voices/{voice_id}/preview?text=Hello")
 
-        assert response.status_code == 200
-        assert "audio/" in response.headers["content-type"]
+        # Patch synthesize to avoid actual Azure call and potential errors
+        # We need to patch the instance on the service that the router uses.
+        # Since service is instantiated at module level in voice_routes.py,
+        # we can patch 'src.api.voice_routes.service.azure_provider.synthesize'
+        from unittest.mock import AsyncMock, patch
+
+        with patch(
+            "src.api.voice_routes.service.azure_provider.synthesize", new_callable=AsyncMock
+        ) as mock_synthesize:
+            mock_synthesize.return_value = b"mock_audio_bytes"
+
+            # Assuming preview takes text query param or uses default
+            response = await client.get(f"/api/voices/{voice_id}/preview?text=Hello")
+
+            assert response.status_code == 200
+            assert "audio/" in response.headers["content-type"]
+            assert response.content == b"mock_audio_bytes"

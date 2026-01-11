@@ -21,8 +21,12 @@ class QAMessage with _$QAMessage {
     required String content,
 
     /// Message sequence number within the session.
-    required int sequence, /// Creation timestamp.
-    required DateTime createdAt, /// Whether the question was in scope of the story.
+    required int sequence,
+
+    /// Creation timestamp.
+    required DateTime createdAt,
+
+    /// Whether the question was in scope of the story.
     /// Only applicable for child messages.
     bool? isInScope,
 

@@ -8,7 +8,8 @@ import '../../core/database/enums.dart';
 /// has been recorded, is being processed, or is ready to use.
 class VoiceStatusIndicator extends StatelessWidget {
   const VoiceStatusIndicator({
-    required this.status, super.key,
+    required this.status,
+    super.key,
     this.iconSize = 16,
     this.fontSize = 12,
   });

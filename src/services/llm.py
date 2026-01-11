@@ -104,7 +104,10 @@ class ClaudeService:
             )
 
             # Extract response text
-            response_text = message.content[0].text
+            first_block = message.content[0]
+            if not hasattr(first_block, "text"):
+                raise RuntimeError("Unexpected response format from Claude API")
+            response_text: str = first_block.text
             logger.debug(f"Claude response: {response_text}")
 
             # Parse JSON response (handle markdown code blocks)
@@ -162,7 +165,10 @@ class ClaudeService:
                 messages=[{"role": "user", "content": user_prompt}],
             )
 
-            response_text = message.content[0].text
+            first_block = message.content[0]
+            if not hasattr(first_block, "text"):
+                raise RuntimeError("Unexpected response format from Claude API")
+            response_text: str = first_block.text
             logger.debug(f"Claude Q&A response: {response_text}")
 
             # Parse JSON response (handle markdown code blocks)

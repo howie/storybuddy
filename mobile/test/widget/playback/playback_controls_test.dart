@@ -594,11 +594,15 @@ void main() {
     test('formatDuration formats correctly', () {
       expect(StoryPlayback.formatDuration(const Duration()), '00:00');
       expect(
-          StoryPlayback.formatDuration(const Duration(seconds: 65)), '01:05',);
+        StoryPlayback.formatDuration(const Duration(seconds: 65)),
+        '01:05',
+      );
       expect(
-          StoryPlayback.formatDuration(
-              const Duration(minutes: 10, seconds: 30),),
-          '10:30',);
+        StoryPlayback.formatDuration(
+          const Duration(minutes: 10, seconds: 30),
+        ),
+        '10:30',
+      );
     });
 
     test('formattedPosition returns correct format', () {

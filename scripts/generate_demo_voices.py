@@ -111,20 +111,20 @@ def get_speech_config():
 def generate_ssml(text: str, voice: str, role: str = None, style: str = None) -> str:
     """Generate SSML markup for voice synthesis."""
     if role:
-        return f'''<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
+        return f"""<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
        xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-TW">
     <voice name="{voice}">
         <mstts:express-as role="{role}" style="{style or "general"}">
             {text}
         </mstts:express-as>
     </voice>
-</speak>'''
+</speak>"""
     else:
-        return f'''<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="zh-TW">
+        return f"""<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="zh-TW">
     <voice name="{voice}">
         {text}
     </voice>
-</speak>'''
+</speak>"""
 
 
 def synthesize_to_file(speech_config, ssml: str, output_path: Path) -> bool:

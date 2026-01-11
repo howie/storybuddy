@@ -57,11 +57,12 @@ void main() {
 
       test('returns true when multiple connections available', () async {
         // Arrange
-        when(() => mockConnectivity.checkConnectivity())
-            .thenAnswer((_) async => [
-                  ConnectivityResult.wifi,
-                  ConnectivityResult.mobile,
-                ],);
+        when(() => mockConnectivity.checkConnectivity()).thenAnswer(
+          (_) async => [
+            ConnectivityResult.wifi,
+            ConnectivityResult.mobile,
+          ],
+        );
 
         // Act
         final result = await service.isConnected;

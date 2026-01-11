@@ -9,7 +9,8 @@ import '../../core/network/connectivity_service.dart';
 /// notifications when the device goes online or offline.
 class ConnectivityListener extends ConsumerStatefulWidget {
   const ConnectivityListener({
-    required this.child, super.key,
+    required this.child,
+    super.key,
   });
 
   /// The child widget to render.

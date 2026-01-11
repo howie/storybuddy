@@ -13,7 +13,9 @@ class VoiceProfileModel {
     required this.parentId,
     required this.name,
     required this.status,
-    required this.createdAt, required this.updatedAt, this.sampleDurationSeconds,
+    required this.createdAt,
+    required this.updatedAt,
+    this.sampleDurationSeconds,
     this.remoteVoiceModelUrl,
     this.errorMessage,
   });

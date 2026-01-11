@@ -24,9 +24,15 @@ class Story with _$Story {
     required StorySource source,
 
     /// Character count of content.
-    required int wordCount, /// Creation timestamp.
-    required DateTime createdAt, /// Last update timestamp.
-    required DateTime updatedAt, /// AI generation keywords (if AI generated).
+    required int wordCount,
+
+    /// Creation timestamp.
+    required DateTime createdAt,
+
+    /// Last update timestamp.
+    required DateTime updatedAt,
+
+    /// AI generation keywords (if AI generated).
     List<String>? keywords,
 
     /// Estimated reading time in minutes.

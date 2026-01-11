@@ -109,7 +109,8 @@ class GenerateStoryUseCase {
 class KeywordValidationResult {
   KeywordValidationResult({
     required this.isValid,
-    required this.keywordCount, this.message,
+    required this.keywordCount,
+    this.message,
   });
 
   final bool isValid;

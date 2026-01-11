@@ -224,7 +224,8 @@ class VoiceRecordingNotifier extends _$VoiceRecordingNotifier {
   Future<void> uploadRecording({required String name}) async {
     print('VoiceRecordingNotifier: uploadRecording called with name: $name');
     print(
-        'VoiceRecordingNotifier: Current recordingPath: ${state.recordingPath}',);
+      'VoiceRecordingNotifier: Current recordingPath: ${state.recordingPath}',
+    );
 
     if (state.recordingPath == null) {
       print('VoiceRecordingNotifier: Error - recordingPath is null');
@@ -273,7 +274,8 @@ class VoiceRecordingNotifier extends _$VoiceRecordingNotifier {
         uploadProgress: 1,
       );
       print(
-          'VoiceRecordingNotifier: State updated to uploaded. ProfileId: ${profile.id}',);
+        'VoiceRecordingNotifier: State updated to uploaded. ProfileId: ${profile.id}',
+      );
 
       // Refresh list
       ref.invalidate(voiceProfileListNotifierProvider);

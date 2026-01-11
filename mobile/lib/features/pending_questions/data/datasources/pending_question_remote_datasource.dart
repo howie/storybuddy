@@ -67,11 +67,12 @@ class PendingQuestionRemoteDataSourceImpl
     final response = await apiClient.get<Map<String, dynamic>>(
       '/qa/pending/summaries',
     );
-    final summaries =
-        response.data!['summaries'] as List<dynamic>;
+    final summaries = response.data!['summaries'] as List<dynamic>;
     return summaries
-        .map((s) =>
-            PendingQuestionSummaryModel.fromJson(s as Map<String, dynamic>),)
+        .map(
+          (s) =>
+              PendingQuestionSummaryModel.fromJson(s as Map<String, dynamic>),
+        )
         .toList();
   }
 

@@ -21,8 +21,12 @@ class VoiceProfile with _$VoiceProfile {
     required VoiceProfileStatus status,
 
     /// Creation timestamp.
-    required DateTime createdAt, /// Last update timestamp.
-    required DateTime updatedAt, /// Duration of the voice sample in seconds.
+    required DateTime createdAt,
+
+    /// Last update timestamp.
+    required DateTime updatedAt,
+
+    /// Duration of the voice sample in seconds.
     int? sampleDurationSeconds,
 
     /// Local path to the recorded audio file.

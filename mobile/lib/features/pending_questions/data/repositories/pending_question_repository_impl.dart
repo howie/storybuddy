@@ -26,7 +26,9 @@ class PendingQuestionRepositoryImpl implements PendingQuestionRepository {
     if (await connectivityService.isConnected) {
       try {
         await _syncFromRemote(
-            storyId: storyId, includeAnswered: includeAnswered,);
+          storyId: storyId,
+          includeAnswered: includeAnswered,
+        );
       } catch (_) {
         // Continue with local data if sync fails
       }

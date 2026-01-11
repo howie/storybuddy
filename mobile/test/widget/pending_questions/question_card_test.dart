@@ -413,8 +413,10 @@ void main() {
     });
 
     test('test fixture pendingQuestionAnswered has correct values', () {
-      expect(TestData.pendingQuestionAnswered.status,
-          PendingQuestionStatus.answered,);
+      expect(
+        TestData.pendingQuestionAnswered.status,
+        PendingQuestionStatus.answered,
+      );
       expect(TestData.pendingQuestionAnswered.answeredAt, isNotNull);
     });
 

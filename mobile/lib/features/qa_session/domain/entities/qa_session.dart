@@ -15,7 +15,9 @@ class QASession with _$QASession {
     required String storyId,
 
     /// Session start timestamp.
-    required DateTime startedAt, /// Session status.
+    required DateTime startedAt,
+
+    /// Session status.
     @Default(QASessionStatus.active) QASessionStatus status,
 
     /// Number of messages in this session.

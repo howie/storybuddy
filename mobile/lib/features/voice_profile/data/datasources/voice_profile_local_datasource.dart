@@ -31,8 +31,11 @@ abstract class VoiceProfileLocalDataSource {
   Future<void> updateSyncStatus(String id, SyncStatus status);
 
   /// Updates status from server response.
-  Future<void> updateStatus(String id, VoiceProfileStatus status,
-      {String? errorMessage,});
+  Future<void> updateStatus(
+    String id,
+    VoiceProfileStatus status, {
+    String? errorMessage,
+  });
 
   /// Watches all voice profiles for reactive updates.
   Stream<List<entity.VoiceProfile>> watchVoiceProfiles();

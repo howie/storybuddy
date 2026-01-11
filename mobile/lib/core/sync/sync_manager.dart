@@ -119,9 +119,11 @@ class SyncManager {
       );
     }
 
-    _updateStatus(_status.copyWith(
-      state: SyncState.syncing,
-    ),);
+    _updateStatus(
+      _status.copyWith(
+        state: SyncState.syncing,
+      ),
+    );
 
     var totalSynced = 0;
     final errors = <String>[];
@@ -138,11 +140,13 @@ class SyncManager {
     }
 
     final success = errors.isEmpty;
-    _updateStatus(_status.copyWith(
-      state: success ? SyncState.completed : SyncState.failed,
-      lastSyncAt: DateTime.now(),
-      lastError: errors.isNotEmpty ? errors.first : null,
-    ),);
+    _updateStatus(
+      _status.copyWith(
+        state: success ? SyncState.completed : SyncState.failed,
+        lastSyncAt: DateTime.now(),
+        lastError: errors.isNotEmpty ? errors.first : null,
+      ),
+    );
 
     // Reset to idle after a short delay
     Future.delayed(const Duration(seconds: 2), () {

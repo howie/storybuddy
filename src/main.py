@@ -16,7 +16,10 @@ from fastapi.responses import JSONResponse
 from src.api import interaction, parents, qa, questions, stories, transcripts, voice, voice_routes
 from src.config import get_settings
 from src.db.init import init_database
-from src.services.interaction.retention_service import start_retention_service, stop_retention_service
+from src.services.interaction.retention_service import (
+    start_retention_service,
+    stop_retention_service,
+)
 
 # Configure structured logging
 settings = get_settings()

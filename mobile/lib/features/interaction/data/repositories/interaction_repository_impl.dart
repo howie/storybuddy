@@ -39,8 +39,6 @@ class InteractionRepositoryImpl implements InteractionRepository {
         storyId: storyId,
         parentId: '', // TODO: Get from auth
         startedAt: DateTime.now(),
-        mode: SessionMode.interactive,
-        status: SessionStatus.calibrating,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );

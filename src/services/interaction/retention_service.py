@@ -6,9 +6,9 @@ Implements FR-019: Recording retention period with automatic cleanup.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Optional, Callable, Awaitable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from src.services.interaction.recording_service import (
     RecordingService,
@@ -41,8 +41,8 @@ class RetentionService:
 
     def __init__(
         self,
-        config: Optional[RetentionServiceConfig] = None,
-        recording_service: Optional[RecordingService] = None,
+        config: RetentionServiceConfig | None = None,
+        recording_service: RecordingService | None = None,
     ):
         """Initialize Retention Service.
 
@@ -52,9 +52,9 @@ class RetentionService:
         """
         self.config = config or RetentionServiceConfig()
         self._recording_service = recording_service
-        self._cleanup_task: Optional[asyncio.Task] = None
+        self._cleanup_task: asyncio.Task | None = None
         self._is_running = False
-        self._last_cleanup: Optional[datetime] = None
+        self._last_cleanup: datetime | None = None
         self._cleanup_callbacks: list[Callable[[int], Awaitable[None]]] = []
 
     @property
@@ -130,8 +130,7 @@ class RetentionService:
             duration_ms = int((self._last_cleanup - start_time).total_seconds() * 1000)
 
             logger.info(
-                f"Retention cleanup complete: {deleted} recordings deleted "
-                f"in {duration_ms}ms"
+                f"Retention cleanup complete: {deleted} recordings deleted in {duration_ms}ms"
             )
 
             # Notify callbacks
@@ -176,7 +175,7 @@ class RetentionService:
         return self._is_running
 
     @property
-    def last_cleanup(self) -> Optional[datetime]:
+    def last_cleanup(self) -> datetime | None:
         """Get timestamp of last cleanup run."""
         return self._last_cleanup
 
@@ -190,22 +189,20 @@ class RetentionService:
             "isRunning": self._is_running,
             "cleanupIntervalSeconds": self.config.cleanup_interval_seconds,
             "defaultRetentionDays": self.config.default_retention_days,
-            "lastCleanup": (
-                self._last_cleanup.isoformat() + "Z"
-                if self._last_cleanup else None
-            ),
+            "lastCleanup": (self._last_cleanup.isoformat() + "Z" if self._last_cleanup else None),
             "nextCleanup": (
                 (
-                    self._last_cleanup +
-                    timedelta(seconds=self.config.cleanup_interval_seconds)
-                ).isoformat() + "Z"
-                if self._last_cleanup else None
+                    self._last_cleanup + timedelta(seconds=self.config.cleanup_interval_seconds)
+                ).isoformat()
+                + "Z"
+                if self._last_cleanup
+                else None
             ),
         }
 
 
 # Singleton instance
-_retention_service: Optional[RetentionService] = None
+_retention_service: RetentionService | None = None
 
 
 def get_retention_service() -> RetentionService:

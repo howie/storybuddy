@@ -15,12 +15,10 @@ class VoiceSegment with _$VoiceSegment {
     required int sequence,
     required DateTime startedAt,
     required DateTime endedAt,
-    String? transcript,
+    required int durationMs, required DateTime createdAt, String? transcript,
     String? audioUrl,
     @Default(false) bool isRecorded,
     @Default('opus') String audioFormat,
-    required int durationMs,
-    required DateTime createdAt,
   }) = _VoiceSegment;
 
   factory VoiceSegment.fromJson(Map<String, dynamic> json) =>

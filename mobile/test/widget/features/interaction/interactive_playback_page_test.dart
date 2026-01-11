@@ -2,15 +2,14 @@
 // Tests the interactive playback page UI and interactions.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-
+import 'package:storybuddy/features/interaction/domain/entities/interaction_session.dart';
 // These imports will fail until the widgets are implemented
 import 'package:storybuddy/features/interaction/presentation/pages/interactive_playback_page.dart';
 import 'package:storybuddy/features/interaction/presentation/providers/interaction_provider.dart';
 import 'package:storybuddy/features/interaction/presentation/widgets/interaction_indicator.dart';
-import 'package:storybuddy/features/interaction/domain/entities/interaction_session.dart';
 import 'package:storybuddy/shared/widgets/mode_toggle.dart';
 
 // Mock classes
@@ -344,8 +343,8 @@ void main() {
           overrides: [
             interactionProvider.overrideWith(() => mockInteractionNotifier),
           ],
-          child: MaterialApp(
-            home: const InteractivePlaybackPage(
+          child: const MaterialApp(
+            home: InteractivePlaybackPage(
               storyId: 'story-123',
               storyTitle: '小兔子的冒險',
             ),
@@ -442,7 +441,7 @@ void main() {
         (tester) async {
       // Arrange
       when(() => mockInteractionNotifier.state).thenReturn(
-        InteractionState(
+        const InteractionState(
           isLoading: true,
         ),
       );

@@ -96,10 +96,10 @@ void main() {
 
   group('BatterySessionStats', () {
     test('should calculate consumption per hour', () {
-      final stats = BatterySessionStats(
+      const stats = BatterySessionStats(
         startLevel: 100,
         endLevel: 90,
-        duration: const Duration(minutes: 30),
+        duration: Duration(minutes: 30),
         snapshots: [],
         wasChargingDuringSession: false,
       );
@@ -109,10 +109,10 @@ void main() {
     });
 
     test('should indicate significant drain', () {
-      final stats = BatterySessionStats(
+      const stats = BatterySessionStats(
         startLevel: 100,
         endLevel: 90,
-        duration: const Duration(hours: 1),
+        duration: Duration(hours: 1),
         snapshots: [],
         wasChargingDuringSession: false,
       );
@@ -121,10 +121,10 @@ void main() {
     });
 
     test('should not indicate significant drain when charging', () {
-      final stats = BatterySessionStats(
+      const stats = BatterySessionStats(
         startLevel: 80,
         endLevel: 100,
-        duration: const Duration(hours: 1),
+        duration: Duration(hours: 1),
         snapshots: [],
         wasChargingDuringSession: true,
       );
@@ -133,10 +133,10 @@ void main() {
     });
 
     test('should provide summary for charging session', () {
-      final stats = BatterySessionStats(
+      const stats = BatterySessionStats(
         startLevel: 80,
         endLevel: 100,
-        duration: const Duration(hours: 1),
+        duration: Duration(hours: 1),
         snapshots: [],
         wasChargingDuringSession: true,
       );
@@ -145,10 +145,10 @@ void main() {
     });
 
     test('should provide summary for high power usage', () {
-      final stats = BatterySessionStats(
+      const stats = BatterySessionStats(
         startLevel: 100,
         endLevel: 70,
-        duration: const Duration(hours: 1),
+        duration: Duration(hours: 1),
         snapshots: [],
         wasChargingDuringSession: false,
       );
@@ -157,10 +157,10 @@ void main() {
     });
 
     test('should provide summary for low power usage', () {
-      final stats = BatterySessionStats(
+      const stats = BatterySessionStats(
         startLevel: 100,
         endLevel: 95,
-        duration: const Duration(hours: 1),
+        duration: Duration(hours: 1),
         snapshots: [],
         wasChargingDuringSession: false,
       );

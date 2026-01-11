@@ -272,7 +272,7 @@ class _TranscriptHistoryPageState extends ConsumerState<TranscriptHistoryPage> {
 
 /// Page for viewing a single transcript.
 class TranscriptDetailPage extends ConsumerWidget {
-  const TranscriptDetailPage({super.key, required this.transcriptId});
+  const TranscriptDetailPage({required this.transcriptId, super.key});
 
   final String transcriptId;
 

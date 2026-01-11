@@ -5,14 +5,15 @@ Provides real-time speech transcription for interactive story mode.
 """
 
 import asyncio
+import logging
+import uuid
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Dict, Any, AsyncIterator
-import uuid
-import logging
+from typing import Any
 
-from google.cloud import speech_v1 as speech
 from google.api_core.exceptions import GoogleAPIError
+from google.cloud import speech_v1 as speech
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +33,12 @@ class StreamingSTTConfig:
     """
 
     language_code: str = "zh-TW"  # Traditional Chinese (Taiwan)
-    alternative_language_codes: List[str] = field(default_factory=list)
+    alternative_language_codes: list[str] = field(default_factory=list)
     sample_rate_hertz: int = 16000
     encoding: str = "OGG_OPUS"  # Opus codec as specified in FR-016
     enable_automatic_punctuation: bool = True
     model: str = "latest_short"  # Optimized for short utterances
-    speech_contexts: List[Dict[str, Any]] = field(default_factory=list)
+    speech_contexts: list[dict[str, Any]] = field(default_factory=list)
     single_utterance: bool = False  # Allow multiple utterances
     interim_results: bool = True  # Enable real-time feedback
 
@@ -59,7 +60,7 @@ class TranscriptionResult:
     is_final: bool
     confidence: float = 0.0
     stability: float = 0.0
-    segment_id: Optional[str] = None
+    segment_id: str | None = None
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
     @property
@@ -67,7 +68,7 @@ class TranscriptionResult:
         """Whether this result has no transcribed text."""
         return not self.text or self.text.strip() == ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "text": self.text,
@@ -89,20 +90,20 @@ class StreamingSTTService:
     - Update speech context for story-specific vocabulary
     """
 
-    def __init__(self, config: Optional[StreamingSTTConfig] = None):
+    def __init__(self, config: StreamingSTTConfig | None = None):
         """Initialize STT service.
 
         Args:
             config: STT configuration. Uses defaults if not provided.
         """
         self.config = config or StreamingSTTConfig()
-        self._client: Optional[speech.SpeechClient] = None
+        self._client: speech.SpeechClient | None = None
         self._streaming: bool = False
-        self._session_id: Optional[str] = None
+        self._session_id: str | None = None
         self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         self._result_queue: asyncio.Queue[TranscriptionResult] = asyncio.Queue()
         self._stop_event: asyncio.Event = asyncio.Event()
-        self._stream_task: Optional[asyncio.Task] = None
+        self._stream_task: asyncio.Task | None = None
 
     @property
     def is_streaming(self) -> bool:
@@ -227,7 +228,7 @@ class StreamingSTTService:
                     timeout=0.5,
                 )
                 yield result
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
 
     async def _run_stream(self) -> None:
@@ -239,9 +240,7 @@ class StreamingSTTService:
             # Create request generator
             async def request_generator():
                 # First request: config only
-                yield speech.StreamingRecognizeRequest(
-                    streaming_config=streaming_config
-                )
+                yield speech.StreamingRecognizeRequest(streaming_config=streaming_config)
 
                 # Subsequent requests: audio content
                 while not self._stop_event.is_set():
@@ -251,7 +250,7 @@ class StreamingSTTService:
                             timeout=0.1,
                         )
                         yield speech.StreamingRecognizeRequest(audio_content=audio)
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         continue
 
             # Convert async generator to sync for the API
@@ -279,7 +278,7 @@ class StreamingSTTService:
                         text=alternative.transcript,
                         is_final=result.is_final,
                         confidence=alternative.confidence if result.is_final else 0.0,
-                        stability=result.stability if hasattr(result, 'stability') else 0.0,
+                        stability=result.stability if hasattr(result, "stability") else 0.0,
                         segment_id=str(uuid.uuid4()) if result.is_final else None,
                     )
 
@@ -305,7 +304,7 @@ class StreamingSTTService:
 
     async def update_speech_context(
         self,
-        phrases: List[str],
+        phrases: list[str],
         boost: float = 20.0,
     ) -> None:
         """Update speech context for improved recognition.
@@ -317,9 +316,7 @@ class StreamingSTTService:
             phrases: List of phrases/words to boost.
             boost: Boost value (default 20, higher = more boost).
         """
-        self.config.speech_contexts = [
-            {"phrases": phrases, "boost": boost}
-        ]
+        self.config.speech_contexts = [{"phrases": phrases, "boost": boost}]
         logger.info(f"Updated speech context with {len(phrases)} phrases")
 
     async def _handle_timeout(self) -> None:

@@ -115,7 +115,7 @@ class BatteryMonitor {
       timestamp: DateTime.now(),
       level: level,
       isCharging: isCharging,
-    ));
+    ),);
   }
 
   /// Get estimated remaining interactive time based on current drain rate.

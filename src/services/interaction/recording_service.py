@@ -5,14 +5,14 @@ Handles saving, retrieving, and managing audio recordings with privacy settings.
 """
 
 import asyncio
+import logging
 import os
 import uuid
-import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +51,9 @@ class Recording:
     file_size_bytes: int = 0
     status: RecordingStatus = RecordingStatus.PENDING
     created_at: datetime = field(default_factory=datetime.utcnow)
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "recordingId": self.recording_id,
@@ -74,14 +74,14 @@ class RecordingService:
     Implements FR-018 (recording toggle) and FR-019 (retention period).
     """
 
-    def __init__(self, config: Optional[RecordingServiceConfig] = None):
+    def __init__(self, config: RecordingServiceConfig | None = None):
         """Initialize Recording Service.
 
         Args:
             config: Service configuration.
         """
         self.config = config or RecordingServiceConfig()
-        self._recordings: Dict[str, Recording] = {}
+        self._recordings: dict[str, Recording] = {}
         self._ensure_storage_path()
 
     def _ensure_storage_path(self) -> None:
@@ -95,8 +95,8 @@ class RecordingService:
         session_id: str,
         segment_id: str,
         settings: Any,  # InteractionSettings
-        duration_ms: Optional[int] = None,
-    ) -> Optional[Recording]:
+        duration_ms: int | None = None,
+    ) -> Recording | None:
         """Save an audio recording if recording is enabled.
 
         Args:
@@ -110,7 +110,7 @@ class RecordingService:
             Recording object if saved, None if skipped.
         """
         # Check if recording is enabled in settings
-        if not getattr(settings, 'recording_enabled', False):
+        if not getattr(settings, "recording_enabled", False):
             logger.debug(f"Recording disabled for session {session_id}")
             return None
 
@@ -163,12 +163,12 @@ class RecordingService:
 
     def _write_file(self, path: Path, data: bytes) -> None:
         """Write file with restricted permissions."""
-        with open(path, 'wb') as f:
+        with open(path, "wb") as f:
             f.write(data)
         # Set restrictive permissions (owner read/write only)
         os.chmod(path, 0o600)
 
-    def _calculate_max_bytes(self, duration_ms: Optional[int]) -> int:
+    def _calculate_max_bytes(self, duration_ms: int | None) -> int:
         """Calculate maximum bytes based on duration limit."""
         max_duration_ms = self.config.max_recording_duration_seconds * 1000
         # Assuming 16kHz mono 16-bit = 32000 bytes/second
@@ -180,7 +180,7 @@ class RecordingService:
         bytes_per_second = self.config.sample_rate * 2
         return int(byte_length * 1000 / bytes_per_second)
 
-    async def get_recording(self, recording_id: str) -> Optional[Recording]:
+    async def get_recording(self, recording_id: str) -> Recording | None:
         """Get a specific recording by ID.
 
         Args:
@@ -191,7 +191,7 @@ class RecordingService:
         """
         return self._recordings.get(recording_id)
 
-    async def get_recordings(self, session_id: str) -> List[Recording]:
+    async def get_recordings(self, session_id: str) -> list[Recording]:
         """Get all recordings for a session.
 
         Args:
@@ -201,7 +201,8 @@ class RecordingService:
             List of recordings.
         """
         return [
-            r for r in self._recordings.values()
+            r
+            for r in self._recordings.values()
             if r.session_id == session_id and r.status != RecordingStatus.DELETED
         ]
 
@@ -261,7 +262,7 @@ class RecordingService:
         logger.info(f"Deleted {deleted} recordings for session {session_id}")
         return deleted
 
-    def get_expired_recordings(self) -> List[Recording]:
+    def get_expired_recordings(self) -> list[Recording]:
         """Get all recordings that have exceeded retention period.
 
         Returns:
@@ -269,7 +270,8 @@ class RecordingService:
         """
         now = datetime.utcnow()
         return [
-            r for r in self._recordings.values()
+            r
+            for r in self._recordings.values()
             if r.expires_at and r.expires_at < now and r.status != RecordingStatus.DELETED
         ]
 
@@ -291,7 +293,7 @@ class RecordingService:
 
         return deleted
 
-    async def get_storage_usage(self, session_id: Optional[str] = None) -> Dict[str, Any]:
+    async def get_storage_usage(self, session_id: str | None = None) -> dict[str, Any]:
         """Get storage usage statistics.
 
         Args:
@@ -304,8 +306,7 @@ class RecordingService:
             recordings = await self.get_recordings(session_id)
         else:
             recordings = [
-                r for r in self._recordings.values()
-                if r.status != RecordingStatus.DELETED
+                r for r in self._recordings.values() if r.status != RecordingStatus.DELETED
             ]
 
         total_bytes = sum(r.file_size_bytes for r in recordings)
@@ -321,7 +322,7 @@ class RecordingService:
 
 
 # Singleton instance
-_recording_service: Optional[RecordingService] = None
+_recording_service: RecordingService | None = None
 
 
 def get_recording_service() -> RecordingService:

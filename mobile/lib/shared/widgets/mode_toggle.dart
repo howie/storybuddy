@@ -5,9 +5,7 @@ import 'package:flutter/material.dart';
 /// T042 [US1] Create mode toggle widget.
 class ModeToggle extends StatelessWidget {
   const ModeToggle({
-    super.key,
-    required this.isInteractive,
-    required this.onChanged,
+    required this.isInteractive, required this.onChanged, super.key,
     this.enabled = true,
   });
 

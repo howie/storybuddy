@@ -32,7 +32,7 @@ class StartInteraction {
 
     if (token.isEmpty) {
       return const Left(
-          ValidationFailure(message: 'Authentication token is required'));
+          ValidationFailure(message: 'Authentication token is required'),);
     }
 
     // Start the session

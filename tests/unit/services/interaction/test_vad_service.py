@@ -4,12 +4,12 @@ T023 [P] [US1] Unit test for VAD service.
 Tests the webrtcvad-based voice activity detection for interactive story mode.
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 import struct
 
+import pytest
+
 # These imports will fail until the service is implemented
-from src.services.interaction.vad_service import VADService, VADConfig
+from src.services.interaction.vad_service import VADConfig, VADService
 
 
 class TestVADConfig:
@@ -70,12 +70,13 @@ class TestVADService:
         """Generate a simulated speech frame with audio content."""
         # Create a simple sine wave pattern to simulate speech
         import math
+
         samples = []
         for i in range(320):  # 20ms at 16kHz
             # Generate a 300Hz sine wave (typical speech frequency)
             sample = int(16000 * math.sin(2 * math.pi * 300 * i / 16000))
             samples.append(sample)
-        return struct.pack('<' + 'h' * 320, *samples)
+        return struct.pack("<" + "h" * 320, *samples)
 
     def test_create_service_with_default_config(self, vad_service):
         """Should create service with default configuration."""
@@ -111,11 +112,12 @@ class TestVADService:
 
         # Create speech-like audio
         import math
+
         speech_samples = []
         for i in range(320):
             sample = int(16000 * math.sin(2 * math.pi * 300 * i / 16000))
             speech_samples.append(sample)
-        speech = struct.pack('<' + 'h' * 320, *speech_samples)
+        speech = struct.pack("<" + "h" * 320, *speech_samples)
 
         # Process frames and track state changes
         events = []
@@ -126,7 +128,7 @@ class TestVADService:
 
         # Should have detected speech_started and speech_ended
         assert len(events) >= 1
-        assert any(e['type'] == 'speech_started' for e in events)
+        assert any(e["type"] == "speech_started" for e in events)
 
     def test_reset_clears_internal_state(self, vad_service):
         """Should reset internal state for new session."""
@@ -144,18 +146,19 @@ class TestVADService:
         """Should calibrate noise floor from ambient audio."""
         # Generate some ambient noise frames
         import random
+
         noise_frames = []
         for _ in range(50):  # 1 second of audio at 20ms frames
             samples = [random.randint(-500, 500) for _ in range(320)]
-            frame = struct.pack('<' + 'h' * 320, *samples)
+            frame = struct.pack("<" + "h" * 320, *samples)
             noise_frames.append(frame)
 
         calibration = vad_service.calibrate(noise_frames)
 
         # CalibrationResult is a dataclass, access attributes directly
-        assert hasattr(calibration, 'noise_floor_db')
-        assert hasattr(calibration, 'percentile_90')
-        assert hasattr(calibration, 'sample_count')
+        assert hasattr(calibration, "noise_floor_db")
+        assert hasattr(calibration, "percentile_90")
+        assert hasattr(calibration, "sample_count")
         assert calibration.sample_count == 50
 
     def test_speech_detection_respects_threshold(self, vad_service):
@@ -189,6 +192,7 @@ class TestVADServiceIntegration:
     def test_thread_safety(self, vad_service):
         """Should be thread-safe for concurrent access."""
         import threading
+
         results = []
 
         def process_frames():

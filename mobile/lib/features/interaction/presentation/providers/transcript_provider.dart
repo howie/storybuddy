@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:storybuddy/features/interaction/data/datasources/transcript_remote_datasource.dart';
@@ -66,18 +65,16 @@ class TranscriptListNotifier extends StateNotifier<TranscriptListState> {
   /// Load first page of transcripts.
   Future<void> loadTranscripts({String? storyId}) async {
     _storyIdFilter = storyId;
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final response = await _repository.getTranscripts(
         storyId: storyId,
-        page: 1,
       );
 
       state = TranscriptListState(
         transcripts: response.transcripts,
         hasMore: response.hasMore,
-        currentPage: 1,
       );
     } catch (e) {
       state = state.copyWith(

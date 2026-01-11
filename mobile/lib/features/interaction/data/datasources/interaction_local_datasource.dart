@@ -1,6 +1,6 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:storybuddy/features/interaction/data/models/interaction_settings_model.dart';
 
 /// T065 [US3] Implement settings local datasource.

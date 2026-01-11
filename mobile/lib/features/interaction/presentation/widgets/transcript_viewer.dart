@@ -8,8 +8,7 @@ import 'package:storybuddy/features/interaction/domain/entities/interaction_tran
 /// Displays a formatted interaction transcript with conversation turns.
 class TranscriptViewer extends StatelessWidget {
   const TranscriptViewer({
-    super.key,
-    required this.transcript,
+    required this.transcript, super.key,
     this.onShare,
     this.onEmail,
   });
@@ -203,7 +202,7 @@ class TranscriptViewer extends StatelessWidget {
           speakerType: speakerType,
           text: text.replaceAll(RegExp(r'\s*\[中斷.*\]'), ''),
           wasInterrupted: wasInterrupted,
-        ));
+        ),);
       } else {
         // Non-timestamped line, treat as continuation or standalone
         entries.add(_TranscriptEntry(
@@ -211,7 +210,7 @@ class TranscriptViewer extends StatelessWidget {
           speaker: '',
           speakerType: _SpeakerType.system,
           text: line,
-        ));
+        ),);
       }
     }
 
@@ -350,9 +349,7 @@ class TranscriptViewerLoading extends StatelessWidget {
 /// Error state widget for transcript viewer.
 class TranscriptViewerError extends StatelessWidget {
   const TranscriptViewerError({
-    super.key,
-    required this.message,
-    required this.onRetry,
+    required this.message, required this.onRetry, super.key,
   });
 
   final String message;

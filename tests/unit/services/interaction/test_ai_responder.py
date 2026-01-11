@@ -4,9 +4,9 @@ T047 [P] [US2] Unit test for AI responder safety.
 Tests the Claude AI integration for generating child-safe responses.
 """
 
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-from datetime import datetime
 
 # These imports will fail until the service is implemented
 from src.services.interaction.ai_responder import (
@@ -16,7 +16,6 @@ from src.services.interaction.ai_responder import (
     ResponseContext,
     TriggerType,
 )
-from src.services.interaction.content_filter import ContentFilter
 
 
 class TestAIResponderConfig:
@@ -143,7 +142,9 @@ class TestAIResponder:
         """Should respond to story-related questions appropriately (US2 Scenario 1)."""
         # Setup mock response - use Mock, not AsyncMock, since asyncio.to_thread wraps sync call
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="小兔子正在森林裡找蘿蔔呢！牠想找到最甜的蘿蔔帶回家。")]
+        mock_response.content = [
+            MagicMock(text="小兔子正在森林裡找蘿蔔呢！牠想找到最甜的蘿蔔帶回家。")
+        ]
         mock_anthropic_client.messages.create = Mock(return_value=mock_response)
 
         response = await ai_responder.respond(
@@ -164,11 +165,14 @@ class TestAIResponder:
         """Should redirect off-topic conversations back to story (US2 Scenario 2)."""
         # Setup mock response that redirects
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="這是個有趣的問題！不過讓我們先看看小兔子在森林裡發生了什麼事...")]
+        mock_response.content = [
+            MagicMock(text="這是個有趣的問題！不過讓我們先看看小兔子在森林裡發生了什麼事...")
+        ]
         mock_anthropic_client.messages.create = Mock(return_value=mock_response)
 
         # Mock content filter to detect off-topic content
         from src.services.interaction.content_filter import ContentCategory
+
         filter_result = MagicMock()
         filter_result.categories_detected = [ContentCategory.OFF_TOPIC]
         mock_content_filter.filter = Mock(return_value=filter_result)
@@ -180,7 +184,9 @@ class TestAIResponder:
 
         assert response is not None
         # The AI should gently redirect to the story
-        assert response.was_redirected is True or "故事" in response.text or "小兔子" in response.text
+        assert (
+            response.was_redirected is True or "故事" in response.text or "小兔子" in response.text
+        )
 
     @pytest.mark.asyncio
     async def test_handle_inappropriate_language(
@@ -189,13 +195,16 @@ class TestAIResponder:
         """Should handle inappropriate language appropriately (US2 Scenario 3)."""
         # Mark content as needing filtering
         from src.services.interaction.content_filter import ContentCategory
+
         filter_result = MagicMock()
         filter_result.categories_detected = [ContentCategory.INAPPROPRIATE_LANGUAGE]
         mock_content_filter.filter = Mock(return_value=filter_result)
 
         # Setup mock response with gentle guidance
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="讓我們用友善的話來聊天吧！你想知道小兔子接下來會遇到什麼嗎？")]
+        mock_response.content = [
+            MagicMock(text="讓我們用友善的話來聊天吧！你想知道小兔子接下來會遇到什麼嗎？")
+        ]
         mock_anthropic_client.messages.create = Mock(return_value=mock_response)
 
         response = await ai_responder.respond(
@@ -227,9 +236,7 @@ class TestAIResponder:
         assert "system" in str(call_args) or call_args is not None
 
     @pytest.mark.asyncio
-    async def test_response_length_limit(
-        self, ai_responder, mock_anthropic_client, story_context
-    ):
+    async def test_response_length_limit(self, ai_responder, mock_anthropic_client, story_context):
         """Should keep responses concise for children."""
         # Setup a long mock response that should be truncated
         long_text = "很長的回應。" * 100
@@ -246,9 +253,7 @@ class TestAIResponder:
         assert len(response.text) <= ai_responder.config.max_response_length_chars
 
     @pytest.mark.asyncio
-    async def test_include_conversation_history(
-        self, ai_responder, mock_anthropic_client
-    ):
+    async def test_include_conversation_history(self, ai_responder, mock_anthropic_client):
         """Should include conversation history for context continuity."""
         context = ResponseContext(
             session_id="session-123",
@@ -327,9 +332,10 @@ class TestAIResponderSafety:
         if call_args.kwargs.get("system"):
             system_prompt = call_args.kwargs["system"]
             # Should mention safety concepts
-            assert any(keyword in system_prompt.lower() for keyword in [
-                "兒童", "安全", "適合", "友善", "child", "safe", "appropriate"
-            ])
+            assert any(
+                keyword in system_prompt.lower()
+                for keyword in ["兒童", "安全", "適合", "友善", "child", "safe", "appropriate"]
+            )
 
     @pytest.mark.asyncio
     async def test_never_provides_personal_info_requests(
@@ -338,6 +344,7 @@ class TestAIResponderSafety:
         """Should never ask for or reveal personal information."""
         # Mock content filter to detect personal info request
         from src.services.interaction.content_filter import ContentCategory
+
         filter_result = MagicMock()
         filter_result.categories_detected = [ContentCategory.PERSONAL_INFO_REQUEST]
         mock_content_filter.filter = Mock(return_value=filter_result)
@@ -362,7 +369,9 @@ class TestAIResponderSafety:
     ):
         """Should handle potentially scary topics in a gentle, reassuring way."""
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="在故事裡，大野狼其實沒有那麼可怕。小兔子很聰明，知道怎麼保護自己呢！")]
+        mock_response.content = [
+            MagicMock(text="在故事裡，大野狼其實沒有那麼可怕。小兔子很聰明，知道怎麼保護自己呢！")
+        ]
         mock_anthropic_client.messages.create = Mock(return_value=mock_response)
 
         response = await ai_responder.respond(
@@ -403,9 +412,7 @@ class TestAIResponderSafety:
         unsafe_response.content = [MagicMock(text="不安全的內容")]
         safe_response = MagicMock()
         safe_response.content = [MagicMock(text="安全的回應")]
-        mock_anthropic_client.messages.create = Mock(
-            side_effect=[unsafe_response, safe_response]
-        )
+        mock_anthropic_client.messages.create = Mock(side_effect=[unsafe_response, safe_response])
 
         response = await ai_responder.respond(
             child_text="你好",
@@ -455,9 +462,7 @@ class TestAIResponderErrorHandling:
         self, ai_responder, mock_anthropic_client, story_context
     ):
         """Should handle API errors gracefully with fallback response."""
-        mock_anthropic_client.messages.create = Mock(
-            side_effect=Exception("API Error")
-        )
+        mock_anthropic_client.messages.create = Mock(side_effect=Exception("API Error"))
 
         response = await ai_responder.respond(
             child_text="你好",
@@ -473,10 +478,7 @@ class TestAIResponderErrorHandling:
         self, ai_responder, mock_anthropic_client, story_context
     ):
         """Should handle timeout with appropriate message."""
-        import asyncio
-        mock_anthropic_client.messages.create = Mock(
-            side_effect=asyncio.TimeoutError()
-        )
+        mock_anthropic_client.messages.create = Mock(side_effect=TimeoutError())
 
         response = await ai_responder.respond(
             child_text="你好",
@@ -488,9 +490,7 @@ class TestAIResponderErrorHandling:
         assert response.is_fallback is True
 
     @pytest.mark.asyncio
-    async def test_handle_empty_response(
-        self, ai_responder, mock_anthropic_client, story_context
-    ):
+    async def test_handle_empty_response(self, ai_responder, mock_anthropic_client, story_context):
         """Should handle empty API response."""
         mock_response = MagicMock()
         mock_response.content = []
@@ -534,7 +534,7 @@ class TestAIResponderInterruption:
     async def test_can_be_interrupted(self, ai_responder):
         """AI response generation should be interruptible."""
         # Verify the responder supports cancellation
-        assert hasattr(ai_responder, 'cancel_current_response')
+        assert hasattr(ai_responder, "cancel_current_response")
 
     @pytest.mark.asyncio
     async def test_interrupted_response_marked(self, ai_responder):

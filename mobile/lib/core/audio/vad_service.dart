@@ -2,11 +2,25 @@
 ///
 /// Provides real-time voice activity detection for interactive story mode.
 /// Detects speech start/end events based on audio energy levels.
+library;
 import 'dart:math';
 import 'dart:typed_data';
 
 /// Configuration for Voice Activity Detection.
 class VADConfig {
+
+  const VADConfig({
+    this.sampleRate = 16000,
+    this.frameDurationMs = 20,
+    this.speechThresholdDb = -35,
+    this.silenceThresholdDb = -50,
+    this.minSpeechDurationMs = 100,
+    this.minSilenceDurationMs = 300,
+  }) : assert(
+            frameDurationMs == 10 ||
+                frameDurationMs == 20 ||
+                frameDurationMs == 30,
+            'Frame duration must be 10, 20, or 30 ms',);
   /// Audio sample rate (Hz).
   final int sampleRate;
 
@@ -24,19 +38,6 @@ class VADConfig {
 
   /// Minimum silence duration to confirm speech end (ms).
   final int minSilenceDurationMs;
-
-  const VADConfig({
-    this.sampleRate = 16000,
-    this.frameDurationMs = 20,
-    this.speechThresholdDb = -35,
-    this.silenceThresholdDb = -50,
-    this.minSpeechDurationMs = 100,
-    this.minSilenceDurationMs = 300,
-  }) : assert(
-            frameDurationMs == 10 ||
-                frameDurationMs == 20 ||
-                frameDurationMs == 30,
-            'Frame duration must be 10, 20, or 30 ms');
 
   /// Number of samples per frame.
   int get samplesPerFrame => (sampleRate * frameDurationMs) ~/ 1000;
@@ -56,6 +57,12 @@ enum VADEventType {
 
 /// Event emitted by VAD service.
 class VADEvent {
+
+  const VADEvent({
+    required this.type,
+    required this.timestamp,
+    this.durationMs,
+  });
   /// Type of event.
   final VADEventType type;
 
@@ -64,12 +71,6 @@ class VADEvent {
 
   /// Duration of speech in milliseconds (only for speechEnded).
   final int? durationMs;
-
-  const VADEvent({
-    required this.type,
-    required this.timestamp,
-    this.durationMs,
-  });
 
   @override
   String toString() =>
@@ -80,6 +81,8 @@ class VADEvent {
 ///
 /// Detects speech vs silence in audio frames based on energy levels.
 class VADService {
+
+  VADService({this.config = const VADConfig()});
   final VADConfig config;
 
   // State tracking
@@ -92,8 +95,6 @@ class VADService {
   // Calibration
   double? _noiseFloorDb;
   bool _isCalibrated = false;
-
-  VADService({this.config = const VADConfig()});
 
   /// Whether calibration has been performed.
   bool get isCalibrated => _isCalibrated;
@@ -178,9 +179,9 @@ class VADService {
   double calculateFrameEnergy(Uint8List audioFrame) {
     // Interpret bytes as 16-bit signed integers (little-endian)
     final samples = Int16List.view(audioFrame.buffer, audioFrame.offsetInBytes,
-        audioFrame.lengthInBytes ~/ 2);
+        audioFrame.lengthInBytes ~/ 2,);
 
-    if (samples.isEmpty) return -100.0;
+    if (samples.isEmpty) return -100;
 
     // Calculate RMS
     double sumSquares = 0;
@@ -190,7 +191,7 @@ class VADService {
     final rms = sqrt(sumSquares / samples.length);
 
     // Convert to dB (normalized to 16-bit range)
-    if (rms < 1) return -100.0;
+    if (rms < 1) return -100;
     return 20 * log(rms / 32768) / ln10;
   }
 

@@ -4,7 +4,6 @@ T050 [US2] Create child-safe system prompt template.
 Provides system prompts for AI responses that are safe and appropriate for children.
 """
 
-from typing import Optional, List
 from dataclasses import dataclass
 
 
@@ -14,9 +13,9 @@ class StoryContext:
 
     title: str
     synopsis: str
-    characters: List[str]
-    current_scene: Optional[str] = None
-    themes: Optional[List[str]] = None
+    characters: list[str]
+    current_scene: str | None = None
+    themes: list[str] | None = None
 
 
 # Base system prompt for child-safe AI interactions
@@ -102,8 +101,8 @@ REDIRECT_PHRASES = [
 
 
 def build_system_prompt(
-    story_context: Optional[StoryContext] = None,
-    conversation_history: Optional[List[dict]] = None,
+    story_context: StoryContext | None = None,
+    conversation_history: list[dict] | None = None,
 ) -> str:
     """Build the complete system prompt for AI interaction.
 
@@ -118,7 +117,9 @@ def build_system_prompt(
 
     # Add story context if available
     if story_context:
-        characters_str = "、".join(story_context.characters) if story_context.characters else "（尚未介紹）"
+        characters_str = (
+            "、".join(story_context.characters) if story_context.characters else "（尚未介紹）"
+        )
         story_section = STORY_CONTEXT_TEMPLATE.format(
             title=story_context.title,
             synopsis=story_context.synopsis,
@@ -164,6 +165,7 @@ def get_redirect_phrase() -> str:
         A redirect phrase to guide conversation back to story.
     """
     import random
+
     return random.choice(REDIRECT_PHRASES)
 
 
@@ -181,8 +183,8 @@ CHARACTER_VOICE_PROMPTS = {
 
 
 def build_character_prompt(
-    character_name: Optional[str] = None,
-    character_personality: Optional[str] = None,
+    character_name: str | None = None,
+    character_personality: str | None = None,
 ) -> str:
     """Build a character-specific prompt addition.
 

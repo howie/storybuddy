@@ -5,28 +5,28 @@ T078 [US4] Generate transcript on session end.
 Manages the lifecycle of interactive story sessions.
 """
 
-import asyncio
+import logging
+import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Dict, Any, List, Callable, Awaitable
-import uuid
-import logging
+from typing import Any
 
-from src.models.enums import SessionMode, SessionStatus
 from src.db.repository import (
-    InteractionSessionRepository,
-    VoiceSegmentRepository,
-    NoiseCalibrationRepository,
     AIResponseRepository,
+    InteractionSessionRepository,
+    NoiseCalibrationRepository,
+    VoiceSegmentRepository,
 )
-from src.services.interaction.vad_service import VADService, VADConfig, CalibrationResult
+from src.models.enums import SessionMode, SessionStatus
 from src.services.interaction.streaming_stt import StreamingSTTService, TranscriptionResult
+from src.services.interaction.vad_service import CalibrationResult, VADService
 from src.services.transcript import TranscriptGenerator, get_scheduler
 
 logger = logging.getLogger(__name__)
 
 # Type alias for event handlers
-EventHandler = Callable[[Dict[str, Any]], Awaitable[None]]
+EventHandler = Callable[[dict[str, Any]], Awaitable[None]]
 
 
 @dataclass
@@ -44,32 +44,26 @@ class SessionState:
     story_position_ms: int = 0
     is_child_speaking: bool = False
     is_ai_responding: bool = False
-    current_segment_id: Optional[str] = None
+    current_segment_id: str | None = None
     started_at: datetime = field(default_factory=datetime.utcnow)
-    calibration: Optional[CalibrationResult] = None
+    calibration: CalibrationResult | None = None
 
     def activate(self) -> None:
         """Transition to active status."""
         if self.status not in [SessionStatus.CALIBRATING, SessionStatus.PAUSED]:
-            raise ValueError(
-                f"Invalid transition: cannot activate from {self.status}"
-            )
+            raise ValueError(f"Invalid transition: cannot activate from {self.status}")
         self.status = SessionStatus.ACTIVE
 
     def pause(self) -> None:
         """Transition to paused status."""
         if self.status != SessionStatus.ACTIVE:
-            raise ValueError(
-                f"Invalid transition: cannot pause from {self.status}"
-            )
+            raise ValueError(f"Invalid transition: cannot pause from {self.status}")
         self.status = SessionStatus.PAUSED
 
     def resume(self) -> None:
         """Resume from paused status."""
         if self.status != SessionStatus.PAUSED:
-            raise ValueError(
-                f"Invalid transition: cannot resume from {self.status}"
-            )
+            raise ValueError(f"Invalid transition: cannot resume from {self.status}")
         self.status = SessionStatus.ACTIVE
 
     def complete(self) -> None:
@@ -91,10 +85,10 @@ class SessionEvent:
 
     type: str
     session_id: str
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "type": self.type,
@@ -116,10 +110,10 @@ class SessionManager:
 
     def __init__(
         self,
-        repository: Optional[InteractionSessionRepository] = None,
-        vad_service: Optional[VADService] = None,
-        stt_service: Optional[StreamingSTTService] = None,
-        transcript_generator: Optional[TranscriptGenerator] = None,
+        repository: InteractionSessionRepository | None = None,
+        vad_service: VADService | None = None,
+        stt_service: StreamingSTTService | None = None,
+        transcript_generator: TranscriptGenerator | None = None,
     ):
         """Initialize session manager.
 
@@ -138,13 +132,13 @@ class SessionManager:
         self._transcript_generator = transcript_generator or TranscriptGenerator()
 
         # Active sessions by ID
-        self._sessions: Dict[str, SessionState] = {}
+        self._sessions: dict[str, SessionState] = {}
 
         # Event subscribers
-        self._event_handlers: List[EventHandler] = []
+        self._event_handlers: list[EventHandler] = []
 
         # Calibration audio buffers
-        self._calibration_buffers: Dict[str, List[bytes]] = {}
+        self._calibration_buffers: dict[str, list[bytes]] = {}
 
     def subscribe(self, handler: EventHandler) -> None:
         """Subscribe to session events.
@@ -199,22 +193,26 @@ class SessionManager:
             story_id=story_id,
             parent_id=parent_id,
             mode=mode,
-            status=SessionStatus.CALIBRATING if mode == SessionMode.INTERACTIVE else SessionStatus.ACTIVE,
+            status=SessionStatus.CALIBRATING
+            if mode == SessionMode.INTERACTIVE
+            else SessionStatus.ACTIVE,
         )
         self._sessions[session_id] = state
         self._calibration_buffers[session_id] = []
 
         # Emit event
-        await self._emit_event(SessionEvent(
-            type="session_created",
-            session_id=session_id,
-            data={"storyId": story_id, "mode": mode.value},
-        ))
+        await self._emit_event(
+            SessionEvent(
+                type="session_created",
+                session_id=session_id,
+                data={"storyId": story_id, "mode": mode.value},
+            )
+        )
 
         logger.info(f"Created session {session_id} for story {story_id}")
         return state
 
-    def get_state(self, session_id: str) -> Optional[SessionState]:
+    def get_state(self, session_id: str) -> SessionState | None:
         """Get the current state of a session.
 
         Args:
@@ -305,10 +303,12 @@ class SessionManager:
         # Reset VAD state
         self._vad_service.reset()
 
-        await self._emit_event(SessionEvent(
-            type="session_activated",
-            session_id=session_id,
-        ))
+        await self._emit_event(
+            SessionEvent(
+                type="session_activated",
+                session_id=session_id,
+            )
+        )
 
         logger.info(f"Session {session_id} activated")
 
@@ -325,10 +325,12 @@ class SessionManager:
         state.pause()
         await self._repository.update_status(session_id, SessionStatus.PAUSED)
 
-        await self._emit_event(SessionEvent(
-            type="session_paused",
-            session_id=session_id,
-        ))
+        await self._emit_event(
+            SessionEvent(
+                type="session_paused",
+                session_id=session_id,
+            )
+        )
 
     async def resume_session(self, session_id: str) -> None:
         """Resume a paused session.
@@ -343,12 +345,14 @@ class SessionManager:
         state.resume()
         await self._repository.update_status(session_id, SessionStatus.ACTIVE)
 
-        await self._emit_event(SessionEvent(
-            type="session_resumed",
-            session_id=session_id,
-        ))
+        await self._emit_event(
+            SessionEvent(
+                type="session_resumed",
+                session_id=session_id,
+            )
+        )
 
-    async def end_session(self, session_id: str) -> Dict[str, Any]:
+    async def end_session(self, session_id: str) -> dict[str, Any]:
         """End a session and cleanup resources.
 
         T078 [US4]: Generates transcript when session ends.
@@ -391,13 +395,17 @@ class SessionManager:
         # Remove from active sessions
         del self._sessions[session_id]
 
-        await self._emit_event(SessionEvent(
-            type="session_ended",
-            session_id=session_id,
-            data=summary,
-        ))
+        await self._emit_event(
+            SessionEvent(
+                type="session_ended",
+                session_id=session_id,
+                data=summary,
+            )
+        )
 
-        logger.info(f"Session {session_id} ended, duration: {duration_ms}ms, transcript: {transcript_id}")
+        logger.info(
+            f"Session {session_id} ended, duration: {duration_ms}ms, transcript: {transcript_id}"
+        )
         return summary
 
     async def _generate_session_transcript(
@@ -405,7 +413,7 @@ class SessionManager:
         session_id: str,
         state: SessionState,
         ended_at: datetime,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Generate a transcript for the ended session.
 
         T078 [US4]: Called automatically when session ends.
@@ -425,9 +433,9 @@ class SessionManager:
 
             # Convert to model objects
             from src.models.interaction import (
+                AIResponse,
                 InteractionSession,
                 VoiceSegment,
-                AIResponse,
             )
 
             session_model = InteractionSession(
@@ -482,7 +490,7 @@ class SessionManager:
         self,
         session_id: str,
         audio_frame: bytes,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Process an audio frame during active session.
 
         Args:
@@ -530,17 +538,19 @@ class SessionManager:
         state.is_child_speaking = True
         state.current_segment_id = str(uuid.uuid4())
 
-        await self._emit_event(SessionEvent(
-            type="speech_started",
-            session_id=session_id,
-            data={"segmentId": state.current_segment_id},
-        ))
+        await self._emit_event(
+            SessionEvent(
+                type="speech_started",
+                session_id=session_id,
+                data={"segmentId": state.current_segment_id},
+            )
+        )
 
     async def handle_speech_ended(
         self,
         session_id: str,
         duration_ms: int,
-    ) -> Optional[TranscriptionResult]:
+    ) -> TranscriptionResult | None:
         """Handle speech ended event.
 
         Args:
@@ -563,15 +573,17 @@ class SessionManager:
                 final_result = result
                 break
 
-        await self._emit_event(SessionEvent(
-            type="speech_ended",
-            session_id=session_id,
-            data={
-                "segmentId": state.current_segment_id,
-                "durationMs": duration_ms,
-                "transcription": final_result.to_dict() if final_result else None,
-            },
-        ))
+        await self._emit_event(
+            SessionEvent(
+                type="speech_ended",
+                session_id=session_id,
+                data={
+                    "segmentId": state.current_segment_id,
+                    "durationMs": duration_ms,
+                    "transcription": final_result.to_dict() if final_result else None,
+                },
+            )
+        )
 
         state.current_segment_id = None
         return final_result
@@ -628,14 +640,16 @@ class SessionManager:
             state.status = SessionStatus.CALIBRATING
             self._calibration_buffers[session_id] = []
 
-        await self._emit_event(SessionEvent(
-            type="mode_switched",
-            session_id=session_id,
-            data={
-                "oldMode": old_mode.value,
-                "newMode": new_mode.value,
-            },
-        ))
+        await self._emit_event(
+            SessionEvent(
+                type="mode_switched",
+                session_id=session_id,
+                data={
+                    "oldMode": old_mode.value,
+                    "newMode": new_mode.value,
+                },
+            )
+        )
 
         logger.info(f"Session {session_id} mode switched: {old_mode.value} → {new_mode.value}")
 
@@ -643,7 +657,7 @@ class SessionManager:
         self,
         session_id: str,
         audio_frame: bytes,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Send audio to STT service.
 
         Args:
@@ -681,14 +695,16 @@ class SessionManager:
             state.set_error()
             await self._repository.update_status(session_id, SessionStatus.ERROR)
 
-        await self._emit_event(SessionEvent(
-            type="session_error",
-            session_id=session_id,
-            data={
-                "message": str(error),
-                "recoverable": recoverable,
-            },
-        ))
+        await self._emit_event(
+            SessionEvent(
+                type="session_error",
+                session_id=session_id,
+                data={
+                    "message": str(error),
+                    "recoverable": recoverable,
+                },
+            )
+        )
 
         logger.error(f"Session {session_id} error: {error}")
 

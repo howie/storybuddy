@@ -141,7 +141,7 @@ class InteractionNotifier extends StateNotifier<InteractionState> {
         isLoading: false,
         status: SessionStatus.calibrating,
         mode: SessionMode.interactive,
-        calibrationProgress: 0.0,
+        calibrationProgress: 0,
       );
 
       // Subscribe to WebSocket messages
@@ -207,7 +207,7 @@ class InteractionNotifier extends StateNotifier<InteractionState> {
       state = state.copyWith(
         noiseFloorDb: result.noiseFloorDb,
         isQuietEnvironment: result.isQuietEnvironment,
-        calibrationProgress: 1.0,
+        calibrationProgress: 1,
       );
 
       // Tell server calibration is complete
@@ -315,7 +315,7 @@ class InteractionNotifier extends StateNotifier<InteractionState> {
 
     state = state.copyWith(
       isListening: false,
-      calibrationProgress: 0.0,
+      calibrationProgress: 0,
       noiseFloorDb: null,
     );
   }
@@ -376,15 +376,11 @@ class InteractionNotifier extends StateNotifier<InteractionState> {
   /// T097 [P] Subscribe to WebSocket messages and connection state.
   void _subscribeToMessages() {
     _messageSubscription?.cancel();
-    _messageSubscription = _webSocketClient?.messages.listen((message) {
-      _handleMessage(message);
-    });
+    _messageSubscription = _webSocketClient?.messages.listen(_handleMessage);
 
     _connectionSubscription?.cancel();
     _connectionSubscription =
-        _webSocketClient?.connectionState.listen((connected) {
-      _handleConnectionStateChange(connected);
-    });
+        _webSocketClient?.connectionState.listen(_handleConnectionStateChange);
 
     // Subscribe to error stream
     _webSocketClient?.errors.listen((errorMessage) {
@@ -502,7 +498,7 @@ class InteractionNotifier extends StateNotifier<InteractionState> {
   void _subscribeToAudio() {
     _audioSubscription?.cancel();
     _audioSubscription = _audioStreamer?.audioStream.listen((audioData) {
-      if (state.isListening && _webSocketClient?.isConnected == true) {
+      if (state.isListening && (_webSocketClient?.isConnected ?? false)) {
         _webSocketClient?.sendAudio(audioData);
       }
     });

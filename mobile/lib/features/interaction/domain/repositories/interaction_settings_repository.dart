@@ -1,5 +1,5 @@
-import 'package:storybuddy/features/interaction/domain/entities/interaction_settings.dart';
 import 'package:storybuddy/features/interaction/data/models/interaction_settings_model.dart';
+import 'package:storybuddy/features/interaction/domain/entities/interaction_settings.dart';
 
 /// Repository interface for interaction settings.
 abstract class InteractionSettingsRepository {

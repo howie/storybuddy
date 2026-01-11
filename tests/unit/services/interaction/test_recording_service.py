@@ -4,21 +4,22 @@ T057 [P] [US3] Unit test for recording toggle.
 Tests the audio recording storage service with privacy controls.
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-from datetime import datetime, timedelta
-import uuid
-import tempfile
 import os
+import tempfile
+import uuid
+from datetime import datetime, timedelta
+
+import pytest
+
+from src.models.interaction import InteractionSettings
 
 # These imports will fail until the service is implemented
 from src.services.interaction.recording_service import (
+    Recording,
     RecordingService,
     RecordingServiceConfig,
-    Recording,
     RecordingStatus,
 )
-from src.models.interaction import InteractionSettings
 
 
 class TestRecordingServiceConfig:
@@ -95,9 +96,7 @@ class TestRecordingService:
         return InteractionSettings(recording_enabled=False)
 
     @pytest.mark.asyncio
-    async def test_save_recording_when_enabled(
-        self, recording_service, enabled_settings
-    ):
+    async def test_save_recording_when_enabled(self, recording_service, enabled_settings):
         """Should save recording when recording is enabled."""
         audio_data = b"fake audio data"
         session_id = "session-123"
@@ -116,9 +115,7 @@ class TestRecordingService:
         assert os.path.exists(recording.audio_path)
 
     @pytest.mark.asyncio
-    async def test_skip_recording_when_disabled(
-        self, recording_service, disabled_settings
-    ):
+    async def test_skip_recording_when_disabled(self, recording_service, disabled_settings):
         """Should not save recording when disabled (US3 core feature)."""
         audio_data = b"fake audio data"
 
@@ -191,9 +188,7 @@ class TestRecordingServiceRetention:
         return InteractionSettings(recording_enabled=True)
 
     @pytest.mark.asyncio
-    async def test_get_expired_recordings(
-        self, recording_service, enabled_settings
-    ):
+    async def test_get_expired_recordings(self, recording_service, enabled_settings):
         """Should identify recordings older than retention period."""
         # Create a recording and manually set its timestamp to 31 days ago
         recording = await recording_service.save_recording(
@@ -212,9 +207,7 @@ class TestRecordingServiceRetention:
         assert expired is not None
 
     @pytest.mark.asyncio
-    async def test_cleanup_expired_recordings(
-        self, recording_service, enabled_settings
-    ):
+    async def test_cleanup_expired_recordings(self, recording_service, enabled_settings):
         """Should delete recordings older than retention period."""
         # This test verifies the cleanup job functionality
         deleted_count = await recording_service.cleanup_expired()
@@ -239,9 +232,7 @@ class TestRecordingServicePrivacy:
         return InteractionSettings(recording_enabled=True)
 
     @pytest.mark.asyncio
-    async def test_recordings_stored_securely(
-        self, recording_service, enabled_settings
-    ):
+    async def test_recordings_stored_securely(self, recording_service, enabled_settings):
         """Recordings should be stored with proper permissions."""
         recording = await recording_service.save_recording(
             audio_data=b"secure audio",
@@ -255,9 +246,7 @@ class TestRecordingServicePrivacy:
         # In production, verify file permissions are restricted
 
     @pytest.mark.asyncio
-    async def test_delete_all_session_recordings(
-        self, recording_service, enabled_settings
-    ):
+    async def test_delete_all_session_recordings(self, recording_service, enabled_settings):
         """Should be able to delete all recordings for a session."""
         session_id = "session-delete-all"
 
@@ -283,7 +272,9 @@ class TestRecordingServicePrivacy:
 
     @pytest.mark.asyncio
     async def test_settings_change_takes_effect_immediately(
-        self, recording_service, enabled_settings,
+        self,
+        recording_service,
+        enabled_settings,
     ):
         """Changing recording setting should take effect for new recordings."""
         # First recording with enabled
@@ -327,9 +318,7 @@ class TestRecordingServiceMaxDuration:
         return InteractionSettings(recording_enabled=True)
 
     @pytest.mark.asyncio
-    async def test_truncate_long_recordings(
-        self, recording_service, enabled_settings
-    ):
+    async def test_truncate_long_recordings(self, recording_service, enabled_settings):
         """Should truncate recordings that exceed max duration."""
         # Create a very long audio (simulated)
         long_audio = b"a" * 1000000  # Large byte array

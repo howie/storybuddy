@@ -11,11 +11,11 @@ from src.services.transcript.email_sender import (
     EmailSenderConfig,
     EmailSendResult,
 )
-from src.services.transcript.generator import TranscriptGenerator, TranscriptEntry
+from src.services.transcript.generator import TranscriptEntry, TranscriptGenerator
 from src.services.transcript.scheduler import (
-    TranscriptScheduler,
-    SchedulerConfig,
     PendingTranscript,
+    SchedulerConfig,
+    TranscriptScheduler,
     get_scheduler,
     start_transcript_scheduler,
     stop_transcript_scheduler,

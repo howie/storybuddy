@@ -5,7 +5,6 @@ Feature: 006-interactive-story-mode
 """
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator
@@ -32,16 +31,14 @@ class InteractionSession(InteractionSessionBase):
 
     id: UUID = Field(default_factory=uuid4)
     started_at: datetime = Field(default_factory=datetime.utcnow)
-    ended_at: Optional[datetime] = None
+    ended_at: datetime | None = None
     status: SessionStatus = SessionStatus.CALIBRATING
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     @field_validator("ended_at")
     @classmethod
-    def ended_at_must_be_after_started_at(
-        cls, v: Optional[datetime], info
-    ) -> Optional[datetime]:
+    def ended_at_must_be_after_started_at(cls, v: datetime | None, info) -> datetime | None:
         if v is not None and "started_at" in info.data:
             if v <= info.data["started_at"]:
                 raise ValueError("ended_at must be after started_at")
@@ -73,8 +70,8 @@ class VoiceSegment(VoiceSegmentBase):
     id: UUID = Field(default_factory=uuid4)
     started_at: datetime
     ended_at: datetime
-    transcript: Optional[str] = None
-    audio_url: Optional[str] = None
+    transcript: str | None = None
+    audio_url: str | None = None
     is_recorded: bool = False
     audio_format: str = "opus"
     duration_ms: int = 0
@@ -82,9 +79,7 @@ class VoiceSegment(VoiceSegmentBase):
 
     @field_validator("ended_at")
     @classmethod
-    def ended_at_must_be_after_started_at(
-        cls, v: datetime, info
-    ) -> datetime:
+    def ended_at_must_be_after_started_at(cls, v: datetime, info) -> datetime:
         if "started_at" in info.data and v <= info.data["started_at"]:
             raise ValueError("ended_at must be after started_at")
         return v
@@ -92,9 +87,7 @@ class VoiceSegment(VoiceSegmentBase):
     def model_post_init(self, __context) -> None:
         """Calculate duration_ms after initialization."""
         if self.started_at and self.ended_at:
-            self.duration_ms = int(
-                (self.ended_at - self.started_at).total_seconds() * 1000
-            )
+            self.duration_ms = int((self.ended_at - self.started_at).total_seconds() * 1000)
 
     class Config:
         from_attributes = True
@@ -111,38 +104,32 @@ class AIResponseBase(BaseModel):
 class AIResponseCreate(AIResponseBase):
     """Schema for creating an AIResponse."""
 
-    voice_segment_id: Optional[UUID] = None
+    voice_segment_id: UUID | None = None
 
 
 class AIResponse(AIResponseBase):
     """Represents an AI response during interaction."""
 
     id: UUID = Field(default_factory=uuid4)
-    voice_segment_id: Optional[UUID] = None
-    audio_url: Optional[str] = None
+    voice_segment_id: UUID | None = None
+    audio_url: str | None = None
     was_interrupted: bool = False
-    interrupted_at_ms: Optional[int] = None
+    interrupted_at_ms: int | None = None
     response_latency_ms: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     @field_validator("interrupted_at_ms")
     @classmethod
-    def interrupted_at_ms_required_when_interrupted(
-        cls, v: Optional[int], info
-    ) -> Optional[int]:
+    def interrupted_at_ms_required_when_interrupted(cls, v: int | None, info) -> int | None:
         if info.data.get("was_interrupted") and v is None:
             raise ValueError("interrupted_at_ms is required when was_interrupted is True")
         return v
 
     @field_validator("voice_segment_id")
     @classmethod
-    def voice_segment_required_for_child_speech(
-        cls, v: Optional[UUID], info
-    ) -> Optional[UUID]:
+    def voice_segment_required_for_child_speech(cls, v: UUID | None, info) -> UUID | None:
         if info.data.get("trigger_type") == TriggerType.CHILD_SPEECH and v is None:
-            raise ValueError(
-                "voice_segment_id is required when trigger_type is CHILD_SPEECH"
-            )
+            raise ValueError("voice_segment_id is required when trigger_type is CHILD_SPEECH")
         return v
 
     class Config:
@@ -160,11 +147,11 @@ class InteractionSettingsBase(BaseModel):
 class InteractionSettingsUpdate(BaseModel):
     """Schema for updating InteractionSettings."""
 
-    recording_enabled: Optional[bool] = None
-    email_notifications: Optional[bool] = None
-    notification_email: Optional[str] = None
-    notification_frequency: Optional[NotificationFrequency] = None
-    interruption_threshold_ms: Optional[int] = Field(default=None, ge=200, le=2000)
+    recording_enabled: bool | None = None
+    email_notifications: bool | None = None
+    notification_email: str | None = None
+    notification_frequency: NotificationFrequency | None = None
+    interruption_threshold_ms: int | None = Field(default=None, ge=200, le=2000)
 
 
 class InteractionSettings(InteractionSettingsBase):
@@ -172,7 +159,7 @@ class InteractionSettings(InteractionSettingsBase):
 
     id: UUID = Field(default_factory=uuid4)
     parent_id: UUID
-    notification_email: Optional[str] = None
+    notification_email: str | None = None
     interruption_threshold_ms: int = Field(default=500, ge=200, le=2000)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

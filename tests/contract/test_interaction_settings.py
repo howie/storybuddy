@@ -4,9 +4,10 @@ T058 [P] [US3] Contract test for settings API.
 Tests the REST API contract for interaction settings.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from httpx import AsyncClient, ASGITransport
-from unittest.mock import Mock, patch, MagicMock
+from httpx import ASGITransport, AsyncClient
 
 from src.main import app
 
@@ -33,9 +34,7 @@ class TestInteractionSettingsContract:
             yield repo
 
     @pytest.mark.asyncio
-    async def test_get_settings_returns_correct_structure(
-        self, mock_auth, mock_repository
-    ):
+    async def test_get_settings_returns_correct_structure(self, mock_auth, mock_repository):
         """GET /v1/interaction/settings should return correct structure."""
         mock_repository.get_interaction_settings.return_value = {
             "recording_enabled": False,
@@ -87,9 +86,7 @@ class TestInteractionSettingsContract:
         assert data["retentionDays"] == 30
 
     @pytest.mark.asyncio
-    async def test_update_settings_accepts_correct_format(
-        self, mock_auth, mock_repository
-    ):
+    async def test_update_settings_accepts_correct_format(self, mock_auth, mock_repository):
         """PUT /v1/interaction/settings should accept correct format."""
         mock_repository.update_interaction_settings.return_value = True
 
@@ -132,9 +129,7 @@ class TestInteractionSettingsContract:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_update_settings_validates_retention_days(
-        self, mock_auth, mock_repository
-    ):
+    async def test_update_settings_validates_retention_days(self, mock_auth, mock_repository):
         """PUT should validate retention days range."""
         async with AsyncClient(
             transport=ASGITransport(app=app),
@@ -192,9 +187,7 @@ class TestInteractionSettingsFieldValidation:
             yield repo
 
     @pytest.mark.asyncio
-    async def test_recording_enabled_must_be_boolean(
-        self, mock_auth, mock_repository
-    ):
+    async def test_recording_enabled_must_be_boolean(self, mock_auth, mock_repository):
         """recordingEnabled must be boolean."""
         async with AsyncClient(
             transport=ASGITransport(app=app),
@@ -277,9 +270,7 @@ class TestInteractionSettingsResponseFormat:
         assert "retentionDays" in data
 
     @pytest.mark.asyncio
-    async def test_update_response_includes_updated_values(
-        self, mock_auth, mock_repository
-    ):
+    async def test_update_response_includes_updated_values(self, mock_auth, mock_repository):
         """PUT response should include the updated values."""
         mock_repository.update_interaction_settings.return_value = True
         mock_repository.get_interaction_settings.return_value = {

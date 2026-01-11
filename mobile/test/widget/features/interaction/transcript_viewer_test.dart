@@ -1,6 +1,7 @@
 /// T072 [P] [US4] Widget test for transcript viewer.
 ///
 /// Tests the TranscriptViewer widget for displaying interaction transcripts.
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,7 +18,8 @@ void main() {
         id: 'transcript-123',
         sessionId: 'session-456',
         storyTitle: '小熊的冒險',
-        plainText: '''[00:00] 孩子：這個故事好好聽！
+        plainText: '''
+[00:00] 孩子：這個故事好好聽！
 [00:15] AI：很高興你喜歡！小熊接下來會遇到什麼呢？
 [00:30] 孩子：我覺得小熊會找到蜂蜜！
 [00:45] AI：說得對！小熊聞到了甜甜的蜂蜜味道。''',
@@ -74,8 +76,8 @@ void main() {
         find.byWidgetPredicate(
           (widget) =>
               widget is Text &&
-              (widget.data?.contains('1') == true ||
-                  widget.data?.contains('分鐘') == true),
+              ((widget.data?.contains('1') ?? false) ||
+                  (widget.data?.contains('分鐘') ?? false)),
         ),
         findsWidgets,
       );
@@ -123,7 +125,6 @@ void main() {
       await tester.pumpWidget(
         buildTestWidget(
           transcript: sampleTranscript,
-          onShare: null,
         ),
       );
 
@@ -185,8 +186,8 @@ void main() {
         find.byWidgetPredicate(
           (widget) =>
               widget is Text &&
-              (widget.data?.contains(now.month.toString()) == true ||
-                  widget.data?.contains('今天') == true),
+              ((widget.data?.contains(now.month.toString()) ?? false) ||
+                  (widget.data?.contains('今天') ?? false)),
         ),
         findsWidgets,
       );
@@ -214,7 +215,8 @@ void main() {
         id: 'interrupted-transcript',
         sessionId: 'session-int',
         storyTitle: '被打斷的故事',
-        plainText: '''[00:00] AI：讓我告訴你— [中斷]
+        plainText: '''
+[00:00] AI：讓我告訴你— [中斷]
 [00:05] 孩子：我知道答案！''',
         htmlContent: '<div>Interrupted</div>',
         turnCount: 1,
@@ -235,7 +237,7 @@ void main() {
       // Check for semantic widgets
       expect(
         find.bySemanticsLabel(
-            RegExp(r'.*互動紀錄.*|.*transcript.*', caseSensitive: false)),
+            RegExp('.*互動紀錄.*|.*transcript.*', caseSensitive: false),),
         findsWidgets,
       );
     });

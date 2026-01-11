@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-
+import 'package:storybuddy/features/interaction/domain/entities/interaction_settings.dart';
 import 'package:storybuddy/features/interaction/presentation/pages/interaction_settings_page.dart';
 import 'package:storybuddy/features/interaction/presentation/providers/interaction_settings_provider.dart';
-import 'package:storybuddy/features/interaction/domain/entities/interaction_settings.dart';
 
 /// T059 [P] [US3] Widget test for interaction settings page.
 
@@ -65,11 +64,9 @@ void main() {
     testWidgets('displays recording toggle switch', (tester) async {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
-          recordingEnabled: false,
-          autoTranscribe: true,
-          retentionDays: 30,
+          
         ),
-      ));
+      ),);
       await tester.pump();
 
       expect(find.text('錄音設定'), findsOneWidget);
@@ -80,11 +77,9 @@ void main() {
         (tester) async {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
-          recordingEnabled: false,
-          autoTranscribe: true,
-          retentionDays: 30,
+          
         ),
-      ));
+      ),);
       await tester.pump();
 
       final recordingSwitch = tester.widget<Switch>(
@@ -98,10 +93,8 @@ void main() {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
           recordingEnabled: true,
-          autoTranscribe: true,
-          retentionDays: 30,
         ),
-      ));
+      ),);
       await tester.pump();
 
       final recordingSwitch = tester.widget<Switch>(
@@ -114,11 +107,9 @@ void main() {
         (tester) async {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
-          recordingEnabled: false,
-          autoTranscribe: true,
-          retentionDays: 30,
+          
         ),
-      ));
+      ),);
       await tester.pump();
 
       // Find and tap the recording switch
@@ -132,11 +123,9 @@ void main() {
     testWidgets('displays privacy notice for recording', (tester) async {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
-          recordingEnabled: false,
-          autoTranscribe: true,
-          retentionDays: 30,
+          
         ),
-      ));
+      ),);
       await tester.pump();
 
       // Should show privacy information
@@ -150,10 +139,8 @@ void main() {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
           recordingEnabled: true,
-          autoTranscribe: true,
-          retentionDays: 30,
         ),
-      ));
+      ),);
       await tester.pump();
 
       expect(find.text('保留期限'), findsOneWidget);
@@ -164,11 +151,9 @@ void main() {
         (tester) async {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
-          recordingEnabled: false,
-          autoTranscribe: true,
-          retentionDays: 30,
+          
         ),
-      ));
+      ),);
       await tester.pump();
 
       // Retention setting should be hidden or disabled when recording is off
@@ -179,10 +164,8 @@ void main() {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
           recordingEnabled: true,
-          autoTranscribe: true,
-          retentionDays: 30,
         ),
-      ));
+      ),);
       await tester.pump();
 
       // Tap retention setting
@@ -205,11 +188,9 @@ void main() {
         (tester) async {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
-          recordingEnabled: false,
-          autoTranscribe: true,
-          retentionDays: 30,
+          
         ),
-      ));
+      ),);
       await tester.pump();
 
       // Tap recording switch
@@ -229,11 +210,9 @@ void main() {
     testWidgets('confirmation dialog can be cancelled', (tester) async {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
-          recordingEnabled: false,
-          autoTranscribe: true,
-          retentionDays: 30,
+          
         ),
-      ));
+      ),);
       await tester.pump();
 
       // Tap recording switch
@@ -254,11 +233,9 @@ void main() {
     testWidgets('confirmation dialog confirms enabling', (tester) async {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
-          recordingEnabled: false,
-          autoTranscribe: true,
-          retentionDays: 30,
+          
         ),
-      ));
+      ),);
       await tester.pump();
 
       // Tap recording switch
@@ -276,10 +253,8 @@ void main() {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
           recordingEnabled: true,
-          autoTranscribe: true,
-          retentionDays: 30,
         ),
-      ));
+      ),);
       await tester.pump();
 
       expect(find.text('自動轉寫'), findsOneWidget);
@@ -291,10 +266,8 @@ void main() {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
           recordingEnabled: true,
-          autoTranscribe: true,
-          retentionDays: 30,
         ),
-      ));
+      ),);
       await tester.pump();
 
       expect(find.text('刪除所有錄音'), findsOneWidget);
@@ -305,10 +278,8 @@ void main() {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
           recordingEnabled: true,
-          autoTranscribe: true,
-          retentionDays: 30,
         ),
-      ));
+      ),);
       await tester.pump();
 
       await tester.tap(find.text('刪除所有錄音'));
@@ -325,10 +296,8 @@ void main() {
       await tester.pumpWidget(buildTestWidget(
         settings: const InteractionSettings(
           recordingEnabled: true,
-          autoTranscribe: true,
-          retentionDays: 30,
         ),
-      ));
+      ),);
       await tester.pump();
 
       // Should show storage info section

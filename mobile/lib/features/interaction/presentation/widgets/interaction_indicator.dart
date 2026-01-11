@@ -8,8 +8,7 @@ import 'package:storybuddy/features/interaction/presentation/providers/interacti
 /// Shows current state: listening, child speaking, AI responding, etc.
 class InteractionIndicator extends StatelessWidget {
   const InteractionIndicator({
-    super.key,
-    required this.state,
+    required this.state, super.key,
     this.showLabel = true,
   });
 
@@ -153,20 +152,20 @@ class _AnimatedIndicatorState extends State<_AnimatedIndicator>
     );
 
     _scaleAnimation = Tween<double>(
-      begin: 1.0,
+      begin: 1,
       end: 1.2,
     ).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeInOut,
-    ));
+    ),);
 
     _opacityAnimation = Tween<double>(
-      begin: 1.0,
+      begin: 1,
       end: 0.5,
     ).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeInOut,
-    ));
+    ),);
 
     if (widget.shouldPulse) {
       _controller.repeat(reverse: true);
@@ -223,8 +222,7 @@ class _AnimatedIndicatorState extends State<_AnimatedIndicator>
 /// Compact version of the interaction indicator for inline display.
 class CompactInteractionIndicator extends StatelessWidget {
   const CompactInteractionIndicator({
-    super.key,
-    required this.state,
+    required this.state, super.key,
   });
 
   final InteractionState state;

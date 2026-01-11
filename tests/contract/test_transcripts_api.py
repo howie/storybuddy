@@ -35,9 +35,7 @@ def sample_parent_id() -> str:
 class TestGetTranscriptsEndpoint:
     """Tests for GET /v1/interaction/transcripts endpoint."""
 
-    def test_get_transcripts_success(
-        self, client: TestClient, sample_session_id: str
-    ):
+    def test_get_transcripts_success(self, client: TestClient, sample_session_id: str):
         """Test successful retrieval of transcripts."""
         response = client.get(
             "/v1/interaction/transcripts",
@@ -49,9 +47,7 @@ class TestGetTranscriptsEndpoint:
         assert "transcripts" in data
         assert isinstance(data["transcripts"], list)
 
-    def test_get_transcripts_with_pagination(
-        self, client: TestClient, sample_parent_id: str
-    ):
+    def test_get_transcripts_with_pagination(self, client: TestClient, sample_parent_id: str):
         """Test transcript retrieval with pagination."""
         response = client.get(
             "/v1/interaction/transcripts",
@@ -69,9 +65,7 @@ class TestGetTranscriptsEndpoint:
         assert "limit" in data
         assert "offset" in data
 
-    def test_get_transcripts_by_date_range(
-        self, client: TestClient, sample_parent_id: str
-    ):
+    def test_get_transcripts_by_date_range(self, client: TestClient, sample_parent_id: str):
         """Test transcript retrieval with date range filter."""
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=7)
@@ -128,9 +122,7 @@ class TestGetTranscriptByIdEndpoint:
 class TestGenerateTranscriptEndpoint:
     """Tests for POST /v1/interaction/transcripts/generate endpoint."""
 
-    def test_generate_transcript_success(
-        self, client: TestClient, sample_session_id: str
-    ):
+    def test_generate_transcript_success(self, client: TestClient, sample_session_id: str):
         """Test successful transcript generation."""
         response = client.post(
             "/v1/interaction/transcripts/generate",
@@ -227,9 +219,7 @@ class TestDeleteTranscriptEndpoint:
 class TestNotificationSettingsEndpoint:
     """Tests for notification frequency settings endpoints."""
 
-    def test_get_notification_settings(
-        self, client: TestClient, sample_parent_id: str
-    ):
+    def test_get_notification_settings(self, client: TestClient, sample_parent_id: str):
         """Test getting notification settings."""
         response = client.get(
             "/v1/interaction/settings",
@@ -240,9 +230,7 @@ class TestNotificationSettingsEndpoint:
         data = response.json()
         assert "notificationFrequency" in data or "notification_frequency" in data
 
-    def test_update_notification_frequency(
-        self, client: TestClient, sample_parent_id: str
-    ):
+    def test_update_notification_frequency(self, client: TestClient, sample_parent_id: str):
         """Test updating notification frequency."""
         response = client.put(
             "/v1/interaction/settings",
@@ -258,9 +246,7 @@ class TestNotificationSettingsEndpoint:
             status.HTTP_422_UNPROCESSABLE_ENTITY,
         ]
 
-    def test_update_notification_frequency_invalid(
-        self, client: TestClient, sample_parent_id: str
-    ):
+    def test_update_notification_frequency_invalid(self, client: TestClient, sample_parent_id: str):
         """Test error for invalid notification frequency."""
         response = client.put(
             "/v1/interaction/settings",
@@ -276,9 +262,7 @@ class TestNotificationSettingsEndpoint:
 class TestTranscriptResponseSchema:
     """Tests for transcript response schema compliance."""
 
-    def test_transcript_list_response_schema(
-        self, client: TestClient, sample_parent_id: str
-    ):
+    def test_transcript_list_response_schema(self, client: TestClient, sample_parent_id: str):
         """Test that transcript list response matches expected schema."""
         response = client.get(
             "/v1/interaction/transcripts",
@@ -299,9 +283,7 @@ class TestTranscriptResponseSchema:
             if "offset" in data:
                 assert isinstance(data["offset"], int)
 
-    def test_single_transcript_response_schema(
-        self, client: TestClient
-    ):
+    def test_single_transcript_response_schema(self, client: TestClient):
         """Test that single transcript response matches expected schema."""
         # This test documents the expected schema
         expected_fields = [

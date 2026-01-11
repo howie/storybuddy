@@ -4,14 +4,10 @@ T087 [P] [US5] Integration test for VAD accuracy.
 Tests VAD accuracy with realistic audio scenarios.
 """
 
-import math
-from pathlib import Path
-from typing import List, Tuple
-
 import numpy as np
 import pytest
 
-from src.services.interaction.vad_service import VADService, VADConfig
+from src.services.interaction.vad_service import VADConfig, VADService
 
 
 class TestVADAccuracy:
@@ -32,8 +28,8 @@ class TestVADAccuracy:
 
     def generate_audio_scenario(
         self,
-        scenario: List[Tuple[str, int, float]],
-    ) -> Tuple[List[bytes], List[Tuple[int, int]]]:
+        scenario: list[tuple[str, int, float]],
+    ) -> tuple[list[bytes], list[tuple[int, int]]]:
         """Generate audio frames for a test scenario.
 
         Args:
@@ -82,10 +78,10 @@ class TestVADAccuracy:
             # Speech-like signal with harmonics
             t = np.linspace(0, 0.02, samples_per_frame)
             samples = amplitude * (
-                0.5 * np.sin(2 * np.pi * 200 * t) +
-                0.3 * np.sin(2 * np.pi * 400 * t) +
-                0.2 * np.sin(2 * np.pi * 800 * t) +
-                0.1 * np.random.normal(0, 1, samples_per_frame)  # Some noise
+                0.5 * np.sin(2 * np.pi * 200 * t)
+                + 0.3 * np.sin(2 * np.pi * 400 * t)
+                + 0.2 * np.sin(2 * np.pi * 800 * t)
+                + 0.1 * np.random.normal(0, 1, samples_per_frame)  # Some noise
             )
         else:  # noise
             # Broadband noise
@@ -97,8 +93,8 @@ class TestVADAccuracy:
     def evaluate_vad(
         self,
         vad_service: VADService,
-        frames: List[bytes],
-        expected_regions: List[Tuple[int, int]],
+        frames: list[bytes],
+        expected_regions: list[tuple[int, int]],
     ) -> dict:
         """Evaluate VAD performance.
 
@@ -143,8 +139,8 @@ class TestVADAccuracy:
 
     def _calculate_metrics(
         self,
-        expected: List[Tuple[int, int]],
-        detected: List[Tuple[int, int]],
+        expected: list[tuple[int, int]],
+        detected: list[tuple[int, int]],
     ) -> dict:
         """Calculate VAD performance metrics.
 
@@ -193,7 +189,7 @@ class TestVADAccuracy:
         """Test detection of simple speech pattern: silence -> speech -> silence."""
         scenario = [
             ("silence", 2000, -55),  # 2s calibration/silence
-            ("speech", 2000, -25),   # 2s speech
+            ("speech", 2000, -25),  # 2s speech
             ("silence", 1000, -55),  # 1s silence
         ]
 
@@ -237,7 +233,7 @@ class TestVADAccuracy:
     def test_noisy_environment(self, vad_service: VADService):
         """Test VAD in noisy environment."""
         scenario = [
-            ("noise", 2000, -40),   # Calibrate to noise
+            ("noise", 2000, -40),  # Calibrate to noise
             ("speech", 2000, -20),  # Loud speech over noise
             ("noise", 1000, -40),
         ]
@@ -252,11 +248,11 @@ class TestVADAccuracy:
         """Test detection of short speech utterances (child responses)."""
         scenario = [
             ("silence", 2000, -55),
-            ("speech", 300, -25),   # Short utterance 1
+            ("speech", 300, -25),  # Short utterance 1
             ("silence", 500, -55),
-            ("speech", 400, -25),   # Short utterance 2
+            ("speech", 400, -25),  # Short utterance 2
             ("silence", 500, -55),
-            ("speech", 200, -25),   # Very short utterance
+            ("speech", 200, -25),  # Very short utterance
             ("silence", 500, -55),
         ]
 
@@ -285,9 +281,9 @@ class TestVADAccuracy:
         scenario = [
             ("silence", 2000, -55),
             ("speech", 1000, -25),
-            ("silence", 200, -55),   # Brief pause
+            ("silence", 200, -55),  # Brief pause
             ("speech", 1500, -25),
-            ("silence", 150, -55),   # Very brief pause
+            ("silence", 150, -55),  # Very brief pause
             ("speech", 800, -25),
             ("silence", 1000, -55),
         ]
@@ -315,11 +311,11 @@ class TestVADAccuracy:
         # Simulate typical children's interaction pattern
         scenario = [
             ("silence", 2000, -50),
-            ("speech", 1500, -25),   # Child speaking
+            ("speech", 1500, -25),  # Child speaking
             ("silence", 2000, -50),  # AI responding (child silent)
-            ("speech", 800, -28),    # Child response
+            ("speech", 800, -28),  # Child response
             ("silence", 1500, -50),
-            ("speech", 2000, -25),   # Child longer response
+            ("speech", 2000, -25),  # Child longer response
             ("silence", 1000, -50),
         ]
 

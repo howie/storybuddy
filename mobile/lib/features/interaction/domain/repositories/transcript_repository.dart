@@ -1,5 +1,5 @@
-import 'package:storybuddy/features/interaction/domain/entities/interaction_transcript.dart';
 import 'package:storybuddy/features/interaction/data/datasources/transcript_remote_datasource.dart';
+import 'package:storybuddy/features/interaction/domain/entities/interaction_transcript.dart';
 
 /// T080 [US4] Repository interface for transcript operations.
 abstract class TranscriptRepository {

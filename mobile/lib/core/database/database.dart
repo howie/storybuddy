@@ -154,7 +154,7 @@ class AppDatabase extends _$AppDatabase {
       onCreate: (m) async {
         await m.createAll();
       },
-      onUpgrade: (Migrator m, int from, int to) async {
+      onUpgrade: (m, from, to) async {
         // Migration from version 1 to 2: add interaction tables
         if (from < 2) {
           await m.createTable(interactionSessions);

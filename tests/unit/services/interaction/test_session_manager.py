@@ -4,18 +4,17 @@ T025 [P] [US1] Unit test for session manager.
 Tests the session lifecycle management for interactive story mode.
 """
 
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-from datetime import datetime, timedelta
-import asyncio
+
+from src.models.enums import SessionMode, SessionStatus
 
 # These imports will fail until the service is implemented
 from src.services.interaction.session_manager import (
     SessionManager,
     SessionState,
-    SessionEvent,
 )
-from src.models.enums import SessionMode, SessionStatus
 from src.services.interaction.vad_service import CalibrationResult
 
 
@@ -106,12 +105,14 @@ class TestSessionManager:
         """Create mock VAD service."""
         with patch("src.services.interaction.session_manager.VADService") as mock:
             service = MagicMock()
-            service.calibrate = Mock(return_value=CalibrationResult(
-                noise_floor_db=-40.0,
-                percentile_90=-35.0,
-                sample_count=50,
-                calibration_duration_ms=1000,
-            ))
+            service.calibrate = Mock(
+                return_value=CalibrationResult(
+                    noise_floor_db=-40.0,
+                    percentile_90=-35.0,
+                    sample_count=50,
+                    calibration_duration_ms=1000,
+                )
+            )
             mock.return_value = service
             yield service
 
@@ -127,7 +128,9 @@ class TestSessionManager:
             yield service
 
     @pytest.fixture
-    def session_manager(self, mock_repository, mock_calibration_repository, mock_vad_service, mock_stt_service):
+    def session_manager(
+        self, mock_repository, mock_calibration_repository, mock_vad_service, mock_stt_service
+    ):
         """Create session manager instance."""
         return SessionManager(
             repository=mock_repository,
@@ -165,7 +168,7 @@ class TestSessionManager:
         calibration = await session_manager.complete_calibration(session.session_id)
 
         assert calibration is not None
-        assert hasattr(calibration, 'noise_floor_db')
+        assert hasattr(calibration, "noise_floor_db")
 
     @pytest.mark.asyncio
     async def test_activate_session_after_calibration(self, session_manager, mock_repository):
@@ -366,12 +369,14 @@ class TestSessionManagerEvents:
         """Create mock VAD service."""
         with patch("src.services.interaction.session_manager.VADService") as mock:
             service = MagicMock()
-            service.calibrate = Mock(return_value=CalibrationResult(
-                noise_floor_db=-40.0,
-                percentile_90=-35.0,
-                sample_count=50,
-                calibration_duration_ms=1000,
-            ))
+            service.calibrate = Mock(
+                return_value=CalibrationResult(
+                    noise_floor_db=-40.0,
+                    percentile_90=-35.0,
+                    sample_count=50,
+                    calibration_duration_ms=1000,
+                )
+            )
             mock.return_value = service
             yield service
 
@@ -399,10 +404,10 @@ class TestSessionManagerEvents:
         # Should have emitted session_created event
         # Check for either object.type or dict['type']
         def get_event_type(e):
-            if hasattr(e, 'type'):
+            if hasattr(e, "type"):
                 return e.type
             elif isinstance(e, dict):
-                return e.get('type')
+                return e.get("type")
             return None
 
         assert any(get_event_type(e) == "session_created" for e in events)
@@ -416,7 +421,7 @@ class TestSessionManagerEvents:
         )
 
         # Check if _check_timeout method exists and is implemented
-        if hasattr(session_manager, '_check_timeout'):
+        if hasattr(session_manager, "_check_timeout"):
             # Simulate timeout
             await session_manager._check_timeout(session.session_id, timeout_seconds=0)
 
@@ -438,7 +443,7 @@ class TestSessionManagerEvents:
         )
 
         # Check if handle_error method exists
-        if hasattr(session_manager, 'handle_error'):
+        if hasattr(session_manager, "handle_error"):
             # Pass recoverable=False to trigger ERROR status
             await session_manager.handle_error(
                 session.session_id,

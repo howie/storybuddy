@@ -31,7 +31,6 @@ void main() {
               isConnected: false,
               isReconnecting: true,
               reconnectAttempts: 2,
-              maxReconnectAttempts: 5,
             ),
           ),
         ),
@@ -45,7 +44,7 @@ void main() {
 
     testWidgets('should show disconnected banner with retry button',
         (tester) async {
-      bool retryPressed = false;
+      var retryPressed = false;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -70,8 +69,8 @@ void main() {
     });
 
     testWidgets('should show error banner with message', (tester) async {
-      bool retryPressed = false;
-      bool dismissPressed = false;
+      var retryPressed = false;
+      var dismissPressed = false;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -142,8 +141,8 @@ void main() {
   group('InteractionErrorDialog', () {
     testWidgets('should show recoverable error with retry option',
         (tester) async {
-      bool retryPressed = false;
-      bool dismissPressed = false;
+      var retryPressed = false;
+      const dismissPressed = false;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -155,7 +154,6 @@ void main() {
                     context,
                     title: '連線錯誤',
                     message: '無法連線到伺服器',
-                    isRecoverable: true,
                     onRetry: () => retryPressed = true,
                   );
                 },

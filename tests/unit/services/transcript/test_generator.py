@@ -37,9 +37,7 @@ class TestTranscriptGenerator:
         )
 
     @pytest.fixture
-    def sample_voice_segments(
-        self, sample_session: InteractionSession
-    ) -> list[VoiceSegment]:
+    def sample_voice_segments(self, sample_session: InteractionSession) -> list[VoiceSegment]:
         """Create sample voice segments."""
         base_time = sample_session.started_at
         segments = []
@@ -219,8 +217,7 @@ class TestTranscriptGenerator:
 
         # Duration should be calculated from session start to end
         expected_duration_ms = int(
-            (sample_session.ended_at - sample_session.started_at).total_seconds()
-            * 1000
+            (sample_session.ended_at - sample_session.started_at).total_seconds() * 1000
         )
         assert transcript.total_duration_ms == expected_duration_ms
 

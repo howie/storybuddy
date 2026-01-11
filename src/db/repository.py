@@ -29,10 +29,6 @@ from src.models.interaction import (
     VoiceSegment,
     VoiceSegmentCreate,
 )
-from src.models.transcript import (
-    InteractionTranscript,
-    InteractionTranscriptCreate,
-)
 from src.models.parent import Parent, ParentCreate, ParentUpdate
 from src.models.qa import (
     QAMessage,
@@ -46,6 +42,10 @@ from src.models.question import (
     PendingQuestionCreate,
 )
 from src.models.story import Story, StoryCreate, StoryUpdate
+from src.models.transcript import (
+    InteractionTranscript,
+    InteractionTranscriptCreate,
+)
 from src.models.voice import (
     VoiceAudio,
     VoiceAudioCreate,
@@ -1091,9 +1091,7 @@ class InteractionSessionRepository:
                 story_id=UUID(row["story_id"]),
                 parent_id=UUID(row["parent_id"]),
                 started_at=datetime.fromisoformat(row["started_at"]),
-                ended_at=(
-                    datetime.fromisoformat(row["ended_at"]) if row["ended_at"] else None
-                ),
+                ended_at=(datetime.fromisoformat(row["ended_at"]) if row["ended_at"] else None),
                 mode=SessionMode(row["mode"]),
                 status=SessionStatus(row["status"]),
                 created_at=datetime.fromisoformat(row["created_at"]),
@@ -1101,9 +1099,7 @@ class InteractionSessionRepository:
             )
 
     @staticmethod
-    async def update_status(
-        session_id: UUID, status: SessionStatus
-    ) -> InteractionSession | None:
+    async def update_status(session_id: UUID, status: SessionStatus) -> InteractionSession | None:
         """Update the status of an interaction session."""
         now = datetime.utcnow().isoformat()
 
@@ -1164,11 +1160,7 @@ class InteractionSessionRepository:
                     story_id=UUID(row["story_id"]),
                     parent_id=UUID(row["parent_id"]),
                     started_at=datetime.fromisoformat(row["started_at"]),
-                    ended_at=(
-                        datetime.fromisoformat(row["ended_at"])
-                        if row["ended_at"]
-                        else None
-                    ),
+                    ended_at=(datetime.fromisoformat(row["ended_at"]) if row["ended_at"] else None),
                     mode=SessionMode(row["mode"]),
                     status=SessionStatus(row["status"]),
                     created_at=datetime.fromisoformat(row["created_at"]),
@@ -1186,9 +1178,7 @@ class VoiceSegmentRepository:
         """Create a new voice segment."""
         segment_id = str(uuid4())
         now = datetime.utcnow().isoformat()
-        duration_ms = int(
-            (data.ended_at - data.started_at).total_seconds() * 1000
-        )
+        duration_ms = int((data.ended_at - data.started_at).total_seconds() * 1000)
 
         async with get_db_connection() as db:
             await db.execute(
@@ -1227,9 +1217,7 @@ class VoiceSegmentRepository:
             )
 
     @staticmethod
-    async def update_transcript(
-        segment_id: UUID, transcript: str
-    ) -> VoiceSegment | None:
+    async def update_transcript(segment_id: UUID, transcript: str) -> VoiceSegment | None:
         """Update the transcript of a voice segment."""
         async with get_db_connection() as db:
             cursor = await db.execute(
@@ -1346,9 +1334,7 @@ class AIResponseRepository:
             )
 
     @staticmethod
-    async def update_audio(
-        response_id: UUID, audio_url: str
-    ) -> AIResponse | None:
+    async def update_audio(response_id: UUID, audio_url: str) -> AIResponse | None:
         """Update the audio URL of an AI response."""
         async with get_db_connection() as db:
             cursor = await db.execute(
@@ -1363,9 +1349,7 @@ class AIResponseRepository:
         return await AIResponseRepository.get_by_id(response_id)
 
     @staticmethod
-    async def mark_interrupted(
-        response_id: UUID, interrupted_at_ms: int
-    ) -> AIResponse | None:
+    async def mark_interrupted(response_id: UUID, interrupted_at_ms: int) -> AIResponse | None:
         """Mark an AI response as interrupted."""
         async with get_db_connection() as db:
             cursor = await db.execute(
@@ -1430,9 +1414,7 @@ class AIResponseRepository:
                     id=UUID(row["id"]),
                     session_id=UUID(row["session_id"]),
                     voice_segment_id=(
-                        UUID(row["voice_segment_id"])
-                        if row["voice_segment_id"]
-                        else None
+                        UUID(row["voice_segment_id"]) if row["voice_segment_id"] else None
                     ),
                     text=row["text"],
                     audio_url=row["audio_url"],
@@ -1508,9 +1490,7 @@ class InteractionTranscriptRepository:
                 total_duration_ms=row["total_duration_ms"],
                 created_at=datetime.fromisoformat(row["created_at"]),
                 email_sent_at=(
-                    datetime.fromisoformat(row["email_sent_at"])
-                    if row["email_sent_at"]
-                    else None
+                    datetime.fromisoformat(row["email_sent_at"]) if row["email_sent_at"] else None
                 ),
             )
 
@@ -1548,9 +1528,7 @@ class InteractionTranscriptRepository:
                 total_duration_ms=row["total_duration_ms"],
                 created_at=datetime.fromisoformat(row["created_at"]),
                 email_sent_at=(
-                    datetime.fromisoformat(row["email_sent_at"])
-                    if row["email_sent_at"]
-                    else None
+                    datetime.fromisoformat(row["email_sent_at"]) if row["email_sent_at"] else None
                 ),
             )
 
@@ -1575,9 +1553,7 @@ class InteractionSettingsRepository:
                     recording_enabled=bool(row["recording_enabled"]),
                     email_notifications=bool(row["email_notifications"]),
                     notification_email=row["notification_email"],
-                    notification_frequency=NotificationFrequency(
-                        row["notification_frequency"]
-                    ),
+                    notification_frequency=NotificationFrequency(row["notification_frequency"]),
                     interruption_threshold_ms=row["interruption_threshold_ms"],
                     created_at=datetime.fromisoformat(row["created_at"]),
                     updated_at=datetime.fromisoformat(row["updated_at"]),

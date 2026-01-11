@@ -4,13 +4,13 @@ T029 [US1] Implement VAD service using webrtcvad.
 Provides real-time voice activity detection for interactive story mode.
 """
 
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Optional, List, Dict, Any, Callable
-import struct
 import math
+import struct
 import threading
+from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
+from typing import Any
 
 import webrtcvad
 
@@ -57,14 +57,10 @@ class VADConfig:
             )
 
         if not 0 <= self.aggressiveness <= 3:
-            raise ValueError(
-                f"aggressiveness must be 0-3, got {self.aggressiveness}"
-            )
+            raise ValueError(f"aggressiveness must be 0-3, got {self.aggressiveness}")
 
         if not 0.0 <= self.speech_threshold <= 1.0:
-            raise ValueError(
-                f"speech_threshold must be 0.0-1.0, got {self.speech_threshold}"
-            )
+            raise ValueError(f"speech_threshold must be 0.0-1.0, got {self.speech_threshold}")
 
     @property
     def frame_size_samples(self) -> int:
@@ -87,7 +83,7 @@ class CalibrationResult:
     calibration_duration_ms: int
     calibrated_at: datetime = field(default_factory=datetime.utcnow)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "noise_floor_db": self.noise_floor_db,
@@ -108,7 +104,7 @@ class VADService:
     - Emit events for speech start/end
     """
 
-    def __init__(self, config: Optional[VADConfig] = None):
+    def __init__(self, config: VADConfig | None = None):
         """Initialize VAD service.
 
         Args:
@@ -124,8 +120,8 @@ class VADService:
         self._total_frames: int = 0
 
         # Calibration data
-        self._calibration_samples: List[float] = []
-        self._noise_floor_db: Optional[float] = None
+        self._calibration_samples: list[float] = []
+        self._noise_floor_db: float | None = None
 
         # Thread safety
         self._lock = threading.Lock()
@@ -150,7 +146,7 @@ class VADService:
 
         return self._vad.is_speech(audio_frame, self.config.sample_rate)
 
-    def process_frame(self, audio_frame: bytes) -> Optional[Dict[str, Any]]:
+    def process_frame(self, audio_frame: bytes) -> dict[str, Any] | None:
         """Process an audio frame and detect speech events.
 
         Maintains internal state to detect speech start/end transitions.
@@ -205,7 +201,7 @@ class VADService:
             self._silence_frames = 0
             self._total_frames = 0
 
-    def calibrate(self, noise_frames: List[bytes]) -> CalibrationResult:
+    def calibrate(self, noise_frames: list[bytes]) -> CalibrationResult:
         """Calibrate noise floor from ambient audio samples.
 
         Analyzes the provided audio frames to determine the ambient noise level.
@@ -230,7 +226,11 @@ class VADService:
         energies_db.sort()
         noise_floor_db = sum(energies_db) / len(energies_db)
         percentile_90_idx = int(len(energies_db) * 0.9)
-        percentile_90 = energies_db[percentile_90_idx] if percentile_90_idx < len(energies_db) else energies_db[-1]
+        percentile_90 = (
+            energies_db[percentile_90_idx]
+            if percentile_90_idx < len(energies_db)
+            else energies_db[-1]
+        )
 
         calibration_duration_ms = len(noise_frames) * self.config.frame_duration_ms
 
@@ -254,7 +254,7 @@ class VADService:
         """
         # Unpack 16-bit signed samples
         num_samples = len(frame) // 2
-        samples = struct.unpack('<' + 'h' * num_samples, frame)
+        samples = struct.unpack("<" + "h" * num_samples, frame)
 
         # Calculate RMS
         sum_squares = sum(s * s for s in samples)
@@ -271,7 +271,7 @@ class VADService:
         return self._is_speaking
 
     @property
-    def noise_floor_db(self) -> Optional[float]:
+    def noise_floor_db(self) -> float | None:
         """Calibrated noise floor in dB, or None if not calibrated."""
         return self._noise_floor_db
 

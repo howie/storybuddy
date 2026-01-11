@@ -3,11 +3,10 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-
+import 'package:storybuddy/core/network/websocket_client.dart';
+import 'package:storybuddy/features/interaction/domain/entities/interaction_session.dart';
 // These imports will fail until the provider is implemented
 import 'package:storybuddy/features/interaction/presentation/providers/interaction_provider.dart';
-import 'package:storybuddy/features/interaction/domain/entities/interaction_session.dart';
-import 'package:storybuddy/core/network/websocket_client.dart';
 
 // Mock classes
 class MockWebSocketClient extends Mock implements WebSocketClient {}
@@ -82,14 +81,14 @@ void main() {
                 (msg) => msg['type'] == 'end_session',
               ),
             ),
-          )).called(1);
+          ),).called(1);
     });
 
     test('should preserve story position when switching modes', () async {
       // Arrange
       when(() => mockWebSocketClient.disconnect()).thenAnswer((_) async {});
 
-      final initialPosition = 45000; // 45 seconds
+      const initialPosition = 45000; // 45 seconds
       notifier.state = InteractionState(
         sessionId: 'session-123',
         mode: SessionMode.interactive,
@@ -145,7 +144,7 @@ void main() {
       when(() => mockWebSocketClient.connect(
             sessionId: any(named: 'sessionId'),
             token: any(named: 'token'),
-          )).thenAnswer((_) async {});
+          ),).thenAnswer((_) async {});
 
       notifier.state = InteractionState(
         sessionId: 'session-123',
@@ -162,7 +161,7 @@ void main() {
       verify(() => mockWebSocketClient.connect(
             sessionId: 'session-123',
             token: any(named: 'token'),
-          )).called(1);
+          ),).called(1);
     });
 
     test('should sync story position when establishing WebSocket', () async {
@@ -170,11 +169,11 @@ void main() {
       when(() => mockWebSocketClient.connect(
             sessionId: any(named: 'sessionId'),
             token: any(named: 'token'),
-          )).thenAnswer((_) async {});
+          ),).thenAnswer((_) async {});
       when(() => mockWebSocketClient.sendMessage(any()))
           .thenAnswer((_) async {});
 
-      final currentPosition = 60000; // 60 seconds
+      const currentPosition = 60000; // 60 seconds
       notifier.state = InteractionState(
         sessionId: 'session-123',
         mode: SessionMode.passive,
@@ -195,7 +194,7 @@ void main() {
                     msg['positionMs'] == currentPosition,
               ),
             ),
-          )).called(1);
+          ),).called(1);
     });
 
     test('should update mode to interactive after switching', () async {
@@ -218,7 +217,7 @@ void main() {
       when(() => mockWebSocketClient.connect(
             sessionId: any(named: 'sessionId'),
             token: any(named: 'token'),
-          )).thenAnswer((_) async {});
+          ),).thenAnswer((_) async {});
 
       notifier.state = InteractionState(
         sessionId: 'session-123',
@@ -294,7 +293,7 @@ void main() {
       verifyNever(() => mockWebSocketClient.connect(
             sessionId: any(named: 'sessionId'),
             token: any(named: 'token'),
-          ));
+          ),);
     });
 
     test('should handle network error during mode switch gracefully', () async {
@@ -339,7 +338,7 @@ void main() {
       when(() => mockWebSocketClient.connect(
             sessionId: any(named: 'sessionId'),
             token: any(named: 'token'),
-          )).thenAnswer((_) async {});
+          ),).thenAnswer((_) async {});
 
       notifier.state = InteractionState(
         sessionId: 'session-123',

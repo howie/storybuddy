@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:storybuddy/core/network/websocket_client.dart';
-import 'package:storybuddy/features/interaction/domain/entities/interaction_session.dart';
 
 /// Remote datasource for interaction feature using WebSocket.
 ///
@@ -92,9 +91,7 @@ class InteractionRemoteDatasourceImpl implements InteractionRemoteDatasource {
 
   void _subscribeToMessages() {
     _messageSubscription?.cancel();
-    _messageSubscription = _webSocketClient.messages.listen((message) {
-      _handleMessage(message);
-    });
+    _messageSubscription = _webSocketClient.messages.listen(_handleMessage);
   }
 
   void _handleMessage(Map<String, dynamic> message) {
@@ -106,7 +103,7 @@ class InteractionRemoteDatasourceImpl implements InteractionRemoteDatasource {
           text: message['text'] as String? ?? '',
           isFinal: false,
           confidence: message['confidence'] as double?,
-        ));
+        ),);
         break;
 
       case 'transcription_final':
@@ -114,28 +111,28 @@ class InteractionRemoteDatasourceImpl implements InteractionRemoteDatasource {
           text: message['text'] as String? ?? '',
           isFinal: true,
           confidence: message['confidence'] as double?,
-        ));
+        ),);
         break;
 
       case 'ai_response_started':
         _aiResponseController.add(AIResponseUpdate(
           type: AIResponseType.started,
           text: '',
-        ));
+        ),);
         break;
 
       case 'ai_response_text':
         _aiResponseController.add(AIResponseUpdate(
           type: AIResponseType.textChunk,
           text: message['text'] as String? ?? '',
-        ));
+        ),);
         break;
 
       case 'ai_response_completed':
         _aiResponseController.add(AIResponseUpdate(
           type: AIResponseType.completed,
           text: message['fullText'] as String? ?? '',
-        ));
+        ),);
         break;
 
       case 'resume_story':
@@ -143,7 +140,7 @@ class InteractionRemoteDatasourceImpl implements InteractionRemoteDatasource {
         _sessionControlController.add(SessionControlMessage(
           type: SessionControlType.resumeStory,
           resumePositionMs: position != null ? (position * 1000).toInt() : null,
-        ));
+        ),);
         break;
 
       case 'session_status_changed':
@@ -151,13 +148,13 @@ class InteractionRemoteDatasourceImpl implements InteractionRemoteDatasource {
         _sessionControlController.add(SessionControlMessage(
           type: SessionControlType.statusChanged,
           status: status,
-        ));
+        ),);
         break;
 
       case 'session_ended':
         _sessionControlController.add(SessionControlMessage(
           type: SessionControlType.ended,
-        ));
+        ),);
         break;
 
       case 'error':
@@ -166,7 +163,7 @@ class InteractionRemoteDatasourceImpl implements InteractionRemoteDatasource {
           type: SessionControlType.error,
           errorMessage: message['message'] as String?,
           isRecoverable: recoverable,
-        ));
+        ),);
         break;
     }
   }

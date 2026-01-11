@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:storybuddy/features/interaction/presentation/providers/interaction_settings_provider.dart';
 import 'package:storybuddy/features/interaction/domain/entities/interaction_settings.dart';
+import 'package:storybuddy/features/interaction/presentation/providers/interaction_settings_provider.dart';
 
 /// T068 [US3] Create interaction settings page.
 /// Page for managing recording privacy and interaction settings.

@@ -29,11 +29,9 @@ class InteractionSession with _$InteractionSession {
     required String storyId,
     required String parentId,
     required DateTime startedAt,
-    DateTime? endedAt,
+    required DateTime createdAt, required DateTime updatedAt, DateTime? endedAt,
     @Default(SessionMode.interactive) SessionMode mode,
     @Default(SessionStatus.calibrating) SessionStatus status,
-    required DateTime createdAt,
-    required DateTime updatedAt,
   }) = _InteractionSession;
 
   factory InteractionSession.fromJson(Map<String, dynamic> json) =>

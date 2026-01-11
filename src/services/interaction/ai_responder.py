@@ -11,17 +11,16 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 from anthropic import Anthropic, APIError, APITimeoutError, RateLimitError
 
+from src.services.interaction.content_filter import ContentFilter
 from src.services.interaction.prompts import (
+    StoryContext,
     build_system_prompt,
     get_fallback_response,
-    get_redirect_phrase,
-    StoryContext,
 )
-from src.services.interaction.content_filter import ContentFilter
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +57,10 @@ class ResponseContext:
     story_title: str
     story_synopsis: str = ""
     current_position_ms: int = 0
-    characters: List[str] = field(default_factory=list)
+    characters: list[str] = field(default_factory=list)
     current_scene: str = ""
-    conversation_history: List[Dict[str, str]] = field(default_factory=list)
-    themes: List[str] = field(default_factory=list)
+    conversation_history: list[dict[str, str]] = field(default_factory=list)
+    themes: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -73,12 +72,12 @@ class AIResponse:
     trigger_type: TriggerType
     was_redirected: bool = False
     was_interrupted: bool = False
-    original_topic: Optional[str] = None
+    original_topic: str | None = None
     is_fallback: bool = False
     created_at: datetime = field(default_factory=datetime.utcnow)
     processing_time_ms: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "responseId": self.response_id,
@@ -102,8 +101,8 @@ class AIResponder:
 
     def __init__(
         self,
-        config: Optional[AIResponderConfig] = None,
-        content_filter: Optional[ContentFilter] = None,
+        config: AIResponderConfig | None = None,
+        content_filter: ContentFilter | None = None,
     ):
         """Initialize AI Responder.
 
@@ -114,7 +113,7 @@ class AIResponder:
         self.config = config or AIResponderConfig()
         self._client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
         self._content_filter = content_filter or ContentFilter()
-        self._current_task: Optional[asyncio.Task] = None
+        self._current_task: asyncio.Task | None = None
         self._is_generating = False
 
     async def respond(
@@ -146,7 +145,9 @@ class AIResponder:
             )
 
         # Check input content
-        input_filter_result = self._content_filter.filter(child_text, context={"story_title": context.story_title})
+        input_filter_result = self._content_filter.filter(
+            child_text, context={"story_title": context.story_title}
+        )
         was_redirected = len(input_filter_result.categories_detected) > 0
 
         # Build system prompt
@@ -185,7 +186,9 @@ class AIResponder:
                 filter_result = self._content_filter.is_safe(response_text)
 
                 if not filter_result:
-                    logger.warning(f"Response failed content filter, regenerating (attempt {attempt + 1})")
+                    logger.warning(
+                        f"Response failed content filter, regenerating (attempt {attempt + 1})"
+                    )
                     if attempt < self.config.max_retries:
                         await asyncio.sleep(self.config.retry_delay_seconds)
                         continue
@@ -206,7 +209,7 @@ class AIResponder:
                     processing_time_ms=processing_time,
                 )
 
-            except (APITimeoutError, asyncio.TimeoutError):
+            except (TimeoutError, APITimeoutError):
                 logger.warning(f"API timeout (attempt {attempt + 1})")
                 if attempt < self.config.max_retries:
                     await asyncio.sleep(self.config.retry_delay_seconds)
@@ -240,8 +243,8 @@ class AIResponder:
     async def _call_api(
         self,
         system_prompt: str,
-        messages: List[Dict[str, str]],
-    ) -> Optional[str]:
+        messages: list[dict[str, str]],
+    ) -> str | None:
         """Call the Anthropic API.
 
         Args:
@@ -276,7 +279,7 @@ class AIResponder:
         self,
         child_text: str,
         context: ResponseContext,
-    ) -> List[Dict[str, str]]:
+    ) -> list[dict[str, str]]:
         """Build the message list for the API call.
 
         Args:
@@ -326,7 +329,7 @@ class AIResponder:
         for end_char in ["。", "！", "？", ".", "!", "?"]:
             last_end = truncated.rfind(end_char)
             if last_end > max_len * 0.5:  # At least half the content
-                return truncated[:last_end + 1]
+                return truncated[: last_end + 1]
 
         # Look for other break points
         for break_char in ["，", "、", ",", " "]:
@@ -337,7 +340,7 @@ class AIResponder:
         # Hard truncate with ellipsis
         return truncated[:-3] + "..."
 
-    async def cancel_current_response(self) -> Optional[AIResponse]:
+    async def cancel_current_response(self) -> AIResponse | None:
         """Cancel the current response generation.
 
         Returns:

@@ -4,19 +4,16 @@ T027 [P] [US1] Integration test for interaction flow.
 Tests the end-to-end interaction flow from speech to AI response.
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-import asyncio
-import json
-from datetime import datetime
-import struct
 import math
+import struct
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from src.models.enums import SessionMode, SessionStatus
 
 # These imports will fail until the services are implemented
 from src.services.interaction.session_manager import SessionManager
-from src.services.interaction.vad_service import VADService
-from src.services.interaction.streaming_stt import StreamingSTTService
-from src.models.enums import SessionMode, SessionStatus
 
 
 class TestInteractionFlowIntegration:
@@ -38,6 +35,7 @@ class TestInteractionFlowIntegration:
     @pytest.fixture
     def generate_speech_audio(self):
         """Generate simulated speech audio for testing."""
+
         def _generate(duration_ms=2000, sample_rate=16000):
             """Generate sine wave audio simulating speech."""
             num_samples = int(sample_rate * duration_ms / 1000)
@@ -52,9 +50,9 @@ class TestInteractionFlowIntegration:
             frames = []
             frame_samples = int(sample_rate * 0.02)  # 320 samples per frame
             for i in range(0, len(samples), frame_samples):
-                frame = samples[i:i + frame_samples]
+                frame = samples[i : i + frame_samples]
                 if len(frame) == frame_samples:
-                    frames.append(struct.pack('<' + 'h' * frame_samples, *frame))
+                    frames.append(struct.pack("<" + "h" * frame_samples, *frame))
             return frames
 
         return _generate
@@ -62,6 +60,7 @@ class TestInteractionFlowIntegration:
     @pytest.fixture
     def generate_silence_audio(self):
         """Generate silence audio for testing."""
+
         def _generate(duration_ms=1000, sample_rate=16000):
             """Generate silent audio frames."""
             num_frames = int(duration_ms / 20)  # 20ms per frame
@@ -198,9 +197,7 @@ class TestInteractionFlowIntegration:
         await session_manager.end_session(session.session_id)
 
     @pytest.mark.asyncio
-    async def test_mode_switching_mid_playback(
-        self, setup_services, generate_speech_audio
-    ):
+    async def test_mode_switching_mid_playback(self, setup_services, generate_speech_audio):
         """Test switching between interactive and passive modes (FR-013)."""
         session_manager = setup_services
 
@@ -253,15 +250,21 @@ class TestInteractionFlowWithSTT:
         mock_stt.start_session = AsyncMock()
         mock_stt.stop_session = AsyncMock()
         mock_stt.send_audio = AsyncMock()
-        mock_stt.get_results = AsyncMock(return_value=iter([
-            MagicMock(
-                text="小兔子會不會遇到大野狼",
-                is_final=True,
-                confidence=0.95,
+        mock_stt.get_results = AsyncMock(
+            return_value=iter(
+                [
+                    MagicMock(
+                        text="小兔子會不會遇到大野狼",
+                        is_final=True,
+                        confidence=0.95,
+                    )
+                ]
             )
-        ]))
+        )
 
-        with patch("src.services.interaction.streaming_stt.StreamingSTTService", return_value=mock_stt):
+        with patch(
+            "src.services.interaction.streaming_stt.StreamingSTTService", return_value=mock_stt
+        ):
             session_manager = SessionManager(stt_service=mock_stt)
             yield session_manager, mock_stt
 
@@ -335,7 +338,10 @@ class TestInteractionFlowErrorHandling:
             )
 
             # Should return error instead of crashing
-            assert error is not None or session_manager.get_state(session.session_id).status != SessionStatus.ERROR
+            assert (
+                error is not None
+                or session_manager.get_state(session.session_id).status != SessionStatus.ERROR
+            )
 
     @pytest.mark.asyncio
     async def test_handle_network_disconnection(self, setup_services):

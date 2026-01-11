@@ -4,14 +4,14 @@ T024 [P] [US1] Unit test for streaming STT.
 Tests the Google Cloud Speech-to-Text integration for real-time transcription.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-import asyncio
 
 # These imports will fail until the service is implemented
 from src.services.interaction.streaming_stt import (
-    StreamingSTTService,
     StreamingSTTConfig,
+    StreamingSTTService,
     TranscriptionResult,
 )
 
@@ -44,9 +44,7 @@ class TestStreamingSTTConfig:
     def test_speech_context_for_story_vocabulary(self):
         """Should support custom vocabulary for story context."""
         config = StreamingSTTConfig(
-            speech_contexts=[
-                {"phrases": ["小兔子", "大野狼", "森林"], "boost": 20}
-            ]
+            speech_contexts=[{"phrases": ["小兔子", "大野狼", "森林"], "boost": 20}]
         )
         assert len(config.speech_contexts) == 1
         assert "小兔子" in config.speech_contexts[0]["phrases"]
@@ -228,7 +226,7 @@ class TestStreamingSTTService:
         await stt_service.start_session("session-123")
 
         # Service should be able to detect timeout and restart
-        assert hasattr(stt_service, '_handle_timeout')
+        assert hasattr(stt_service, "_handle_timeout")
 
     @pytest.mark.asyncio
     async def test_update_speech_context(self, stt_service, mock_speech_client):

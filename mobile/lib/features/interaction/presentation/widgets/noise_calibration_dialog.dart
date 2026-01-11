@@ -2,6 +2,7 @@
 ///
 /// Shows calibration progress and instructions to the user
 /// before starting interactive story mode.
+library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -26,6 +27,10 @@ enum CalibrationState {
 
 /// Dialog for noise calibration before interactive mode.
 class NoiseCalibrationDialog extends ConsumerStatefulWidget {
+
+  const NoiseCalibrationDialog({
+    required this.onCalibrationComplete, required this.onCancel, required this.audioStream, super.key,
+  });
   /// Callback when calibration completes successfully.
   final void Function(CalibrationResult result) onCalibrationComplete;
 
@@ -35,13 +40,6 @@ class NoiseCalibrationDialog extends ConsumerStatefulWidget {
   /// Audio frame stream for calibration.
   final Stream<List<int>> audioStream;
 
-  const NoiseCalibrationDialog({
-    super.key,
-    required this.onCalibrationComplete,
-    required this.onCancel,
-    required this.audioStream,
-  });
-
   @override
   ConsumerState<NoiseCalibrationDialog> createState() =>
       _NoiseCalibrationDialogState();
@@ -50,7 +48,7 @@ class NoiseCalibrationDialog extends ConsumerStatefulWidget {
 class _NoiseCalibrationDialogState extends ConsumerState<NoiseCalibrationDialog>
     with SingleTickerProviderStateMixin {
   CalibrationState _state = CalibrationState.instructions;
-  double _progress = 0.0;
+  double _progress = 0;
   String? _errorMessage;
   CalibrationResult? _result;
 
@@ -86,10 +84,10 @@ class _NoiseCalibrationDialogState extends ConsumerState<NoiseCalibrationDialog>
     _audioSubscription = widget.audioStream.listen(
       (audioData) {
         final frame =
-            audioData is List<int> ? List<int>.from(audioData) : audioData;
+            List<int>.from(audioData);
 
         final needsMore = _calibrationService.addFrame(
-          frame is List<int> ? List<int>.from(frame).toList() : frame,
+          List<int>.from(frame).toList(),
         );
 
         setState(() {
@@ -414,7 +412,7 @@ Future<CalibrationResult?> showCalibrationDialog({
     builder: (context) => NoiseCalibrationDialog(
       audioStream: audioStream,
       onCalibrationComplete: (result) => Navigator.of(context).pop(result),
-      onCancel: () => Navigator.of(context).pop(null),
+      onCancel: () => Navigator.of(context).pop(),
     ),
   );
 }

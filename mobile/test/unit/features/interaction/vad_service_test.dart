@@ -1,6 +1,7 @@
 /// T086 [P] [US5] Unit test for client-side VAD.
 ///
 /// Tests the client-side Voice Activity Detection service.
+library;
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -14,14 +15,7 @@ void main() {
 
     setUp(() {
       vadService = VADService(
-        config: const VADConfig(
-          sampleRate: 16000,
-          frameDurationMs: 20,
-          speechThresholdDb: -35,
-          silenceThresholdDb: -50,
-          minSpeechDurationMs: 100,
-          minSilenceDurationMs: 300,
-        ),
+        
       );
     });
 
@@ -31,7 +25,7 @@ void main() {
 
     /// Generate silent audio frame.
     Uint8List generateSilentFrame({double noiseDb = -55}) {
-      final samplesPerFrame = 320; // 20ms at 16kHz
+      const samplesPerFrame = 320; // 20ms at 16kHz
       final amplitude = pow(10, noiseDb / 20) * 32767;
       final random = Random();
 
@@ -45,7 +39,7 @@ void main() {
 
     /// Generate speech-like audio frame.
     Uint8List generateSpeechFrame({double speechDb = -25}) {
-      final samplesPerFrame = 320;
+      const samplesPerFrame = 320;
       final amplitude = pow(10, speechDb / 20) * 32767;
 
       final samples = Int16List(samplesPerFrame);
@@ -68,7 +62,7 @@ void main() {
       vadService.calibrate(-50);
 
       for (var i = 0; i < 10; i++) {
-        final frame = generateSilentFrame(noiseDb: -55);
+        final frame = generateSilentFrame();
         final event = vadService.processFrame(frame);
 
         // Silent frames should not trigger speech events
@@ -84,7 +78,7 @@ void main() {
       // Send several speech frames
       VADEvent? speechEvent;
       for (var i = 0; i < 10; i++) {
-        final frame = generateSpeechFrame(speechDb: -25);
+        final frame = generateSpeechFrame();
         final event = vadService.processFrame(frame);
         if (event?.type == VADEventType.speechStarted) {
           speechEvent = event;
@@ -158,11 +152,11 @@ void main() {
 
     test('calculates energy correctly', () {
       // Silent frame should have low energy
-      final silentFrame = generateSilentFrame(noiseDb: -55);
+      final silentFrame = generateSilentFrame();
       final silentEnergy = vadService.calculateFrameEnergy(silentFrame);
 
       // Speech frame should have higher energy
-      final speechFrame = generateSpeechFrame(speechDb: -25);
+      final speechFrame = generateSpeechFrame();
       final speechEnergy = vadService.calculateFrameEnergy(speechFrame);
 
       expect(speechEnergy, greaterThan(silentEnergy));
@@ -235,7 +229,7 @@ void main() {
     test('validates frame duration', () {
       // Valid durations: 10, 20, 30 ms
       expect(() => const VADConfig(frameDurationMs: 10), returnsNormally);
-      expect(() => const VADConfig(frameDurationMs: 20), returnsNormally);
+      expect(() => const VADConfig(), returnsNormally);
       expect(() => const VADConfig(frameDurationMs: 30), returnsNormally);
     });
   });

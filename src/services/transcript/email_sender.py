@@ -9,10 +9,9 @@ import logging
 import re
 import smtplib
 import ssl
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Optional
 from uuid import uuid4
 
 from src.models.transcript import InteractionTranscript
@@ -29,7 +28,7 @@ class EmailSenderConfig:
     smtp_user: str
     smtp_password: str
     use_tls: bool = True
-    from_email: Optional[str] = None
+    from_email: str | None = None
     from_name: str = "StoryBuddy"
     timeout: int = 30
     max_retries: int = 3
@@ -45,8 +44,8 @@ class EmailSendResult:
     """Result of an email send operation."""
 
     success: bool
-    message_id: Optional[str] = None
-    error: Optional[str] = None
+    message_id: str | None = None
+    error: str | None = None
 
 
 class EmailSender:
@@ -57,9 +56,7 @@ class EmailSender:
     """
 
     # Email validation regex pattern
-    _EMAIL_PATTERN = re.compile(
-        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    )
+    _EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
     def __init__(self, config: EmailSenderConfig):
         """
@@ -70,7 +67,7 @@ class EmailSender:
         """
         self._config = config
 
-    def validate_email(self, email: Optional[str]) -> bool:
+    def validate_email(self, email: str | None) -> bool:
         """
         Validate email address format.
 
@@ -89,7 +86,7 @@ class EmailSender:
         to_email: str,
         transcript: InteractionTranscript,
         story_title: str,
-        max_retries: Optional[int] = None,
+        max_retries: int | None = None,
     ) -> EmailSendResult:
         """
         Send a single transcript email.
@@ -120,7 +117,7 @@ class EmailSender:
         text_body = f"""
 {story_title} - 互動紀錄
 
-日期：{transcript.created_at.strftime('%Y年%m月%d日 %H:%M')}
+日期：{transcript.created_at.strftime("%Y年%m月%d日 %H:%M")}
 時長：{duration_text}
 對話回合：{transcript.turn_count} 回合
 
@@ -137,7 +134,7 @@ class EmailSender:
         html_body = transcript.html_content
 
         retries = max_retries if max_retries is not None else self._config.max_retries
-        last_error: Optional[str] = None
+        last_error: str | None = None
 
         for attempt in range(retries):
             try:
@@ -153,13 +150,9 @@ class EmailSender:
                 )
             except Exception as e:
                 last_error = str(e)
-                logger.warning(
-                    f"Email send attempt {attempt + 1} failed: {e}"
-                )
+                logger.warning(f"Email send attempt {attempt + 1} failed: {e}")
                 if attempt < retries - 1:
-                    await asyncio.sleep(
-                        self._config.retry_delay * (attempt + 1)
-                    )
+                    await asyncio.sleep(self._config.retry_delay * (attempt + 1))
 
         return EmailSendResult(
             success=False,
@@ -228,17 +221,21 @@ class EmailSender:
 
             html_parts.append('<div class="story-section">')
             html_parts.append(f'<div class="story-title">📖 {title}</div>')
-            html_parts.append(f"<p>時長：{duration_min} 分鐘 | 對話：{transcript.turn_count} 回合</p>")
+            html_parts.append(
+                f"<p>時長：{duration_min} 分鐘 | 對話：{transcript.turn_count} 回合</p>"
+            )
             html_parts.append("<hr>")
             html_parts.append(transcript.html_content)
             html_parts.append("</div>")
 
-        html_parts.extend([
-            "<hr>",
-            "<p style='color: #666; font-size: 12px;'>此郵件由 StoryBuddy 自動發送。</p>",
-            "</body>",
-            "</html>",
-        ])
+        html_parts.extend(
+            [
+                "<hr>",
+                "<p style='color: #666; font-size: 12px;'>此郵件由 StoryBuddy 自動發送。</p>",
+                "</body>",
+                "</html>",
+            ]
+        )
 
         text_body = "".join(text_parts)
         html_body = "\n".join(html_parts)

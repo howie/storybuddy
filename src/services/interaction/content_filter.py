@@ -4,11 +4,11 @@ T052 [US2] Implement content filter for response validation.
 Filters and validates content to ensure it's appropriate for children.
 """
 
-import re
 import logging
+import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, List, Dict, Any, Set
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +34,8 @@ class ContentFilterConfig:
     enable_violence_filter: bool = True
     enable_adult_content_filter: bool = True
     enable_personal_info_filter: bool = True
-    custom_blocked_phrases: List[str] = field(default_factory=list)
-    custom_allowed_phrases: List[str] = field(default_factory=list)
+    custom_blocked_phrases: list[str] = field(default_factory=list)
+    custom_allowed_phrases: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -44,14 +44,14 @@ class FilterResult:
 
     is_safe: bool
     original_text: str
-    filtered_text: Optional[str]
-    categories_detected: List[ContentCategory] = field(default_factory=list)
+    filtered_text: str | None
+    categories_detected: list[ContentCategory] = field(default_factory=list)
     was_modified: bool = False
-    reason: Optional[str] = None
+    reason: str | None = None
     confidence: float = 1.0
     needs_review: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "isSafe": self.is_safe,
@@ -71,7 +71,7 @@ class ContentFilter:
     that AI responses are safe for children.
     """
 
-    def __init__(self, config: Optional[ContentFilterConfig] = None):
+    def __init__(self, config: ContentFilterConfig | None = None):
         """Initialize content filter.
 
         Args:
@@ -118,23 +118,51 @@ class ContentFilter:
 
         # Off-topic keywords (used with context)
         self._off_topic_keywords = {
-            "股票", "投資", "政治", "選舉", "新聞",
-            "工作", "公司", "老闆", "薪水",
-            "stocks", "politics", "election", "news",
+            "股票",
+            "投資",
+            "政治",
+            "選舉",
+            "新聞",
+            "工作",
+            "公司",
+            "老闆",
+            "薪水",
+            "stocks",
+            "politics",
+            "election",
+            "news",
         }
 
         # Common story-related words (should be allowed)
         self._story_keywords = {
-            "故事", "角色", "主角", "冒險", "魔法", "森林",
-            "動物", "朋友", "家人", "英雄", "公主", "王子",
-            "story", "character", "adventure", "magic", "forest",
-            "animal", "friend", "hero", "princess", "prince",
+            "故事",
+            "角色",
+            "主角",
+            "冒險",
+            "魔法",
+            "森林",
+            "動物",
+            "朋友",
+            "家人",
+            "英雄",
+            "公主",
+            "王子",
+            "story",
+            "character",
+            "adventure",
+            "magic",
+            "forest",
+            "animal",
+            "friend",
+            "hero",
+            "princess",
+            "prince",
         }
 
     def filter(
         self,
         text: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> FilterResult:
         """Filter and analyze text content.
 
@@ -213,7 +241,7 @@ class ContentFilter:
             needs_review=len(categories_detected) > 0 and is_safe,
         )
 
-    def is_safe(self, text: str, context: Optional[Dict[str, Any]] = None) -> bool:
+    def is_safe(self, text: str, context: dict[str, Any] | None = None) -> bool:
         """Quick check if text is safe.
 
         Args:
@@ -243,7 +271,7 @@ class ContentFilter:
     def contains_inappropriate_content(
         self,
         text: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> bool:
         """Check if text contains inappropriate content.
 
@@ -298,7 +326,7 @@ class ContentFilter:
                 return True
         return False
 
-    def _check_off_topic(self, text: str, context: Dict[str, Any]) -> bool:
+    def _check_off_topic(self, text: str, context: dict[str, Any]) -> bool:
         """Check if content is off-topic for the story."""
         story_title = context.get("story_title", "").lower()
 

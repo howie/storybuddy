@@ -2,12 +2,30 @@
 ///
 /// Collects ambient audio samples and calculates noise floor
 /// for optimal VAD performance.
-import 'dart:async';
+library;
 import 'dart:math';
 import 'dart:typed_data';
 
 /// Result of noise calibration.
 class CalibrationResult {
+
+  const CalibrationResult({
+    required this.noiseFloorDb,
+    required this.percentile90,
+    required this.sampleCount,
+    required this.calibrationDurationMs,
+    required this.calibratedAt,
+  });
+
+  factory CalibrationResult.fromJson(Map<String, dynamic> json) {
+    return CalibrationResult(
+      noiseFloorDb: json['noiseFloorDb'] as double,
+      percentile90: json['percentile90'] as double,
+      sampleCount: json['sampleCount'] as int,
+      calibrationDurationMs: json['calibrationDurationMs'] as int,
+      calibratedAt: DateTime.parse(json['calibratedAt'] as String),
+    );
+  }
   /// Average noise floor in dB.
   final double noiseFloorDb;
 
@@ -23,14 +41,6 @@ class CalibrationResult {
   /// When calibration was performed.
   final DateTime calibratedAt;
 
-  const CalibrationResult({
-    required this.noiseFloorDb,
-    required this.percentile90,
-    required this.sampleCount,
-    required this.calibrationDurationMs,
-    required this.calibratedAt,
-  });
-
   /// Whether the noise environment is quiet enough for good detection.
   bool get isQuietEnvironment => noiseFloorDb < -40;
 
@@ -45,16 +55,6 @@ class CalibrationResult {
         'calibratedAt': calibratedAt.toIso8601String(),
       };
 
-  factory CalibrationResult.fromJson(Map<String, dynamic> json) {
-    return CalibrationResult(
-      noiseFloorDb: json['noiseFloorDb'] as double,
-      percentile90: json['percentile90'] as double,
-      sampleCount: json['sampleCount'] as int,
-      calibrationDurationMs: json['calibrationDurationMs'] as int,
-      calibratedAt: DateTime.parse(json['calibratedAt'] as String),
-    );
-  }
-
   @override
   String toString() =>
       'CalibrationResult(noiseFloorDb: ${noiseFloorDb.toStringAsFixed(1)}, '
@@ -63,6 +63,13 @@ class CalibrationResult {
 
 /// Configuration for noise calibration.
 class CalibrationConfig {
+
+  const CalibrationConfig({
+    this.targetDurationMs = 2000,
+    this.minSamples = 50,
+    this.sampleRate = 16000,
+    this.frameDurationMs = 20,
+  });
   /// Target duration for calibration in milliseconds.
   final int targetDurationMs;
 
@@ -75,29 +82,22 @@ class CalibrationConfig {
   /// Frame duration in milliseconds.
   final int frameDurationMs;
 
-  const CalibrationConfig({
-    this.targetDurationMs = 2000,
-    this.minSamples = 50,
-    this.sampleRate = 16000,
-    this.frameDurationMs = 20,
-  });
-
   /// Expected number of samples based on target duration.
   int get expectedSamples => targetDurationMs ~/ frameDurationMs;
 }
 
 /// Service for performing noise calibration.
 class NoiseCalibrationService {
+
+  NoiseCalibrationService({
+    this.config = const CalibrationConfig(),
+  });
   final CalibrationConfig config;
 
   final List<double> _energySamples = [];
   final List<Uint8List> _audioFrames = [];
   DateTime? _startTime;
   bool _isCalibrating = false;
-
-  NoiseCalibrationService({
-    this.config = const CalibrationConfig(),
-  });
 
   /// Whether calibration is in progress.
   bool get isCalibrating => _isCalibrating;
@@ -107,8 +107,8 @@ class NoiseCalibrationService {
 
   /// Progress of calibration (0.0 to 1.0).
   double get progress {
-    if (!_isCalibrating) return 0.0;
-    return min(1.0, _energySamples.length / config.expectedSamples);
+    if (!_isCalibrating) return 0;
+    return min(1, _energySamples.length / config.expectedSamples);
   }
 
   /// Start collecting calibration samples.
@@ -182,16 +182,16 @@ class NoiseCalibrationService {
 
   /// Calculate mean of values.
   double _calculateMean(List<double> values) {
-    if (values.isEmpty) return -40.0; // Default
+    if (values.isEmpty) return -40; // Default
     return values.reduce((a, b) => a + b) / values.length;
   }
 
   /// Calculate energy of an audio frame in dB.
   double _calculateFrameEnergy(Uint8List frame) {
     final samples = Int16List.view(
-        frame.buffer, frame.offsetInBytes, frame.lengthInBytes ~/ 2);
+        frame.buffer, frame.offsetInBytes, frame.lengthInBytes ~/ 2,);
 
-    if (samples.isEmpty) return -100.0;
+    if (samples.isEmpty) return -100;
 
     // Calculate RMS
     double sumSquares = 0;
@@ -201,7 +201,7 @@ class NoiseCalibrationService {
     final rms = sqrt(sumSquares / samples.length);
 
     // Convert to dB
-    if (rms < 1) return -100.0;
+    if (rms < 1) return -100;
     return 20 * log(rms / 32768) / ln10;
   }
 

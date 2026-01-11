@@ -8,8 +8,7 @@ Date: 2026-01-10
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from alembic import op
-    import sqlalchemy as sa
+    pass
 
 
 # Revision identifiers
@@ -33,7 +32,9 @@ def upgrade() -> None:
         sa.Column("started_at", sa.DateTime(), nullable=False),
         sa.Column("ended_at", sa.DateTime(), nullable=True),
         sa.Column("mode", sa.String(20), nullable=False),  # 'interactive' | 'passive'
-        sa.Column("status", sa.String(20), nullable=False),  # 'calibrating' | 'active' | 'paused' | 'completed' | 'error'
+        sa.Column(
+            "status", sa.String(20), nullable=False
+        ),  # 'calibrating' | 'active' | 'paused' | 'completed' | 'error'
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
     )
@@ -77,7 +78,9 @@ def upgrade() -> None:
         ),
         sa.Column("text", sa.Text(), nullable=False),
         sa.Column("audio_url", sa.String(500), nullable=True),
-        sa.Column("trigger_type", sa.String(20), nullable=False),  # 'child_speech' | 'story_prompt' | 'timeout'
+        sa.Column(
+            "trigger_type", sa.String(20), nullable=False
+        ),  # 'child_speech' | 'story_prompt' | 'timeout'
         sa.Column("was_interrupted", sa.Boolean(), nullable=False, default=False),
         sa.Column("interrupted_at_ms", sa.Integer(), nullable=True),
         sa.Column("response_latency_ms", sa.Integer(), nullable=False),
@@ -117,7 +120,9 @@ def upgrade() -> None:
         sa.Column("recording_enabled", sa.Boolean(), nullable=False, default=False),
         sa.Column("email_notifications", sa.Boolean(), nullable=False, default=True),
         sa.Column("notification_email", sa.String(255), nullable=True),
-        sa.Column("notification_frequency", sa.String(20), nullable=False, default="daily"),  # 'instant' | 'daily' | 'weekly'
+        sa.Column(
+            "notification_frequency", sa.String(20), nullable=False, default="daily"
+        ),  # 'instant' | 'daily' | 'weekly'
         sa.Column("interruption_threshold_ms", sa.Integer(), nullable=False, default=500),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
@@ -147,7 +152,9 @@ def upgrade() -> None:
     op.create_index("idx_interaction_sessions_status", "interaction_sessions", ["status"])
     op.create_index("idx_voice_segments_session_id", "voice_segments", ["session_id"])
     op.create_index("idx_ai_responses_session_id", "ai_responses", ["session_id"])
-    op.create_index("idx_interaction_transcripts_email_sent_at", "interaction_transcripts", ["email_sent_at"])
+    op.create_index(
+        "idx_interaction_transcripts_email_sent_at", "interaction_transcripts", ["email_sent_at"]
+    )
 
 
 def downgrade() -> None:

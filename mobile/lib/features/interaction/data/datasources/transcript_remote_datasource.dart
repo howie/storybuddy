@@ -44,11 +44,6 @@ class TranscriptListResponse {
     required this.pageSize,
   });
 
-  final List<TranscriptSummary> transcripts;
-  final int total;
-  final int page;
-  final int pageSize;
-
   factory TranscriptListResponse.fromJson(Map<String, dynamic> json) {
     return TranscriptListResponse(
       transcripts: (json['transcripts'] as List<dynamic>)
@@ -59,6 +54,11 @@ class TranscriptListResponse {
       pageSize: json['pageSize'] as int,
     );
   }
+
+  final List<TranscriptSummary> transcripts;
+  final int total;
+  final int page;
+  final int pageSize;
 
   bool get hasMore => page * pageSize < total;
 }
@@ -71,10 +71,6 @@ class SendEmailResult {
     this.error,
   });
 
-  final bool success;
-  final String? messageId;
-  final String? error;
-
   factory SendEmailResult.fromJson(Map<String, dynamic> json) {
     return SendEmailResult(
       success: json['success'] as bool,
@@ -82,6 +78,10 @@ class SendEmailResult {
       error: json['error'] as String?,
     );
   }
+
+  final bool success;
+  final String? messageId;
+  final String? error;
 }
 
 /// Exported transcript content.
@@ -187,10 +187,10 @@ class TranscriptRemoteDatasourceImpl implements TranscriptRemoteDatasource {
 
     // Get filename from content-disposition header
     final contentDisposition = response.headers.value('content-disposition');
-    String filename = 'transcript.$format';
+    var filename = 'transcript.$format';
     if (contentDisposition != null) {
       final match =
-          RegExp(r'filename="([^"]+)"').firstMatch(contentDisposition);
+          RegExp('filename="([^"]+)"').firstMatch(contentDisposition);
       if (match != null) {
         filename = match.group(1)!;
       }

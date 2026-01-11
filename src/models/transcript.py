@@ -5,7 +5,6 @@ Feature: 006-interactive-story-mode
 """
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator
@@ -35,7 +34,7 @@ class InteractionTranscript(InteractionTranscriptBase):
     turn_count: int = Field(ge=0)
     total_duration_ms: int = Field(ge=0)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    email_sent_at: Optional[datetime] = None
+    email_sent_at: datetime | None = None
 
     @field_validator("plain_text", "html_content")
     @classmethod
@@ -56,7 +55,7 @@ class TranscriptSummary(BaseModel):
     turn_count: int
     total_duration_ms: int
     created_at: datetime
-    email_sent_at: Optional[datetime] = None
+    email_sent_at: datetime | None = None
 
     class Config:
         from_attributes = True

@@ -4,13 +4,13 @@ Provides structured logging utilities for interaction session events,
 making it easier to analyze and debug interaction flows.
 """
 
-import logging
 import json
+import logging
+import time
 from datetime import datetime
-from typing import Any, Dict, Optional
 from enum import Enum
 from functools import wraps
-import time
+from typing import Any
 
 
 class InteractionEventType(str, Enum):
@@ -88,7 +88,7 @@ class InteractionLogger:
     def log_event(
         self,
         event_type: InteractionEventType,
-        data: Optional[Dict[str, Any]] = None,
+        data: dict[str, Any] | None = None,
         level: int = logging.INFO,
     ) -> None:
         """Log a structured interaction event.
@@ -120,18 +120,14 @@ class InteractionLogger:
 
     # Convenience methods for common events
 
-    def log_session_created(
-        self, story_id: str, parent_id: str, mode: str
-    ) -> None:
+    def log_session_created(self, story_id: str, parent_id: str, mode: str) -> None:
         """Log session creation."""
         self.log_event(
             InteractionEventType.SESSION_CREATED,
             {"story_id": story_id, "parent_id": parent_id, "mode": mode},
         )
 
-    def log_calibration_completed(
-        self, noise_floor_db: float, sample_count: int
-    ) -> None:
+    def log_calibration_completed(self, noise_floor_db: float, sample_count: int) -> None:
         """Log calibration completion."""
         self.log_event(
             InteractionEventType.CALIBRATION_COMPLETED,
@@ -152,9 +148,7 @@ class InteractionLogger:
             {"segment_id": segment_id, "duration_ms": duration_ms},
         )
 
-    def log_transcription_completed(
-        self, text: str, confidence: float, latency_ms: int
-    ) -> None:
+    def log_transcription_completed(self, text: str, confidence: float, latency_ms: int) -> None:
         """Log transcription completion."""
         self.log_event(
             InteractionEventType.TRANSCRIPTION_COMPLETED,
@@ -196,9 +190,7 @@ class InteractionLogger:
             {"duration_ms": duration_ms, "turn_count": turn_count},
         )
 
-    def log_error(
-        self, error_code: str, message: str, recoverable: bool = True
-    ) -> None:
+    def log_error(self, error_code: str, message: str, recoverable: bool = True) -> None:
         """Log an error event."""
         self.log_event(
             InteractionEventType.SESSION_ERROR,
@@ -236,6 +228,7 @@ def measure_latency(logger: InteractionLogger, operation: str):
         logger: InteractionLogger instance.
         operation: Name of the operation being measured.
     """
+
     def decorator(func):
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
@@ -254,6 +247,7 @@ def measure_latency(logger: InteractionLogger, operation: str):
             return result
 
         import asyncio
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         return sync_wrapper
@@ -262,7 +256,7 @@ def measure_latency(logger: InteractionLogger, operation: str):
 
 
 # Module-level loggers registry
-_session_loggers: Dict[str, InteractionLogger] = {}
+_session_loggers: dict[str, InteractionLogger] = {}
 
 
 def get_logger(session_id: str) -> InteractionLogger:

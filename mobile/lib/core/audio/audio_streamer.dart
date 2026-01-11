@@ -127,7 +127,7 @@ class AudioStreamer {
 
     if (_recorder == null || _encoder == null) {
       throw StateError(
-          'AudioStreamer not initialized. Call initialize() first.');
+          'AudioStreamer not initialized. Call initialize() first.',);
     }
 
     // Check microphone permission
@@ -219,7 +219,7 @@ class AudioStreamer {
       _rawAudioController.add(frameBytes);
 
       // T093 [US5] Process through VAD if enabled
-      bool shouldSendFrame = true;
+      var shouldSendFrame = true;
       if (enableVAD && _vadService != null) {
         final vadEvent = _vadService!.processFrame(frameBytes);
 

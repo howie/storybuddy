@@ -6,9 +6,8 @@ Handles instant, daily, and weekly email notifications for transcripts.
 
 import asyncio
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Callable, Optional
 
 from src.db.repository import Repository
 from src.models.enums import NotificationFrequency
@@ -58,7 +57,7 @@ class TranscriptScheduler:
         repository: Repository,
         email_sender: EmailSender,
         generator: TranscriptGenerator,
-        config: Optional[SchedulerConfig] = None,
+        config: SchedulerConfig | None = None,
     ):
         """
         Initialize the scheduler.
@@ -74,7 +73,7 @@ class TranscriptScheduler:
         self._generator = generator
         self._config = config or SchedulerConfig()
         self._running = False
-        self._task: Optional[asyncio.Task] = None
+        self._task: asyncio.Task | None = None
 
     async def start(self) -> None:
         """Start the scheduler background task."""
@@ -147,9 +146,7 @@ class TranscriptScheduler:
             try:
                 await self._send_single_transcript_email(item)
             except Exception as e:
-                logger.error(
-                    f"Failed to send instant notification for {item.transcript_id}: {e}"
-                )
+                logger.error(f"Failed to send instant notification for {item.transcript_id}: {e}")
 
     async def _process_daily_digests(self) -> None:
         """Send daily digest emails."""
@@ -168,9 +165,7 @@ class TranscriptScheduler:
                     digest_title="今日互動摘要",
                 )
             except Exception as e:
-                logger.error(
-                    f"Failed to send daily digest for parent {parent_id}: {e}"
-                )
+                logger.error(f"Failed to send daily digest for parent {parent_id}: {e}")
 
     async def _process_weekly_digests(self) -> None:
         """Send weekly digest emails."""
@@ -188,13 +183,9 @@ class TranscriptScheduler:
                     digest_title="本週互動摘要",
                 )
             except Exception as e:
-                logger.error(
-                    f"Failed to send weekly digest for parent {parent_id}: {e}"
-                )
+                logger.error(f"Failed to send weekly digest for parent {parent_id}: {e}")
 
-    async def _send_single_transcript_email(
-        self, pending: PendingTranscript
-    ) -> None:
+    async def _send_single_transcript_email(self, pending: PendingTranscript) -> None:
         """Send email for a single transcript."""
         transcript_data = await self._repository.get_transcript(pending.transcript_id)
         if not transcript_data:
@@ -270,9 +261,7 @@ class TranscriptScheduler:
             # Mark all transcripts as sent
             for data in transcript_data:
                 await self._repository.mark_transcript_email_sent(data["transcript_id"])
-            logger.info(
-                f"Digest email sent to {parent_email} with {len(transcripts)} transcripts"
-            )
+            logger.info(f"Digest email sent to {parent_email} with {len(transcripts)} transcripts")
         else:
             logger.error(f"Failed to send digest to {parent_email}: {result.error}")
 
@@ -296,9 +285,7 @@ class TranscriptScheduler:
         if not settings.get("email_notifications", True):
             return
 
-        frequency = NotificationFrequency(
-            settings.get("notification_frequency", "daily")
-        )
+        frequency = NotificationFrequency(settings.get("notification_frequency", "daily"))
 
         if frequency == NotificationFrequency.INSTANT:
             # Mark for immediate processing
@@ -310,10 +297,10 @@ class TranscriptScheduler:
 
 
 # Global scheduler instance
-_scheduler: Optional[TranscriptScheduler] = None
+_scheduler: TranscriptScheduler | None = None
 
 
-def get_scheduler() -> Optional[TranscriptScheduler]:
+def get_scheduler() -> TranscriptScheduler | None:
     """Get the global scheduler instance."""
     return _scheduler
 
@@ -322,7 +309,7 @@ async def start_transcript_scheduler(
     repository: Repository,
     email_sender: EmailSender,
     generator: TranscriptGenerator,
-    config: Optional[SchedulerConfig] = None,
+    config: SchedulerConfig | None = None,
 ) -> TranscriptScheduler:
     """
     Start the transcript scheduler.

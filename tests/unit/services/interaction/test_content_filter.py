@@ -5,14 +5,13 @@ Tests the content filtering for child-safe AI responses.
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 
 # These imports will fail until the service is implemented
 from src.services.interaction.content_filter import (
+    ContentCategory,
     ContentFilter,
     ContentFilterConfig,
     FilterResult,
-    ContentCategory,
 )
 
 
@@ -29,9 +28,7 @@ class TestContentFilterConfig:
 
     def test_custom_blocked_phrases(self):
         """Should allow custom blocked phrases."""
-        config = ContentFilterConfig(
-            custom_blocked_phrases=["壞話1", "壞話2"]
-        )
+        config = ContentFilterConfig(custom_blocked_phrases=["壞話1", "壞話2"])
         assert "壞話1" in config.custom_blocked_phrases
 
     def test_custom_allowed_phrases(self):
@@ -128,7 +125,9 @@ class TestContentFilterProfanity:
         """Should block profane language."""
         result = content_filter.filter("這是髒話內容")
         # Filter should detect and handle profanity
-        assert ContentCategory.INAPPROPRIATE_LANGUAGE in result.categories_detected or result.is_safe
+        assert (
+            ContentCategory.INAPPROPRIATE_LANGUAGE in result.categories_detected or result.is_safe
+        )
 
     def test_detects_masked_profanity(self, content_filter):
         """Should detect masked profanity attempts."""
@@ -160,8 +159,7 @@ class TestContentFilterViolence:
         """Should consider context when filtering violence."""
         # Story context should allow certain narrative elements
         result = content_filter.filter(
-            "小兔子勇敢地躲過了大野狼",
-            context={"story_title": "小兔子冒險記"}
+            "小兔子勇敢地躲過了大野狼", context={"story_title": "小兔子冒險記"}
         )
         assert result.is_safe is True
 
@@ -178,7 +176,9 @@ class TestContentFilterAdultContent:
         """Should block adult themes."""
         result = content_filter.filter("成人內容")
         # Should be filtered
-        assert result.is_safe is False or ContentCategory.ADULT_CONTENT in result.categories_detected
+        assert (
+            result.is_safe is False or ContentCategory.ADULT_CONTENT in result.categories_detected
+        )
 
     def test_blocks_romantic_content(self, content_filter):
         """Should block romantic content inappropriate for children."""
@@ -221,16 +221,14 @@ class TestContentFilterOffTopic:
     def test_detects_completely_off_topic(self, content_filter):
         """Should detect completely off-topic content."""
         result = content_filter.filter(
-            "今天的股票市場怎麼樣",
-            context={"story_title": "小兔子冒險記"}
+            "今天的股票市場怎麼樣", context={"story_title": "小兔子冒險記"}
         )
         assert ContentCategory.OFF_TOPIC in result.categories_detected
 
     def test_allows_related_educational_tangent(self, content_filter):
         """Should allow related educational tangents."""
         result = content_filter.filter(
-            "兔子真的只吃紅蘿蔔嗎",
-            context={"story_title": "小兔子冒險記"}
+            "兔子真的只吃紅蘿蔔嗎", context={"story_title": "小兔子冒險記"}
         )
         # Related to story animal, should be allowed
         assert result.is_safe is True
@@ -247,13 +245,14 @@ class TestContentFilterFearInducing:
     def test_moderates_scary_content(self, content_filter):
         """Should moderate excessively scary content."""
         result = content_filter.filter("可怕的怪物會在晚上來抓你")
-        assert result.is_safe is False or ContentCategory.FEAR_INDUCING in result.categories_detected
+        assert (
+            result.is_safe is False or ContentCategory.FEAR_INDUCING in result.categories_detected
+        )
 
     def test_allows_mild_story_tension(self, content_filter):
         """Should allow mild story tension appropriate for children."""
         result = content_filter.filter(
-            "小兔子有點緊張，因為森林裡有奇怪的聲音",
-            context={"story_title": "小兔子冒險記"}
+            "小兔子有點緊張，因為森林裡有奇怪的聲音", context={"story_title": "小兔子冒險記"}
         )
         assert result.is_safe is True
 
@@ -350,4 +349,4 @@ class TestContentFilterConfidence:
         """Low confidence should flag for review."""
         result = content_filter.filter("模糊的內容需要審查")
         # Should either be flagged or have confidence score
-        assert hasattr(result, 'confidence') or hasattr(result, 'needs_review')
+        assert hasattr(result, "confidence") or hasattr(result, "needs_review")

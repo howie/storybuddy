@@ -13,32 +13,29 @@ Provides real-time bidirectional communication for:
 
 import asyncio
 import json
-from datetime import datetime
-from typing import Optional, Dict, Any, List
 import logging
+from datetime import datetime
+from typing import Any
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, HTTPException
-from fastapi.websockets import WebSocketState
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
-from src.services.interaction.session_manager import SessionManager, SessionState
+from src.models.enums import SessionStatus
 from src.services.interaction.ai_responder import (
     AIResponder,
     ResponseContext,
-    TriggerType,
-    AIResponse,
 )
-from src.models.enums import SessionMode, SessionStatus
+from src.services.interaction.session_manager import SessionManager
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/ws", tags=["interaction"])
 
 # Global service instances
-_session_manager: Optional[SessionManager] = None
-_ai_responder: Optional[AIResponder] = None
+_session_manager: SessionManager | None = None
+_ai_responder: AIResponder | None = None
 
 # Session context storage for AI responses
-_session_contexts: Dict[str, Dict[str, Any]] = {}
+_session_contexts: dict[str, dict[str, Any]] = {}
 
 
 def get_session_manager() -> SessionManager:
@@ -57,7 +54,7 @@ def get_ai_responder() -> AIResponder:
     return _ai_responder
 
 
-def get_session_context(session_id: str) -> Dict[str, Any]:
+def get_session_context(session_id: str) -> dict[str, Any]:
     """Get or create session context for AI responses."""
     if session_id not in _session_contexts:
         _session_contexts[session_id] = {
@@ -73,11 +70,11 @@ def get_session_context(session_id: str) -> Dict[str, Any]:
 
 def update_session_context(
     session_id: str,
-    story_id: Optional[str] = None,
-    story_title: Optional[str] = None,
-    story_synopsis: Optional[str] = None,
-    characters: Optional[List[str]] = None,
-    current_scene: Optional[str] = None,
+    story_id: str | None = None,
+    story_title: str | None = None,
+    story_synopsis: str | None = None,
+    characters: list[str] | None = None,
+    current_scene: str | None = None,
 ) -> None:
     """Update session context with story information."""
     context = get_session_context(session_id)
@@ -124,7 +121,7 @@ class WebSocketConnection:
         self.token = token
         self.is_connected = False
         self._last_activity = datetime.utcnow()
-        self._heartbeat_task: Optional[asyncio.Task] = None
+        self._heartbeat_task: asyncio.Task | None = None
 
     async def accept(self) -> None:
         """Accept the WebSocket connection."""
@@ -132,7 +129,7 @@ class WebSocketConnection:
         self.is_connected = True
         self._last_activity = datetime.utcnow()
 
-    async def send_json(self, data: Dict[str, Any]) -> None:
+    async def send_json(self, data: dict[str, Any]) -> None:
         """Send JSON message to client."""
         if self.is_connected:
             await self.websocket.send_json(data)
@@ -167,13 +164,15 @@ class WebSocketConnection:
             elapsed = (datetime.utcnow() - self._last_activity).total_seconds()
             if elapsed > 60:  # 60 second timeout
                 logger.warning(f"Connection timeout for session {self.session_id}")
-                await self.send_json({
-                    "type": "error",
-                    "code": "session_expired",
-                    "message": "Connection timed out due to inactivity",
-                    "recoverable": False,
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
-                })
+                await self.send_json(
+                    {
+                        "type": "error",
+                        "code": "session_expired",
+                        "message": "Connection timed out due to inactivity",
+                        "recoverable": False,
+                        "timestamp": datetime.utcnow().isoformat() + "Z",
+                    }
+                )
                 await self.close(1000, "Idle timeout")
                 break
 
@@ -209,7 +208,7 @@ async def validate_session(session_id: str) -> bool:
 async def websocket_interaction(
     websocket: WebSocket,
     session_id: str,
-    token: Optional[str] = Query(None),
+    token: str | None = Query(None),
 ):
     """WebSocket endpoint for interactive story mode.
 
@@ -242,14 +241,16 @@ async def websocket_interaction(
         connection.start_heartbeat()
 
         # Send connection established message
-        await connection.send_json({
-            "type": "connection_established",
-            "sessionId": session_id,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        await connection.send_json(
+            {
+                "type": "connection_established",
+                "sessionId": session_id,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         # Subscribe to session events
-        async def event_handler(event: Dict[str, Any]) -> None:
+        async def event_handler(event: dict[str, Any]) -> None:
             if event.get("sessionId") == session_id and connection.is_connected:
                 await connection.send_json(event)
 
@@ -271,17 +272,17 @@ async def websocket_interaction(
                     # JSON control message
                     try:
                         data = json.loads(message["text"])
-                        await handle_control_message(
-                            connection, manager, session_id, data
-                        )
+                        await handle_control_message(connection, manager, session_id, data)
                     except json.JSONDecodeError:
-                        await connection.send_json({
-                            "type": "error",
-                            "code": "invalid_message",
-                            "message": "Invalid JSON format",
-                            "recoverable": True,
-                            "timestamp": datetime.utcnow().isoformat() + "Z",
-                        })
+                        await connection.send_json(
+                            {
+                                "type": "error",
+                                "code": "invalid_message",
+                                "message": "Invalid JSON format",
+                                "recoverable": True,
+                                "timestamp": datetime.utcnow().isoformat() + "Z",
+                            }
+                        )
 
             except WebSocketDisconnect:
                 break
@@ -321,7 +322,7 @@ async def handle_control_message(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle JSON control messages from client.
 
@@ -354,20 +355,22 @@ async def handle_control_message(
     if handler:
         await handler(connection, manager, session_id, message)
     else:
-        await connection.send_json({
-            "type": "error",
-            "code": "unknown_message_type",
-            "message": f"Unknown message type: {message_type}",
-            "recoverable": True,
-            "timestamp": timestamp,
-        })
+        await connection.send_json(
+            {
+                "type": "error",
+                "code": "unknown_message_type",
+                "message": f"Unknown message type: {message_type}",
+                "recoverable": True,
+                "timestamp": timestamp,
+            }
+        )
 
 
 async def handle_start_listening(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle start_listening message."""
     # Client is ready to receive speech
@@ -378,7 +381,7 @@ async def handle_stop_listening(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle stop_listening message."""
     # Client stopped listening (e.g., app backgrounded)
@@ -389,7 +392,7 @@ async def handle_speech_started(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle speech_started message from client VAD."""
     await manager.handle_speech_started(session_id)
@@ -399,7 +402,7 @@ async def handle_speech_ended(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle speech_ended message from client VAD.
 
@@ -410,13 +413,15 @@ async def handle_speech_ended(
 
     if result and result.text:
         # Send transcription result
-        await connection.send_json({
-            "type": "transcription_final",
-            "text": result.text,
-            "confidence": result.confidence,
-            "segmentId": result.segment_id,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        await connection.send_json(
+            {
+                "type": "transcription_final",
+                "text": result.text,
+                "confidence": result.confidence,
+                "segmentId": result.segment_id,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         # Add child's speech to conversation history
         add_conversation_turn(session_id, "child", result.text)
@@ -436,10 +441,12 @@ async def handle_speech_ended(
         )
 
         # Notify client that AI is processing
-        await connection.send_json({
-            "type": "ai_processing_started",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        await connection.send_json(
+            {
+                "type": "ai_processing_started",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         # Generate response
         ai_response = await ai_responder.respond(
@@ -452,15 +459,17 @@ async def handle_speech_ended(
             add_conversation_turn(session_id, "ai", ai_response.text)
 
         # Send AI response to client
-        await connection.send_json({
-            "type": "ai_response",
-            "responseId": ai_response.response_id,
-            "text": ai_response.text,
-            "wasRedirected": ai_response.was_redirected,
-            "isFallback": ai_response.is_fallback,
-            "processingTimeMs": ai_response.processing_time_ms,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        await connection.send_json(
+            {
+                "type": "ai_response",
+                "responseId": ai_response.response_id,
+                "text": ai_response.text,
+                "wasRedirected": ai_response.was_redirected,
+                "isFallback": ai_response.is_fallback,
+                "processingTimeMs": ai_response.processing_time_ms,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         # TODO: T054 - Generate TTS audio for AI response
 
@@ -469,7 +478,7 @@ async def handle_interrupt_ai(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle interrupt_ai message - child started speaking during AI response.
 
@@ -484,12 +493,14 @@ async def handle_interrupt_ai(
     if cancelled_response:
         response_id = cancelled_response.response_id
 
-    await connection.send_json({
-        "type": "ai_response_completed",
-        "responseId": response_id,
-        "wasInterrupted": True,
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-    })
+    await connection.send_json(
+        {
+            "type": "ai_response_completed",
+            "responseId": response_id,
+            "wasInterrupted": True,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+    )
 
     logger.info(f"AI response interrupted for session {session_id}")
 
@@ -498,37 +509,41 @@ async def handle_pause_session(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle pause_session message."""
     await manager.pause_session(session_id)
-    await connection.send_json({
-        "type": "session_status_changed",
-        "status": "paused",
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-    })
+    await connection.send_json(
+        {
+            "type": "session_status_changed",
+            "status": "paused",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+    )
 
 
 async def handle_resume_session(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle resume_session message."""
     await manager.resume_session(session_id)
-    await connection.send_json({
-        "type": "session_status_changed",
-        "status": "active",
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-    })
+    await connection.send_json(
+        {
+            "type": "session_status_changed",
+            "status": "active",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+    )
 
 
 async def handle_end_session(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle end_session message."""
     # Get conversation history for turn count
@@ -541,20 +556,22 @@ async def handle_end_session(
     # Cleanup session context
     cleanup_session_context(session_id)
 
-    await connection.send_json({
-        "type": "session_ended",
-        "transcriptId": f"transcript-{session_id}",  # Would be actual transcript ID
-        "turnCount": turn_count,
-        "totalDurationMs": summary.get("durationMs", 0),
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-    })
+    await connection.send_json(
+        {
+            "type": "session_ended",
+            "transcriptId": f"transcript-{session_id}",  # Would be actual transcript ID
+            "turnCount": turn_count,
+            "totalDurationMs": summary.get("durationMs", 0),
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+    )
 
 
 async def handle_update_context(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle update_context message - update story context for AI responses.
 
@@ -569,10 +586,12 @@ async def handle_update_context(
         current_scene=message.get("currentScene"),
     )
 
-    await connection.send_json({
-        "type": "context_updated",
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-    })
+    await connection.send_json(
+        {
+            "type": "context_updated",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+    )
 
     logger.debug(f"Context updated for session {session_id}")
 
@@ -581,20 +600,22 @@ async def handle_ping(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle ping message (heartbeat)."""
-    await connection.send_json({
-        "type": "pong",
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-    })
+    await connection.send_json(
+        {
+            "type": "pong",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+    )
 
 
 async def handle_start_calibration(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle start_calibration message.
 
@@ -604,32 +625,38 @@ async def handle_start_calibration(
     """
     state = manager.get_state(session_id)
     if not state:
-        await connection.send_json({
-            "type": "error",
-            "code": "session_not_found",
-            "message": "Session not found",
-            "recoverable": False,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        await connection.send_json(
+            {
+                "type": "error",
+                "code": "session_not_found",
+                "message": "Session not found",
+                "recoverable": False,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
         return
 
     if state.status != SessionStatus.CALIBRATING:
-        await connection.send_json({
-            "type": "error",
-            "code": "invalid_state",
-            "message": f"Cannot start calibration: session is {state.status.value}",
-            "recoverable": True,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        await connection.send_json(
+            {
+                "type": "error",
+                "code": "invalid_state",
+                "message": f"Cannot start calibration: session is {state.status.value}",
+                "recoverable": True,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
         return
 
-    await connection.send_json({
-        "type": "calibration_started",
-        "sessionId": session_id,
-        "durationMs": 2000,  # Recommended calibration duration
-        "instructions": "Please remain quiet for 2 seconds",
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-    })
+    await connection.send_json(
+        {
+            "type": "calibration_started",
+            "sessionId": session_id,
+            "durationMs": 2000,  # Recommended calibration duration
+            "instructions": "Please remain quiet for 2 seconds",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+    )
 
     logger.info(f"Calibration started for session {session_id}")
 
@@ -638,7 +665,7 @@ async def handle_complete_calibration(
     connection: WebSocketConnection,
     manager: SessionManager,
     session_id: str,
-    message: Dict[str, Any],
+    message: dict[str, Any],
 ) -> None:
     """Handle complete_calibration message.
 
@@ -647,23 +674,27 @@ async def handle_complete_calibration(
     """
     state = manager.get_state(session_id)
     if not state:
-        await connection.send_json({
-            "type": "error",
-            "code": "session_not_found",
-            "message": "Session not found",
-            "recoverable": False,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        await connection.send_json(
+            {
+                "type": "error",
+                "code": "session_not_found",
+                "message": "Session not found",
+                "recoverable": False,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
         return
 
     if state.status != SessionStatus.CALIBRATING:
-        await connection.send_json({
-            "type": "error",
-            "code": "invalid_state",
-            "message": f"Cannot complete calibration: session is {state.status.value}",
-            "recoverable": True,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        await connection.send_json(
+            {
+                "type": "error",
+                "code": "invalid_state",
+                "message": f"Cannot complete calibration: session is {state.status.value}",
+                "recoverable": True,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
         return
 
     try:
@@ -671,24 +702,28 @@ async def handle_complete_calibration(
         calibration_result = await manager.complete_calibration(session_id)
 
         # Send calibration result to client
-        await connection.send_json({
-            "type": "calibration_completed",
-            "sessionId": session_id,
-            "noiseFloorDb": calibration_result.noise_floor_db,
-            "percentile90": calibration_result.percentile_90,
-            "sampleCount": calibration_result.sample_count,
-            "calibrationDurationMs": calibration_result.calibration_duration_ms,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        await connection.send_json(
+            {
+                "type": "calibration_completed",
+                "sessionId": session_id,
+                "noiseFloorDb": calibration_result.noise_floor_db,
+                "percentile90": calibration_result.percentile_90,
+                "sampleCount": calibration_result.sample_count,
+                "calibrationDurationMs": calibration_result.calibration_duration_ms,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         # Activate the session
         await manager.activate_session(session_id)
 
-        await connection.send_json({
-            "type": "session_status_changed",
-            "status": "active",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        await connection.send_json(
+            {
+                "type": "session_status_changed",
+                "status": "active",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         logger.info(
             f"Calibration completed for session {session_id}: "
@@ -696,11 +731,13 @@ async def handle_complete_calibration(
         )
 
     except ValueError as e:
-        await connection.send_json({
-            "type": "error",
-            "code": "calibration_failed",
-            "message": str(e),
-            "recoverable": True,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        await connection.send_json(
+            {
+                "type": "error",
+                "code": "calibration_failed",
+                "message": str(e),
+                "recoverable": True,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
         logger.error(f"Calibration failed for session {session_id}: {e}")

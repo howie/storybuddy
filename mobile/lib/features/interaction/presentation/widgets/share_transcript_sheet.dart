@@ -9,8 +9,7 @@ import 'package:storybuddy/features/interaction/domain/entities/interaction_tran
 /// Bottom sheet for sharing transcript via various methods.
 class ShareTranscriptSheet extends StatelessWidget {
   const ShareTranscriptSheet({
-    super.key,
-    required this.transcript,
+    required this.transcript, super.key,
     this.onEmailTap,
   });
 
@@ -70,7 +69,7 @@ class ShareTranscriptSheet extends StatelessWidget {
     );
   }
 
-  void _shareAsText(BuildContext context) async {
+  Future<void> _shareAsText(BuildContext context) async {
     final storyTitle = transcript.storyTitle ?? '互動故事';
     final text = '''
 $storyTitle - 互動紀錄

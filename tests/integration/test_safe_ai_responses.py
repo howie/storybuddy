@@ -4,16 +4,16 @@ T049 [P] [US2] Integration test for safe AI responses.
 Tests the end-to-end flow from child speech to safe AI response.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-import asyncio
-from datetime import datetime
+
+from src.models.enums import SessionMode
 
 # These imports will fail until the services are implemented
-from src.services.interaction.ai_responder import AIResponder, ResponseContext, TriggerType
-from src.services.interaction.content_filter import ContentFilter, ContentCategory
+from src.services.interaction.ai_responder import AIResponder, ResponseContext
+from src.services.interaction.content_filter import ContentFilter
 from src.services.interaction.session_manager import SessionManager
-from src.models.enums import SessionMode, SessionStatus
 
 
 class TestAIResponseIntegration:
@@ -35,7 +35,9 @@ class TestAIResponseIntegration:
     @pytest.fixture
     def ai_responder(self, mock_anthropic_client, content_filter):
         """Create AI responder with real content filter."""
-        with patch("src.services.interaction.ai_responder.ContentFilter", return_value=content_filter):
+        with patch(
+            "src.services.interaction.ai_responder.ContentFilter", return_value=content_filter
+        ):
             return AIResponder()
 
     @pytest.fixture
@@ -58,9 +60,11 @@ class TestAIResponseIntegration:
         """Test complete flow for story-related questions (US2 Scenario 1)."""
         # Setup mock to return story-appropriate response
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(
-            text="小兔子正在仔細聽那個聲音呢！原來是風吹過樹葉的沙沙聲，小兔子鬆了一口氣。"
-        )]
+        mock_response.content = [
+            MagicMock(
+                text="小兔子正在仔細聽那個聲音呢！原來是風吹過樹葉的沙沙聲，小兔子鬆了一口氣。"
+            )
+        ]
         mock_anthropic_client.messages.create = AsyncMock(return_value=mock_response)
 
         # Child asks about the story
@@ -86,9 +90,11 @@ class TestAIResponseIntegration:
         """Test complete flow for off-topic redirection (US2 Scenario 2)."""
         # Setup mock to return redirection response
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(
-            text="數學很有趣呢！不過現在讓我們先看看小兔子在森林裡會發生什麼事。你覺得那個聲音是什麼呢？"
-        )]
+        mock_response.content = [
+            MagicMock(
+                text="數學很有趣呢！不過現在讓我們先看看小兔子在森林裡會發生什麼事。你覺得那個聲音是什麼呢？"
+            )
+        ]
         mock_anthropic_client.messages.create = AsyncMock(return_value=mock_response)
 
         # Child talks about unrelated topic
@@ -109,9 +115,9 @@ class TestAIResponseIntegration:
         """Test complete flow for inappropriate content (US2 Scenario 3)."""
         # Setup mock to return gentle guidance
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(
-            text="我們來用友善的話聊天吧！你想知道小兔子在森林裡會遇到什麼朋友嗎？"
-        )]
+        mock_response.content = [
+            MagicMock(text="我們來用友善的話聊天吧！你想知道小兔子在森林裡會遇到什麼朋友嗎？")
+        ]
         mock_anthropic_client.messages.create = AsyncMock(return_value=mock_response)
 
         # Simulate inappropriate input (content filter will flag)
@@ -143,12 +149,12 @@ class TestContentFilterIntegration:
             yield client
 
     @pytest.mark.asyncio
-    async def test_filter_validates_ai_output(
-        self, content_filter, mock_anthropic_client
-    ):
+    async def test_filter_validates_ai_output(self, content_filter, mock_anthropic_client):
         """Content filter should validate all AI outputs."""
         # Create AI responder with real content filter
-        with patch("src.services.interaction.ai_responder.ContentFilter", return_value=content_filter):
+        with patch(
+            "src.services.interaction.ai_responder.ContentFilter", return_value=content_filter
+        ):
             ai_responder = AIResponder()
 
         story_context = ResponseContext(
@@ -177,8 +183,10 @@ class TestContentFilterIntegration:
     ):
         """Unsafe AI output should trigger regeneration."""
         # Mock content filter to flag first response as unsafe
-        with patch.object(content_filter, 'is_safe', side_effect=[False, True]):
-            with patch("src.services.interaction.ai_responder.ContentFilter", return_value=content_filter):
+        with patch.object(content_filter, "is_safe", side_effect=[False, True]):
+            with patch(
+                "src.services.interaction.ai_responder.ContentFilter", return_value=content_filter
+            ):
                 ai_responder = AIResponder()
 
             story_context = ResponseContext(
@@ -223,11 +231,11 @@ class TestPersonalInfoProtection:
             yield client
 
     @pytest.mark.asyncio
-    async def test_never_asks_for_personal_info(
-        self, content_filter, mock_anthropic_client
-    ):
+    async def test_never_asks_for_personal_info(self, content_filter, mock_anthropic_client):
         """AI should never ask for personal information."""
-        with patch("src.services.interaction.ai_responder.ContentFilter", return_value=content_filter):
+        with patch(
+            "src.services.interaction.ai_responder.ContentFilter", return_value=content_filter
+        ):
             ai_responder = AIResponder()
 
         story_context = ResponseContext(
@@ -253,11 +261,11 @@ class TestPersonalInfoProtection:
         assert not any(keyword in response.text for keyword in personal_info_keywords)
 
     @pytest.mark.asyncio
-    async def test_redirects_personal_info_discussion(
-        self, content_filter, mock_anthropic_client
-    ):
+    async def test_redirects_personal_info_discussion(self, content_filter, mock_anthropic_client):
         """AI should redirect personal info discussions back to story."""
-        with patch("src.services.interaction.ai_responder.ContentFilter", return_value=content_filter):
+        with patch(
+            "src.services.interaction.ai_responder.ContentFilter", return_value=content_filter
+        ):
             ai_responder = AIResponder()
 
         story_context = ResponseContext(
@@ -267,9 +275,11 @@ class TestPersonalInfoProtection:
         )
 
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(
-            text="小兔子也有自己的小窩呢！牠住在一個溫暖的地洞裡。你想知道小兔子的家長什麼樣子嗎？"
-        )]
+        mock_response.content = [
+            MagicMock(
+                text="小兔子也有自己的小窩呢！牠住在一個溫暖的地洞裡。你想知道小兔子的家長什麼樣子嗎？"
+            )
+        ]
         mock_anthropic_client.messages.create = AsyncMock(return_value=mock_response)
 
         response = await ai_responder.respond(
@@ -294,9 +304,7 @@ class TestFearManagement:
             yield client
 
     @pytest.mark.asyncio
-    async def test_handles_scary_questions_reassuringly(
-        self, mock_anthropic_client
-    ):
+    async def test_handles_scary_questions_reassuringly(self, mock_anthropic_client):
         """AI should handle scary questions with reassurance."""
         with patch("src.services.interaction.ai_responder.ContentFilter"):
             ai_responder = AIResponder()
@@ -309,9 +317,11 @@ class TestFearManagement:
         )
 
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(
-            text="在這個故事裡，大野狼其實沒有那麼可怕喔！而且小兔子很聰明，牠知道怎麼保護自己。你放心，故事的結局一定會很美好的！"
-        )]
+        mock_response.content = [
+            MagicMock(
+                text="在這個故事裡，大野狼其實沒有那麼可怕喔！而且小兔子很聰明，牠知道怎麼保護自己。你放心，故事的結局一定會很美好的！"
+            )
+        ]
         mock_anthropic_client.messages.create = AsyncMock(return_value=mock_response)
 
         response = await ai_responder.respond(
@@ -337,9 +347,7 @@ class TestConversationContinuity:
             yield client
 
     @pytest.mark.asyncio
-    async def test_maintains_conversation_context(
-        self, mock_anthropic_client
-    ):
+    async def test_maintains_conversation_context(self, mock_anthropic_client):
         """AI should maintain context across conversation turns."""
         with patch("src.services.interaction.ai_responder.ContentFilter"):
             ai_responder = AIResponder()
@@ -356,9 +364,9 @@ class TestConversationContinuity:
         )
 
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(
-            text="對呀！小兔子今天找到了三根很大的胡蘿蔔，牠開心得不得了呢！"
-        )]
+        mock_response.content = [
+            MagicMock(text="對呀！小兔子今天找到了三根很大的胡蘿蔔，牠開心得不得了呢！")
+        ]
         mock_anthropic_client.messages.create = AsyncMock(return_value=mock_response)
 
         response = await ai_responder.respond(
@@ -371,9 +379,7 @@ class TestConversationContinuity:
         assert "胡蘿蔔" in response.text
 
     @pytest.mark.asyncio
-    async def test_builds_conversation_history(
-        self, mock_anthropic_client
-    ):
+    async def test_builds_conversation_history(self, mock_anthropic_client):
         """Multiple turns should build conversation history."""
         with patch("src.services.interaction.ai_responder.ContentFilter"):
             ai_responder = AIResponder()
@@ -419,11 +425,12 @@ class TestSessionManagerWithAI:
     @pytest.fixture
     def mock_services(self):
         """Setup all mocked services."""
-        with patch("src.services.interaction.ai_responder.Anthropic") as mock_anthropic, \
-             patch("src.services.interaction.ai_responder.ContentFilter"), \
-             patch("src.services.interaction.session_manager.VADService"), \
-             patch("src.services.interaction.session_manager.StreamingSTTService"):
-
+        with (
+            patch("src.services.interaction.ai_responder.Anthropic") as mock_anthropic,
+            patch("src.services.interaction.ai_responder.ContentFilter"),
+            patch("src.services.interaction.session_manager.VADService"),
+            patch("src.services.interaction.session_manager.StreamingSTTService"),
+        ):
             mock_client = MagicMock()
             mock_anthropic.return_value = mock_client
 
@@ -453,9 +460,9 @@ class TestSessionManagerWithAI:
 
         # Get AI response
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(
-            text="在這個故事裡，小兔子很聰明，牠知道怎麼躲避大野狼喔！"
-        )]
+        mock_response.content = [
+            MagicMock(text="在這個故事裡，小兔子很聰明，牠知道怎麼躲避大野狼喔！")
+        ]
         mock_client.messages.create = AsyncMock(return_value=mock_response)
 
         context = ResponseContext(
@@ -574,9 +581,7 @@ class TestEdgeCasesIntegration:
         )
 
         # Simulate timeout
-        mock_anthropic_client.messages.create = AsyncMock(
-            side_effect=asyncio.TimeoutError()
-        )
+        mock_anthropic_client.messages.create = AsyncMock(side_effect=TimeoutError())
 
         response = await ai_responder.respond(
             child_text="你好",

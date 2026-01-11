@@ -14,12 +14,7 @@ class InteractionTranscript with _$InteractionTranscript {
   const factory InteractionTranscript({
     required String id,
     required String sessionId,
-    String? storyTitle,
-    required String plainText,
-    required String htmlContent,
-    required int turnCount,
-    required int totalDurationMs,
-    required DateTime createdAt,
+    required String plainText, required String htmlContent, required int turnCount, required int totalDurationMs, required DateTime createdAt, String? storyTitle,
     DateTime? emailSentAt,
   }) = _InteractionTranscript;
 

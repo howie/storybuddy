@@ -218,7 +218,7 @@ class SessionLoadingOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
+    return ColoredBox(
       color: Colors.black54,
       child: Center(
         child: Card(

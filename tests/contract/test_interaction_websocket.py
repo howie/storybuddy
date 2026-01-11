@@ -4,18 +4,14 @@ T026 [P] [US1] Contract test for WebSocket protocol.
 Tests the WebSocket protocol as defined in contracts/websocket-protocol.md.
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
-import json
-import asyncio
 from datetime import datetime
+
+import pytest
 
 # These imports will fail until the endpoint is implemented
 from fastapi.testclient import TestClient
-from fastapi.websockets import WebSocket
 
 from src.main import app
-from src.api.interaction import InteractionWebSocket
 
 
 class TestWebSocketConnection:
@@ -79,49 +75,61 @@ class TestClientToServerMessages:
 
     def test_send_start_listening(self, connected_websocket):
         """Should accept start_listening message."""
-        connected_websocket.send_json({
-            "type": "start_listening",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        connected_websocket.send_json(
+            {
+                "type": "start_listening",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         # Should not receive an error
         # Server may or may not send a response
 
     def test_send_stop_listening(self, connected_websocket):
         """Should accept stop_listening message."""
-        connected_websocket.send_json({
-            "type": "stop_listening",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        connected_websocket.send_json(
+            {
+                "type": "stop_listening",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
     def test_send_speech_started(self, connected_websocket):
         """Should accept speech_started message."""
-        connected_websocket.send_json({
-            "type": "speech_started",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        connected_websocket.send_json(
+            {
+                "type": "speech_started",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
     def test_send_speech_ended(self, connected_websocket):
         """Should accept speech_ended message."""
-        connected_websocket.send_json({
-            "type": "speech_ended",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "durationMs": 2500,
-        })
+        connected_websocket.send_json(
+            {
+                "type": "speech_ended",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "durationMs": 2500,
+            }
+        )
 
     def test_send_interrupt_ai(self, connected_websocket):
         """Should accept interrupt_ai message."""
-        connected_websocket.send_json({
-            "type": "interrupt_ai",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        connected_websocket.send_json(
+            {
+                "type": "interrupt_ai",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
     def test_send_pause_session(self, connected_websocket):
         """Should accept pause_session message."""
-        connected_websocket.send_json({
-            "type": "pause_session",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        connected_websocket.send_json(
+            {
+                "type": "pause_session",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         # Should receive session_status_changed
         response = connected_websocket.receive_json()
@@ -131,17 +139,21 @@ class TestClientToServerMessages:
     def test_send_resume_session(self, connected_websocket):
         """Should accept resume_session message."""
         # First pause
-        connected_websocket.send_json({
-            "type": "pause_session",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        connected_websocket.send_json(
+            {
+                "type": "pause_session",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
         connected_websocket.receive_json()  # Consume pause response
 
         # Then resume
-        connected_websocket.send_json({
-            "type": "resume_session",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        connected_websocket.send_json(
+            {
+                "type": "resume_session",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         response = connected_websocket.receive_json()
         assert response["type"] == "session_status_changed"
@@ -149,10 +161,12 @@ class TestClientToServerMessages:
 
     def test_send_end_session(self, connected_websocket):
         """Should accept end_session message."""
-        connected_websocket.send_json({
-            "type": "end_session",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        connected_websocket.send_json(
+            {
+                "type": "end_session",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         response = connected_websocket.receive_json()
         assert response["type"] == "session_ended"
@@ -170,10 +184,12 @@ class TestClientToServerMessages:
 
     def test_send_invalid_message_type(self, connected_websocket):
         """Should handle invalid message types."""
-        connected_websocket.send_json({
-            "type": "invalid_type",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        connected_websocket.send_json(
+            {
+                "type": "invalid_type",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         response = connected_websocket.receive_json()
         assert response["type"] == "error"
@@ -211,10 +227,12 @@ class TestServerToClientMessages:
     def test_receive_transcription_progress(self, connected_websocket):
         """Should receive transcription_progress during speech."""
         # Trigger speech processing
-        connected_websocket.send_json({
-            "type": "speech_started",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        connected_websocket.send_json(
+            {
+                "type": "speech_started",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         # Send audio data
         for _ in range(10):
@@ -232,19 +250,23 @@ class TestServerToClientMessages:
 
     def test_receive_transcription_final(self, connected_websocket):
         """Should receive transcription_final after speech ends."""
-        connected_websocket.send_json({
-            "type": "speech_started",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-        })
+        connected_websocket.send_json(
+            {
+                "type": "speech_started",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        )
 
         for _ in range(10):
             connected_websocket.send_bytes(bytes(640))
 
-        connected_websocket.send_json({
-            "type": "speech_ended",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "durationMs": 2000,
-        })
+        connected_websocket.send_json(
+            {
+                "type": "speech_ended",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "durationMs": 2000,
+            }
+        )
 
         # Should eventually receive final transcription
         try:
@@ -259,11 +281,13 @@ class TestServerToClientMessages:
     def test_receive_ai_response_sequence(self, connected_websocket):
         """Should receive AI response in correct sequence."""
         # Simulate speech that triggers AI response
-        connected_websocket.send_json({
-            "type": "speech_ended",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "durationMs": 2000,
-        })
+        connected_websocket.send_json(
+            {
+                "type": "speech_ended",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "durationMs": 2000,
+            }
+        )
 
         responses = []
         try:
@@ -288,9 +312,11 @@ class TestServerToClientMessages:
     def test_receive_error_message(self, connected_websocket):
         """Should receive error messages in correct format."""
         # Trigger an error condition
-        connected_websocket.send_json({
-            "type": "unknown_command",
-        })
+        connected_websocket.send_json(
+            {
+                "type": "unknown_command",
+            }
+        )
 
         response = connected_websocket.receive_json()
 
@@ -319,36 +345,44 @@ class TestWebSocketProtocolFlow:
             assert data["type"] == "connection_established"
 
             # 2. Send start_listening
-            websocket.send_json({
-                "type": "start_listening",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-            })
+            websocket.send_json(
+                {
+                    "type": "start_listening",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+            )
 
             # 3. Child starts speaking - send speech_started
-            websocket.send_json({
-                "type": "speech_started",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-            })
+            websocket.send_json(
+                {
+                    "type": "speech_started",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+            )
 
             # 4. Send audio data
             for _ in range(10):
                 websocket.send_bytes(bytes(640))
 
             # 5. Child stops speaking - send speech_ended
-            websocket.send_json({
-                "type": "speech_ended",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-                "durationMs": 2000,
-            })
+            websocket.send_json(
+                {
+                    "type": "speech_ended",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "durationMs": 2000,
+                }
+            )
 
             # 6. Should receive transcription and AI response
             # (depends on implementation)
 
             # 7. End session
-            websocket.send_json({
-                "type": "end_session",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-            })
+            websocket.send_json(
+                {
+                    "type": "end_session",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+            )
 
             response = websocket.receive_json()
             assert response["type"] == "session_ended"
@@ -362,10 +396,12 @@ class TestWebSocketProtocolFlow:
 
             # Assume AI is responding (would need mock)
             # Child interrupts
-            websocket.send_json({
-                "type": "interrupt_ai",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-            })
+            websocket.send_json(
+                {
+                    "type": "interrupt_ai",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+            )
 
             # Should receive ai_response_completed with wasInterrupted=true
             try:
@@ -397,10 +433,12 @@ class TestWebSocketErrorHandling:
             websocket.receive_json()  # connection_established
 
             # Send ping
-            websocket.send_json({
-                "type": "ping",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-            })
+            websocket.send_json(
+                {
+                    "type": "ping",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+            )
 
             # Should receive pong
             response = websocket.receive_json()
@@ -415,10 +453,12 @@ class TestWebSocketErrorHandling:
 
             # Send more than 10 control messages per second
             for _ in range(15):
-                websocket.send_json({
-                    "type": "start_listening",
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
-                })
+                websocket.send_json(
+                    {
+                        "type": "start_listening",
+                        "timestamp": datetime.utcnow().isoformat() + "Z",
+                    }
+                )
 
             # Should receive rate_limited error
             try:

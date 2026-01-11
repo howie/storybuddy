@@ -7,7 +7,6 @@ Generates formatted transcripts from interaction session data.
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -35,7 +34,7 @@ class TranscriptGenerator:
     transcript with both plain text and HTML formats.
     """
 
-    def __init__(self, templates_dir: Optional[Path] = None):
+    def __init__(self, templates_dir: Path | None = None):
         """
         Initialize the generator.
 
@@ -56,7 +55,7 @@ class TranscriptGenerator:
         session: InteractionSession,
         voice_segments: list[VoiceSegment],
         ai_responses: list[AIResponse],
-        story_title: Optional[str] = None,
+        story_title: str | None = None,
     ) -> InteractionTranscript:
         """
         Generate a transcript from session data.
@@ -86,9 +85,7 @@ class TranscriptGenerator:
         # Calculate total duration
         total_duration_ms = 0
         if session.ended_at and session.started_at:
-            total_duration_ms = int(
-                (session.ended_at - session.started_at).total_seconds() * 1000
-            )
+            total_duration_ms = int((session.ended_at - session.started_at).total_seconds() * 1000)
 
         return InteractionTranscript(
             session_id=session.id,
@@ -110,9 +107,7 @@ class TranscriptGenerator:
 
         # Create entries from voice segments
         for segment in voice_segments:
-            timestamp_ms = int(
-                (segment.started_at - session_start).total_seconds() * 1000
-            )
+            timestamp_ms = int((segment.started_at - session_start).total_seconds() * 1000)
             text = segment.transcript if segment.transcript else "[語音] 無法辨識"
 
             entries.append(
@@ -138,9 +133,7 @@ class TranscriptGenerator:
                         break
             else:
                 # For non-speech triggers, use creation time
-                timestamp_ms = int(
-                    (response.created_at - session_start).total_seconds() * 1000
-                )
+                timestamp_ms = int((response.created_at - session_start).total_seconds() * 1000)
 
             # Determine if this is a system message
             speaker_type = "ai"
@@ -271,7 +264,9 @@ class TranscriptGenerator:
         if entries:
             for entry in entries:
                 speaker = self._get_speaker_label(entry.speaker_type)
-                interrupt = '<span class="interrupted"> [中斷]</span>' if entry.was_interrupted else ""
+                interrupt = (
+                    '<span class="interrupted"> [中斷]</span>' if entry.was_interrupted else ""
+                )
                 html_parts.append(
                     f'<div class="entry entry-{entry.speaker_type}">'
                     f'<span class="timestamp">{entry.timestamp}</span> '
@@ -289,9 +284,7 @@ class TranscriptGenerator:
         if not session.ended_at or not session.started_at:
             return "未知"
 
-        total_seconds = int(
-            (session.ended_at - session.started_at).total_seconds()
-        )
+        total_seconds = int((session.ended_at - session.started_at).total_seconds())
 
         if total_seconds < 60:
             return f"{total_seconds} 秒"

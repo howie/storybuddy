@@ -287,9 +287,7 @@ class WebSocketClient {
         _errorController.add('WebSocket error: $error');
         _handleDisconnection();
       },
-      onDone: () {
-        _handleDisconnection();
-      },
+      onDone: _handleDisconnection,
     );
   }
 
@@ -334,7 +332,7 @@ class WebSocketClient {
     if (!_isConnected) return;
 
     _errorController.add(
-        'Connection closed due to inactivity (${idleTimeout.inSeconds}s idle timeout)');
+        'Connection closed due to inactivity (${idleTimeout.inSeconds}s idle timeout)',);
 
     // Send a message to inform the server before disconnecting
     try {
@@ -385,11 +383,11 @@ class WebSocketClient {
           _isReconnecting = false;
         } catch (e) {
           _errorController.add(
-              'Reconnection failed (attempt $_reconnectAttempts/$_maxReconnectAttempts): $e');
+              'Reconnection failed (attempt $_reconnectAttempts/$_maxReconnectAttempts): $e',);
           if (_reconnectAttempts >= _maxReconnectAttempts) {
             _isReconnecting = false;
             _errorController.add(
-                'Max reconnection attempts reached. Please reconnect manually.');
+                'Max reconnection attempts reached. Please reconnect manually.',);
           }
           // If connect fails, it will trigger _handleDisconnection again
         }

@@ -5,19 +5,18 @@ T076 [US4] Implement transcripts REST endpoints.
 Provides endpoints for managing interaction settings and transcripts.
 """
 
-from datetime import datetime
-from typing import Optional, List, Dict, Any
-from uuid import UUID
-from pydantic import BaseModel, Field, field_validator, EmailStr
 import logging
+from datetime import datetime
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query, Response
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from src.db.repository import Repository
 from src.services.interaction.recording_service import get_recording_service
-from src.services.transcript.generator import TranscriptGenerator
 from src.services.transcript.email_sender import EmailSender, EmailSenderConfig
+from src.services.transcript.generator import TranscriptGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +25,7 @@ security = HTTPBearer()
 
 
 # Request/Response Models
+
 
 class InteractionSettingsResponse(BaseModel):
     """Response model for interaction settings."""
@@ -53,26 +53,26 @@ class InteractionSettingsResponse(BaseModel):
 class InteractionSettingsUpdateRequest(BaseModel):
     """Request model for updating interaction settings."""
 
-    recording_enabled: Optional[bool] = Field(
+    recording_enabled: bool | None = Field(
         default=None,
         alias="recordingEnabled",
     )
-    auto_transcribe: Optional[bool] = Field(
+    auto_transcribe: bool | None = Field(
         default=None,
         alias="autoTranscribe",
     )
-    retention_days: Optional[int] = Field(
+    retention_days: int | None = Field(
         default=None,
         alias="retentionDays",
         ge=1,
         le=365,
     )
 
-    @field_validator('retention_days')
+    @field_validator("retention_days")
     @classmethod
     def validate_retention_days(cls, v):
         if v is not None and (v < 1 or v > 365):
-            raise ValueError('retentionDays must be between 1 and 365')
+            raise ValueError("retentionDays must be between 1 and 365")
         return v
 
     class Config:
@@ -83,7 +83,7 @@ class UpdateSettingsResponse(BaseModel):
     """Response model for settings update."""
 
     success: bool
-    settings: Optional[InteractionSettingsResponse] = None
+    settings: InteractionSettingsResponse | None = None
 
 
 class StorageUsageResponse(BaseModel):
@@ -117,7 +117,7 @@ class TranscriptResponse(BaseModel):
 class TranscriptListResponse(BaseModel):
     """Response model for transcript list."""
 
-    transcripts: List[TranscriptResponse]
+    transcripts: list[TranscriptResponse]
     total: int
     page: int
     page_size: int = Field(alias="pageSize")
@@ -128,7 +128,7 @@ class TranscriptListResponse(BaseModel):
 
 # Dependencies
 
-_repository: Optional[Repository] = None
+_repository: Repository | None = None
 
 
 def get_repository() -> Repository:
@@ -141,7 +141,7 @@ def get_repository() -> Repository:
 
 async def verify_token(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Verify JWT token and return user info.
 
     Args:
@@ -168,6 +168,7 @@ async def verify_token(
 
 # Endpoints
 
+
 @router.get(
     "/settings",
     response_model=InteractionSettingsResponse,
@@ -175,7 +176,7 @@ async def verify_token(
     description="Get the current user's interaction settings including recording preferences.",
 )
 async def get_settings(
-    user_info: Dict[str, str] = Depends(verify_token),
+    user_info: dict[str, str] = Depends(verify_token),
     repo: Repository = Depends(get_repository),
 ) -> InteractionSettingsResponse:
     """Get interaction settings for the current user."""
@@ -206,7 +207,7 @@ async def get_settings(
 )
 async def update_settings(
     request: InteractionSettingsUpdateRequest,
-    user_info: Dict[str, str] = Depends(verify_token),
+    user_info: dict[str, str] = Depends(verify_token),
     repo: Repository = Depends(get_repository),
 ) -> UpdateSettingsResponse:
     """Update interaction settings for the current user."""
@@ -238,7 +239,9 @@ async def update_settings(
             recording_enabled=updated.get("recording_enabled", False),
             auto_transcribe=updated.get("auto_transcribe", True),
             retention_days=updated.get("retention_days", 30),
-        ) if updated else None,
+        )
+        if updated
+        else None,
     )
 
 
@@ -249,8 +252,8 @@ async def update_settings(
     description="Get storage usage statistics for recordings.",
 )
 async def get_storage_usage(
-    session_id: Optional[str] = Query(None, alias="sessionId"),
-    user_info: Dict[str, str] = Depends(verify_token),
+    session_id: str | None = Query(None, alias="sessionId"),
+    user_info: dict[str, str] = Depends(verify_token),
 ) -> StorageUsageResponse:
     """Get storage usage statistics."""
     recording_service = get_recording_service()
@@ -271,9 +274,9 @@ async def get_storage_usage(
     description="Delete all recordings for a session or all sessions.",
 )
 async def delete_recordings(
-    session_id: Optional[str] = Query(None, alias="sessionId"),
-    user_info: Dict[str, str] = Depends(verify_token),
-) -> Dict[str, Any]:
+    session_id: str | None = Query(None, alias="sessionId"),
+    user_info: dict[str, str] = Depends(verify_token),
+) -> dict[str, Any]:
     """Delete recordings."""
     recording_service = get_recording_service()
 
@@ -299,10 +302,10 @@ async def delete_recordings(
     description="Get a list of interaction transcripts for the current user.",
 )
 async def list_transcripts(
-    story_id: Optional[str] = Query(None, alias="storyId"),
+    story_id: str | None = Query(None, alias="storyId"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100, alias="pageSize"),
-    user_info: Dict[str, str] = Depends(verify_token),
+    user_info: dict[str, str] = Depends(verify_token),
     repo: Repository = Depends(get_repository),
 ) -> TranscriptListResponse:
     """List transcripts for the current user."""
@@ -336,15 +339,15 @@ async def list_transcripts(
 
 @router.get(
     "/transcripts/{transcript_id}",
-    response_model=Dict[str, Any],
+    response_model=dict[str, Any],
     summary="Get transcript",
     description="Get a specific transcript with all turns.",
 )
 async def get_transcript(
     transcript_id: str,
-    user_info: Dict[str, str] = Depends(verify_token),
+    user_info: dict[str, str] = Depends(verify_token),
     repo: Repository = Depends(get_repository),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get a specific transcript."""
     parent_id = user_info["parent_id"]
 
@@ -367,9 +370,9 @@ async def get_transcript(
 )
 async def delete_transcript(
     transcript_id: str,
-    user_info: Dict[str, str] = Depends(verify_token),
+    user_info: dict[str, str] = Depends(verify_token),
     repo: Repository = Depends(get_repository),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Delete a transcript."""
     parent_id = user_info["parent_id"]
 
@@ -399,6 +402,7 @@ async def delete_transcript(
 
 
 # T076 [US4] Additional transcript endpoints
+
 
 class GenerateTranscriptRequest(BaseModel):
     """Request model for generating a transcript."""
@@ -434,16 +438,16 @@ class SendTranscriptResponse(BaseModel):
     """Response model for email send result."""
 
     success: bool
-    message_id: Optional[str] = Field(None, alias="messageId")
-    error: Optional[str] = None
+    message_id: str | None = Field(None, alias="messageId")
+    error: str | None = None
 
     class Config:
         populate_by_name = True
 
 
 # Global instances for services
-_transcript_generator: Optional[TranscriptGenerator] = None
-_email_sender: Optional[EmailSender] = None
+_transcript_generator: TranscriptGenerator | None = None
+_email_sender: EmailSender | None = None
 
 
 def get_transcript_generator() -> TranscriptGenerator:
@@ -454,7 +458,7 @@ def get_transcript_generator() -> TranscriptGenerator:
     return _transcript_generator
 
 
-def get_email_sender() -> Optional[EmailSender]:
+def get_email_sender() -> EmailSender | None:
     """Get email sender instance if configured."""
     global _email_sender
     # Would be configured via environment variables in production
@@ -476,7 +480,7 @@ def configure_email_sender(config: EmailSenderConfig) -> None:
 )
 async def generate_transcript(
     request: GenerateTranscriptRequest,
-    user_info: Dict[str, str] = Depends(verify_token),
+    user_info: dict[str, str] = Depends(verify_token),
     repo: Repository = Depends(get_repository),
 ) -> GenerateTranscriptResponse:
     """Generate a transcript from session data."""
@@ -506,9 +510,9 @@ async def generate_transcript(
 
     # Convert dict data to model objects for generator
     from src.models.interaction import (
+        AIResponse,
         InteractionSession,
         VoiceSegment,
-        AIResponse,
     )
 
     session_model = InteractionSession(**session)
@@ -557,7 +561,7 @@ async def generate_transcript(
 async def send_transcript_email(
     transcript_id: str,
     request: SendTranscriptRequest,
-    user_info: Dict[str, str] = Depends(verify_token),
+    user_info: dict[str, str] = Depends(verify_token),
     repo: Repository = Depends(get_repository),
 ) -> SendTranscriptResponse:
     """Send transcript via email."""
@@ -624,7 +628,7 @@ async def send_transcript_email(
 async def export_transcript(
     transcript_id: str,
     format: str = Query("html", enum=["html", "txt", "pdf"]),
-    user_info: Dict[str, str] = Depends(verify_token),
+    user_info: dict[str, str] = Depends(verify_token),
     repo: Repository = Depends(get_repository),
 ) -> Response:
     """Export transcript in various formats."""

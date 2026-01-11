@@ -98,7 +98,7 @@ class _InteractivePlaybackPageState
                           color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       ),
-                      background: Container(
+                      background: DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
@@ -212,7 +212,7 @@ class _InteractivePlaybackPageState
 
                           // Status indicators
                           _buildStatusIndicators(
-                              playbackState, interactionState),
+                              playbackState, interactionState,),
                         ],
                       ),
                     ),
@@ -364,7 +364,7 @@ class _InteractivePlaybackPageState
   }
 
   Widget _buildStatusIndicators(
-      StoryPlayback playbackState, InteractionState interactionState) {
+      StoryPlayback playbackState, InteractionState interactionState,) {
     final indicators = <Widget>[];
 
     if (playbackState.isOffline) {
@@ -372,7 +372,7 @@ class _InteractivePlaybackPageState
         Icons.offline_pin,
         '離線播放',
         Theme.of(context).colorScheme.tertiary,
-      ));
+      ),);
     }
 
     if (interactionState.mode == SessionMode.interactive &&
@@ -381,7 +381,7 @@ class _InteractivePlaybackPageState
         Icons.mic,
         '聆聽中',
         Theme.of(context).colorScheme.primary,
-      ));
+      ),);
     }
 
     if (indicators.isEmpty) return const SizedBox.shrink();
@@ -415,7 +415,7 @@ class _InteractivePlaybackPageState
     final noiseFloorDb = interactionState.noiseFloorDb;
     final isQuiet = interactionState.isQuietEnvironment;
 
-    return Container(
+    return ColoredBox(
       color: Colors.black54,
       child: Center(
         child: Card(
@@ -427,7 +427,7 @@ class _InteractivePlaybackPageState
               children: [
                 // Animated mic icon
                 TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 1.0, end: 1.15),
+                  tween: Tween(begin: 1, end: 1.15),
                   duration: const Duration(milliseconds: 800),
                   curve: Curves.easeInOut,
                   builder: (context, value, child) {
@@ -512,7 +512,7 @@ class _InteractivePlaybackPageState
     );
   }
 
-  void _onModeChanged(bool isInteractive) async {
+  Future<void> _onModeChanged(bool isInteractive) async {
     final notifier = ref.read(interactionProvider.notifier);
 
     if (isInteractive) {

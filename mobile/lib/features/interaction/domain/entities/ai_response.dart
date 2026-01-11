@@ -19,14 +19,10 @@ class AIResponse with _$AIResponse {
   const factory AIResponse({
     required String id,
     required String sessionId,
-    String? voiceSegmentId,
-    required String text,
+    required String text, required TriggerType triggerType, required int responseLatencyMs, required DateTime createdAt, String? voiceSegmentId,
     String? audioUrl,
-    required TriggerType triggerType,
     @Default(false) bool wasInterrupted,
     int? interruptedAtMs,
-    required int responseLatencyMs,
-    required DateTime createdAt,
   }) = _AIResponse;
 
   factory AIResponse.fromJson(Map<String, dynamic> json) =>

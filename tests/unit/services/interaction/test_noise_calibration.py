@@ -5,16 +5,14 @@ Tests the noise calibration service for accurate environment noise detection.
 """
 
 import math
-from datetime import datetime
-from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
 
 from src.services.interaction.vad_service import (
-    VADService,
-    VADConfig,
     CalibrationResult,
+    VADConfig,
+    VADService,
 )
 
 
@@ -78,9 +76,9 @@ class TestNoiseCalibration:
             # Generate speech-like signal (mix of frequencies)
             t = np.linspace(0, 0.02, samples_per_frame)
             signal = amplitude * (
-                0.5 * np.sin(2 * np.pi * 200 * t) +
-                0.3 * np.sin(2 * np.pi * 400 * t) +
-                0.2 * np.sin(2 * np.pi * 800 * t)
+                0.5 * np.sin(2 * np.pi * 200 * t)
+                + 0.3 * np.sin(2 * np.pi * 400 * t)
+                + 0.2 * np.sin(2 * np.pi * 800 * t)
             )
             signal = np.clip(signal, -32767, 32767).astype(np.int16)
             frames.append(signal.tobytes())

@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart';
+
 import '../../../../models/voice_kit.dart';
 import '../../data/repositories/voice_kit_repository_impl.dart';
-
-import 'package:just_audio/just_audio.dart';
 
 // -- Voice List Provider --
 final voiceListProvider = FutureProvider<List<VoiceCharacter>>((ref) async {
@@ -15,9 +15,9 @@ final selectedVoiceIdProvider = StateProvider<String?>((ref) => null);
 
 // -- Voice Preview Notifier --
 class VoicePreviewNotifier extends StateNotifier<String?> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
 
   VoicePreviewNotifier() : super(null);
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   Future<void> playPreview(String? url, String voiceId) async {
     if (url == null) return;
@@ -35,7 +35,7 @@ class VoicePreviewNotifier extends StateNotifier<String?> {
       });
     } catch (e) {
       state = null;
-      print("Error playing preview: $e");
+      print('Error playing preview: $e');
     }
   }
 
@@ -64,9 +64,9 @@ final voiceKitsProvider = FutureProvider<List<VoiceKit>>((ref) async {
 
 // -- Download Kit Controller --
 class DownloadKitController extends StateNotifier<AsyncValue<void>> {
-  final VoiceKitRepository _repository;
 
   DownloadKitController(this._repository) : super(const AsyncValue.data(null));
+  final VoiceKitRepository _repository;
 
   Future<void> downloadKit(String kitId) async {
     state = const AsyncValue.loading();
@@ -93,10 +93,10 @@ final voicePreferencesProvider =
 });
 
 class VoicePreferencesController extends StateNotifier<AsyncValue<void>> {
-  final VoiceKitRepository _repository;
 
   VoicePreferencesController(this._repository)
       : super(const AsyncValue.data(null));
+  final VoiceKitRepository _repository;
 
   Future<void> updateDefaultVoice(String userId, String voiceId) async {
     state = const AsyncValue.loading();
@@ -119,10 +119,10 @@ final voicePreferencesControllerProvider =
 
 // Tuple for family arguments? Or a custom class.
 class StoryVoiceMappingParams {
-  final String userId;
-  final String storyId;
 
   StoryVoiceMappingParams(this.userId, this.storyId);
+  final String userId;
+  final String storyId;
 
   @override
   bool operator ==(Object other) =>
@@ -142,13 +142,13 @@ final storyVoiceMappingsProvider =
 });
 
 class StoryVoiceMapController extends StateNotifier<AsyncValue<void>> {
-  final VoiceKitRepository _repository;
 
   StoryVoiceMapController(this._repository)
       : super(const AsyncValue.data(null));
+  final VoiceKitRepository _repository;
 
   Future<void> updateMapping(
-      String userId, String storyId, String role, String voiceId) async {
+      String userId, String storyId, String role, String voiceId,) async {
     state = const AsyncValue.loading();
     try {
       await _repository.updateStoryVoiceMapping(userId, storyId, role, voiceId);

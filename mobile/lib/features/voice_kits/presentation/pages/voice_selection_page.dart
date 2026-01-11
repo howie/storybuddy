@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../providers/voice_kit_provider.dart';
-import '../../../../models/voice_kit.dart';
+
 import '../../../../core/constants/app_colors.dart';
+import '../../../../models/voice_kit.dart';
+import '../providers/voice_kit_provider.dart';
 
 class VoiceSelectionPage extends ConsumerWidget {
   const VoiceSelectionPage({super.key});
@@ -29,7 +30,7 @@ class VoiceSelectionPage extends ConsumerWidget {
             itemBuilder: (context, index) {
               if (index == voices.length) {
                 return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  padding: EdgeInsets.symmetric(vertical: 20),
                   child: Center(
                     child: Text(
                       'Powered by Microsoft Azure Cognitive Services',
@@ -48,7 +49,7 @@ class VoiceSelectionPage extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                   side: isSelected
                       ? BorderSide(
-                          color: Theme.of(context).primaryColor, width: 2)
+                          color: Theme.of(context).primaryColor, width: 2,)
                       : BorderSide.none,
                 ),
                 margin: const EdgeInsets.only(bottom: 12),
@@ -65,8 +66,8 @@ class VoiceSelectionPage extends ConsumerWidget {
                     ),
                   ),
                   title: Text(voice.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(voice.previewText ?? "點擊試聽"),
+                      style: const TextStyle(fontWeight: FontWeight.bold),),
+                  subtitle: Text(voice.previewText ?? '點擊試聽'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -100,7 +101,7 @@ class VoiceSelectionPage extends ConsumerWidget {
                             // In real app need config.
 
                             final url =
-                                "http://10.0.2.2:8000/api/voices/${voice.id}/preview"; // Android emulator
+                                'http://10.0.2.2:8000/api/voices/${voice.id}/preview'; // Android emulator
                             // For now let's use a placeholder or assume config is available
                             ref
                                 .read(voicePreviewProvider.notifier)
@@ -124,7 +125,7 @@ class VoiceSelectionPage extends ConsumerWidget {
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: ElevatedButton(
           onPressed: selectedVoiceId == null
               ? null

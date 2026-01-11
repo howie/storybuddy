@@ -8,21 +8,21 @@ abstract class VoiceKitRemoteDataSource {
   Future<VoiceKit> downloadVoiceKit(String kitId);
   Future<Map<String, dynamic>> getPreferences(String userId);
   Future<Map<String, dynamic>> updatePreferences(
-      String userId, String defaultVoiceId);
+      String userId, String defaultVoiceId,);
   Future<List<dynamic>> getStoryVoiceMappings(String userId, String storyId);
   Future<Map<String, dynamic>> updateStoryVoiceMapping(
-      String userId, String storyId, String role, String voiceId);
+      String userId, String storyId, String role, String voiceId,);
 }
 
 class VoiceKitRemoteDataSourceImpl implements VoiceKitRemoteDataSource {
-  final ApiClient _apiClient;
 
   VoiceKitRemoteDataSourceImpl(this._apiClient);
+  final ApiClient _apiClient;
 
   @override
   Future<List<VoiceCharacter>> getVoices() async {
     final response = await _apiClient.get(
-        '/voices'); // Assuming /voices list individual voices if needed, or extract from kits?
+        '/voices',); // Assuming /voices list individual voices if needed, or extract from kits?
     // Wait, original implementation likely called /voices endpoint which lists system voices.
     // In backend /voices returns List[VoiceCharacter].
     return (response.data as List)
@@ -53,17 +53,17 @@ class VoiceKitRemoteDataSourceImpl implements VoiceKitRemoteDataSource {
 
   @override
   Future<Map<String, dynamic>> updatePreferences(
-      String userId, String defaultVoiceId) async {
+      String userId, String defaultVoiceId,) async {
     final response = await _apiClient.post('/voices/preferences', data: {
       'user_id': userId,
       'default_voice_id': defaultVoiceId,
-    });
+    },);
     return response.data as Map<String, dynamic>;
   }
 
   @override
   Future<List<dynamic>> getStoryVoiceMappings(
-      String userId, String storyId) async {
+      String userId, String storyId,) async {
     final response = await _apiClient
         .get('/stories/$storyId/voices', queryParameters: {'user_id': userId});
     return response.data as List<dynamic>;
@@ -71,12 +71,12 @@ class VoiceKitRemoteDataSourceImpl implements VoiceKitRemoteDataSource {
 
   @override
   Future<Map<String, dynamic>> updateStoryVoiceMapping(
-      String userId, String storyId, String role, String voiceId) async {
+      String userId, String storyId, String role, String voiceId,) async {
     final response = await _apiClient.post('/stories/$storyId/voices', data: {
       'user_id': userId,
       'role': role,
       'voice_id': voiceId,
-    });
+    },);
     return response.data as Map<String, dynamic>;
   }
 }

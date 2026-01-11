@@ -17,9 +17,7 @@ class TestHealthEndpoints:
     # HC-001: Health check endpoint
     # =========================================================================
 
-    async def test_health_check_returns_healthy_status(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_health_check_returns_healthy_status(self, client: AsyncClient) -> None:
         """HC-001: GET /health returns healthy status."""
         response = await client.get("/health")
 
@@ -30,9 +28,7 @@ class TestHealthEndpoints:
         assert "version" in data
         assert data["version"] == "0.1.0"
 
-    async def test_health_check_response_time(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_health_check_response_time(self, client: AsyncClient) -> None:
         """HC-001: Health check should respond quickly (< 100ms)."""
         import time
 
@@ -48,9 +44,7 @@ class TestHealthEndpoints:
     # HC-002: Root endpoint
     # =========================================================================
 
-    async def test_root_endpoint_returns_api_info(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_root_endpoint_returns_api_info(self, client: AsyncClient) -> None:
         """HC-002: GET / returns API information."""
         response = await client.get("/")
 

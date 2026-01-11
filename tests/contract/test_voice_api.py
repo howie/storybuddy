@@ -195,15 +195,15 @@ class TestSelectableVoiceAPI:
     async def test_get_voices_list(self, client: AsyncClient) -> None:
         """GET /api/voices - returns list of available system voices."""
         response = await client.get("/api/voices")
-        
+
         # Endpoint might not be implemented yet, but we assert contract
         if response.status_code == 404:
             return  # Skip if not implemented
-            
+
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
-        
+
         if len(data) > 0:
             voice = data[0]
             assert "id" in voice
@@ -211,50 +211,52 @@ class TestSelectableVoiceAPI:
             assert "provider_voice_id" in voice
             assert "gender" in voice
             # Check for kit_id/is_builtin if returned
-            
+
     async def test_get_voice_detail(self, client: AsyncClient) -> None:
         """GET /api/voices/{id} - returns details of specific voice."""
         # Get list first
         list_response = await client.get("/api/voices")
         if list_response.status_code != 200:
             return
-            
+
         voices = list_response.json()
         if not voices:
             return
-            
+
         voice_id = voices[0]["id"]
         response = await client.get(f"/api/voices/{voice_id}")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == voice_id
-        
+
     async def test_get_voice_preview(self, client: AsyncClient) -> None:
         """GET /api/voices/{id}/preview - returns audio preview."""
         # Get list first
         list_response = await client.get("/api/voices")
         if list_response.status_code != 200:
             return
-            
+
         voices = list_response.json()
         if not voices:
             return
-            
+
         voice_id = voices[0]["id"]
-        
+
         # Patch synthesize to avoid actual Azure call and potential errors
         # We need to patch the instance on the service that the router uses.
         # Since service is instantiated at module level in voice_routes.py,
         # we can patch 'src.api.voice_routes.service.azure_provider.synthesize'
         from unittest.mock import AsyncMock, patch
-        
-        with patch("src.api.voice_routes.service.azure_provider.synthesize", new_callable=AsyncMock) as mock_synthesize:
+
+        with patch(
+            "src.api.voice_routes.service.azure_provider.synthesize", new_callable=AsyncMock
+        ) as mock_synthesize:
             mock_synthesize.return_value = b"mock_audio_bytes"
-            
+
             # Assuming preview takes text query param or uses default
             response = await client.get(f"/api/voices/{voice_id}/preview?text=Hello")
-            
+
             assert response.status_code == 200
             assert "audio/" in response.headers["content-type"]
             assert response.content == b"mock_audio_bytes"

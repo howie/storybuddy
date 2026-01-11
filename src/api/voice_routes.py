@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import BaseModel
@@ -21,8 +21,8 @@ class StoryVoiceMapRequest(BaseModel):
     voice_id: str
 
 
-@router.get("/voices", response_model=List[VoiceCharacter])
-async def list_voices() -> List[VoiceCharacter]:
+@router.get("/voices", response_model=list[VoiceCharacter])
+async def list_voices() -> list[VoiceCharacter]:
     """List all available system voices."""
     return await service.list_voices()
 
@@ -39,7 +39,7 @@ async def get_voice(voice_id: str) -> VoiceCharacter:
 @router.get("/voices/{voice_id}/preview")
 async def get_voice_preview(
     voice_id: str,
-    text: Optional[str] = Query(
+    text: str | None = Query(
         None, description="Text to preview (defaults to voice's preview text)"
     ),
 ) -> Response:
@@ -51,12 +51,10 @@ async def get_voice_preview(
         raise HTTPException(status_code=404, detail="Voice not found")
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=f"TTS generation failed: {e}")
-    except RuntimeError as e:
-        raise HTTPException(status_code=500, detail=f"TTS generation failed: {e}")
 
 
-@router.get("/kits", response_model=List[VoiceKit])
-async def list_kits() -> List[VoiceKit]:
+@router.get("/kits", response_model=list[VoiceKit])
+async def list_kits() -> list[VoiceKit]:
     """List all available voice kits."""
     return await service.list_kits()
 
@@ -72,14 +70,15 @@ async def download_kit(kit_id: str) -> VoiceKit:
 
 # -- Voice Preferences --
 
+
 @router.get("/voices/preferences")
-async def get_user_preferences(user_id: str) -> Dict[str, Any]:
+async def get_user_preferences(user_id: str) -> dict[str, Any]:
     """Get user voice preferences."""
     return await service.get_user_preferences(user_id)
 
 
 @router.post("/voices/preferences")
-async def update_user_preferences(request: VoicePreferenceRequest) -> Dict[str, Any]:
+async def update_user_preferences(request: VoicePreferenceRequest) -> dict[str, Any]:
     """Update user voice preferences."""
     try:
         return await service.update_default_voice(request.user_id, request.default_voice_id)
@@ -89,14 +88,17 @@ async def update_user_preferences(request: VoicePreferenceRequest) -> Dict[str, 
 
 # -- Story Voice Mappings --
 
+
 @router.get("/stories/{story_id}/voices")
-async def get_story_voice_mappings(story_id: str, user_id: str) -> List[Dict[str, Any]]:
+async def get_story_voice_mappings(story_id: str, user_id: str) -> list[dict[str, Any]]:
     """Get voice mappings for a specific story."""
     return await service.get_story_voice_mappings(user_id, story_id)
 
 
 @router.post("/stories/{story_id}/voices")
-async def update_story_voice_mapping(story_id: str, request: StoryVoiceMapRequest) -> Dict[str, Any]:
+async def update_story_voice_mapping(
+    story_id: str, request: StoryVoiceMapRequest
+) -> dict[str, Any]:
     """Update voice mapping for a specific story role."""
     try:
         return await service.update_story_voice_mapping(

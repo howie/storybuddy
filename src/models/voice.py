@@ -1,10 +1,9 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
-
 
 from src.models import VoiceProfileStatus
 
@@ -22,9 +21,9 @@ class AgeGroup(str, Enum):
 
 
 class VoiceStyle(str, Enum):
-    NARRATOR = "narrator"    # For story narration
+    NARRATOR = "narrator"  # For story narration
     CHARACTER = "character"  # For character dialogue
-    BOTH = "both"           # Can be used for both
+    BOTH = "both"  # Can be used for both
 
 
 class TTSProvider(str, Enum):
@@ -128,29 +127,29 @@ class VoicePreviewResponse(BaseModel):
 
 class VoiceCharacter(BaseModel):
     """Individual voice/character within a kit."""
-    
+
     id: str = Field(..., description="Unique identifier")
     kit_id: str = Field(..., description="Parent kit ID")
     name: str = Field(..., max_length=50, description="Character name")
     provider_voice_id: str = Field(..., description="Provider's voice ID")
-    ssml_options: Optional[Dict[str, Any]] = Field(None, description="SSML customization options")
+    ssml_options: dict[str, Any] | None = Field(None, description="SSML customization options")
     gender: Gender
     age_group: AgeGroup
     style: VoiceStyle
-    preview_url: Optional[str] = Field(None, description="URL to preview audio")
-    preview_text: Optional[str] = Field(None, max_length=200, description="Text used for preview")
+    preview_url: str | None = Field(None, description="URL to preview audio")
+    preview_text: str | None = Field(None, max_length=200, description="Text used for preview")
 
 
 class VoiceKit(BaseModel):
     """Collection of related voices."""
-    
+
     id: str = Field(..., description="Unique identifier")
     name: str = Field(..., max_length=100, description="Display name")
-    description: Optional[str] = Field(None, max_length=500, description="Kit description")
-    provider: TTSProvider 
+    description: str | None = Field(None, max_length=500, description="Kit description")
+    provider: TTSProvider
     version: str = Field(..., description="Kit version")
     download_size: int = Field(0, ge=0, description="Size in bytes")
     is_builtin: bool = Field(True, description="Whether kit is included by default")
     is_downloaded: bool = Field(False, description="Whether kit is downloaded locally")
-    voices: List[VoiceCharacter] = Field(default_factory=list, description="Voices in this kit")
+    voices: list[VoiceCharacter] = Field(default_factory=list, description="Voices in this kit")
     created_at: datetime = Field(default_factory=datetime.utcnow)

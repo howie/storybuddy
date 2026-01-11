@@ -104,7 +104,10 @@ class ClaudeService:
             )
 
             # Extract response text
-            response_text = message.content[0].text
+            first_block = message.content[0]
+            if not hasattr(first_block, "text"):
+                raise RuntimeError("Unexpected response format from Claude API")
+            response_text: str = first_block.text
             logger.debug(f"Claude response: {response_text}")
 
             # Parse JSON response (handle markdown code blocks)
@@ -135,9 +138,7 @@ class ClaudeService:
             logger.error(f"Claude API error: {e}")
             raise RuntimeError(f"Failed to generate story: {e}") from e
 
-    async def answer_question(
-        self, story_content: str, question: str
-    ) -> QAResult:
+    async def answer_question(self, story_content: str, question: str) -> QAResult:
         """Answer a child's question about a story.
 
         Args:
@@ -164,7 +165,10 @@ class ClaudeService:
                 messages=[{"role": "user", "content": user_prompt}],
             )
 
-            response_text = message.content[0].text
+            first_block = message.content[0]
+            if not hasattr(first_block, "text"):
+                raise RuntimeError("Unexpected response format from Claude API")
+            response_text: str = first_block.text
             logger.debug(f"Claude Q&A response: {response_text}")
 
             # Parse JSON response (handle markdown code blocks)

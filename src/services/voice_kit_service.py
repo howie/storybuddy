@@ -1,19 +1,20 @@
 import logging
-from typing import List, Optional, Dict, Any
-from sqlalchemy import select, update
-from src.db.init import get_db_connection
+from typing import Any
 
+from src.db.init import get_db_connection
 from src.models.voice import (
     AgeGroup,
     Gender,
-    TTSProvider as TTSProviderEnum,
     VoiceCharacter,
     VoiceKit,
     VoiceStyle,
 )
+from src.models.voice import (
+    TTSProvider as TTSProviderEnum,
+)
 from src.services.tts.azure_tts import AzureTTSProvider
-from src.services.tts.google_tts import GoogleTTSProvider
 from src.services.tts.elevenlabs_tts import ElevenLabsProvider
+from src.services.tts.google_tts import GoogleTTSProvider
 
 
 class VoiceKitService:
@@ -71,7 +72,7 @@ class VoiceKitService:
                         style=VoiceStyle.CHARACTER,
                         preview_text="嘿！我是小強，這裡有好多好玩的東西！",
                     ),
-                     VoiceCharacter(
+                    VoiceCharacter(
                         id="narrator-male",
                         kit_id="builtin-v1",
                         name="故事哥哥",
@@ -91,14 +92,14 @@ class VoiceKitService:
                 provider=TTSProviderEnum.AZURE,
                 version="1.0.0",
                 is_builtin=False,
-                is_downloaded=False, # Initially not downloaded
-                download_size=15000000, # 15MB mock
+                is_downloaded=False,  # Initially not downloaded
+                download_size=15000000,  # 15MB mock
                 voices=[
                     VoiceCharacter(
                         id="santa",
                         kit_id="holiday-v1",
                         name="聖誕老人",
-                        provider_voice_id="zh-TW-YunJheNeural", 
+                        provider_voice_id="zh-TW-YunJheNeural",
                         # Azure doesn't have explicit Santa, mocking with deep male + style
                         ssml_options={"role": "OlderAdult", "style": "cheerful", "pitch": "-10%"},
                         gender=Gender.MALE,
@@ -112,7 +113,7 @@ class VoiceKitService:
                         name="小精靈",
                         provider_voice_id="zh-TW-HsiaoChenNeural",
                         ssml_options={"role": "Boy", "style": "excited", "pitch": "+10%"},
-                        gender=Gender.FEMALE, # Or ambiguous
+                        gender=Gender.FEMALE,  # Or ambiguous
                         age_group=AgeGroup.CHILD,
                         style=VoiceStyle.CHARACTER,
                         preview_text="禮物都準備好囉！",
@@ -186,7 +187,7 @@ class VoiceKitService:
                         id="eleven-drew",
                         kit_id="elevenlabs-premium-v1",
                         name="Drew (新聞主播)",
-                        provider_voice_id="29vD33N1CtxCmqQRPOHJ", 
+                        provider_voice_id="29vD33N1CtxCmqQRPOHJ",
                         gender=Gender.MALE,
                         age_group=AgeGroup.ADULT,
                         style=VoiceStyle.NARRATOR,
@@ -201,14 +202,14 @@ class VoiceKitService:
                         style=VoiceStyle.CHARACTER,
                     ),
                 ],
-            )
+            ),
         ]
 
-    async def list_kits(self) -> List[VoiceKit]:
+    async def list_kits(self) -> list[VoiceKit]:
         """List all available voice kits."""
         return self._kits
 
-    async def list_voices(self) -> List[VoiceCharacter]:
+    async def list_voices(self) -> list[VoiceCharacter]:
         """List all available voices from DOWNLOADED kits."""
         all_voices = []
         for kit in self._kits:
@@ -216,30 +217,30 @@ class VoiceKitService:
                 all_voices.extend(kit.voices)
         return all_voices
 
-    async def get_kit(self, kit_id: str) -> Optional[VoiceKit]:
+    async def get_kit(self, kit_id: str) -> VoiceKit | None:
         """Get a specific kit by ID."""
         for kit in self._kits:
             if kit.id == kit_id:
                 return kit
         return None
 
-    async def download_kit(self, kit_id: str) -> Optional[VoiceKit]:
+    async def download_kit(self, kit_id: str) -> VoiceKit | None:
         """Simulate downloading a kit."""
         self.logger.info(f"Downloading voice kit: {kit_id}", extra={"kit_id": kit_id})
-        
+
         kit = await self.get_kit(kit_id)
         if not kit:
             self.logger.warning(f"Kit not found for download: {kit_id}")
             return None
-            
+
         # Simulate processing (could verify size, etc)
         # In real app, this would trigger background job.
         kit.is_downloaded = True
-        
+
         self.logger.info(f"Voice kit downloaded successfully: {kit_id}", extra={"kit_id": kit_id})
         return kit
 
-    async def get_voice(self, voice_id: str) -> Optional[VoiceCharacter]:
+    async def get_voice(self, voice_id: str) -> VoiceCharacter | None:
         """Get a specific voice by ID."""
         # We search ALL kits, but maybe should only allow if downloaded?
         # For now, let's search all to allow "previewing" uninstalled voices via Store?
@@ -250,7 +251,7 @@ class VoiceKitService:
                     return voice
         return None
 
-    async def get_voice_preview(self, voice_id: str, text: Optional[str] = None) -> bytes:
+    async def get_voice_preview(self, voice_id: str, text: str | None = None) -> bytes:
         """Get audio preview for a voice."""
         voice = await self.get_voice(voice_id)
         if not voice:
@@ -261,92 +262,89 @@ class VoiceKitService:
         # Find kit to determine provider
         kit = next((k for k in self._kits if k.id == voice.kit_id), None)
         if not kit:
-             raise ValueError(f"Kit not found for voice: {voice_id}")
+            raise ValueError(f"Kit not found for voice: {voice_id}")
 
         if kit.provider == TTSProviderEnum.GOOGLE:
             provider = self.google_provider
         elif kit.provider == TTSProviderEnum.ELEVENLABS:
-             provider = self.elevenlabs_provider
+            provider = self.elevenlabs_provider
         elif kit.provider == TTSProviderEnum.AZURE:
             provider = self.azure_provider
         else:
-             # Default
-             provider = self.azure_provider
+            # Default
+            provider = self.azure_provider
 
         return await provider.synthesize(
-            text=preview_text,
-            voice_id=voice.provider_voice_id,
-            options=voice.ssml_options
+            text=preview_text, voice_id=voice.provider_voice_id, options=voice.ssml_options
         )
 
-    async def generate_story_audio(self, story_id: str, voice_id: str) -> bytes:
+    async def generate_story_audio(self, _story_id: str, voice_id: str) -> bytes:
         """
         Generate audio for a story using a specific voice.
-        
+
         Args:
             story_id: ID of story to read (would fetch content from DB)
             voice_id: ID of voice to use
-            
+
         Returns:
             Audio bytes
         """
         # MVP Implementation:
         # 1. Fetch story content (Mocked for now or TODO: Inject StoryService)
         # 2. Call synthesize
-        
+
         # Since I don't have StoryService injected yet, I will mock fetching story content
         # or just fail if text not provided.
         # But method signature is (story_id, voice_id).
-        
+
         # I'll implement a placeholder that synthesizes a fixed string or needs extension.
         # For now, let's assume we just verify voice exists.
-        
+
         voice = await self.get_voice(voice_id)
         if not voice:
             raise ValueError(f"Voice not found: {voice_id}")
-            
+
         # Verify kit is downloaded for generation?
         # Usually yes.
         # kit = next(k for k in self._kits if k.id == voice.kit_id)
         # if not kit.is_downloaded: raise ValueError("Kit not downloaded")
-        
+
         kit = next((k for k in self._kits if k.id == voice.kit_id), None)
         if not kit:
-             raise ValueError(f"Kit not found for voice: {voice_id}")
+            raise ValueError(f"Kit not found for voice: {voice_id}")
 
         if kit.provider == TTSProviderEnum.GOOGLE:
             provider = self.google_provider
         elif kit.provider == TTSProviderEnum.ELEVENLABS:
-             provider = self.elevenlabs_provider
+            provider = self.elevenlabs_provider
         elif kit.provider == TTSProviderEnum.AZURE:
             provider = self.azure_provider
         else:
-             provider = self.azure_provider
-            
+            provider = self.azure_provider
+
         # TODO: Get story content from DB
         story_text = "這是一個測試故事內容。很久很久以前..."
-        
+
         return await provider.synthesize(
-            text=story_text,
-            voice_id=voice.provider_voice_id,
-            options=voice.ssml_options
+            text=story_text, voice_id=voice.provider_voice_id, options=voice.ssml_options
         )
 
     # -- User Preferences --
 
-    async def get_user_preferences(self, user_id: str) -> Dict[str, Any]:
+    async def get_user_preferences(self, user_id: str) -> dict[str, Any]:
         """Get user voice preferences."""
-        async with get_db_connection() as db:
-            async with db.execute(
-                "SELECT * FROM voice_preferences WHERE user_id = :user_id",
-                {"user_id": user_id}
-            ) as cursor:
-                row = await cursor.fetchone()
-                if row:
-                    return dict(row)
-                return {"user_id": user_id, "default_voice_id": None}
+        async with (
+            get_db_connection() as db,
+            db.execute(
+                "SELECT * FROM voice_preferences WHERE user_id = :user_id", {"user_id": user_id}
+            ) as cursor,
+        ):
+            row = await cursor.fetchone()
+            if row:
+                return dict(row)
+            return {"user_id": user_id, "default_voice_id": None}
 
-    async def update_default_voice(self, user_id: str, voice_id: str) -> Dict[str, Any]:
+    async def update_default_voice(self, user_id: str, voice_id: str) -> dict[str, Any]:
         """Update user's default voice."""
         # Verify voice exists
         if not await self.get_voice(voice_id):
@@ -358,39 +356,41 @@ class VoiceKitService:
                 """
                 INSERT INTO voice_preferences (user_id, default_voice_id)
                 VALUES (:user_id, :voice_id)
-                ON CONFLICT(user_id) DO UPDATE SET 
+                ON CONFLICT(user_id) DO UPDATE SET
                     default_voice_id = :voice_id,
                     updated_at = CURRENT_TIMESTAMP
                 """,
-                {"user_id": user_id, "voice_id": voice_id}
+                {"user_id": user_id, "voice_id": voice_id},
             )
             await db.commit()
-            
+
         return await self.get_user_preferences(user_id)
 
     # -- Story Voice Mappings --
 
-    async def get_story_voice_mappings(self, user_id: str, story_id: str) -> List[Dict[str, Any]]:
+    async def get_story_voice_mappings(self, user_id: str, story_id: str) -> list[dict[str, Any]]:
         """Get all voice mappings for a specific story."""
-        async with get_db_connection() as db:
-            async with db.execute(
+        async with (
+            get_db_connection() as db,
+            db.execute(
                 """
-                SELECT * FROM story_voice_maps 
+                SELECT * FROM story_voice_maps
                 WHERE user_id = :user_id AND story_id = :story_id
                 """,
-                {"user_id": user_id, "story_id": story_id}
-            ) as cursor:
-                rows = await cursor.fetchall()
-                return [dict(row) for row in rows]
+                {"user_id": user_id, "story_id": story_id},
+            ) as cursor,
+        ):
+            rows = await cursor.fetchall()
+            return [dict(row) for row in rows]
 
     async def update_story_voice_mapping(
         self, user_id: str, story_id: str, role: str, voice_id: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Update a voice mapping for a specific story role."""
-         # Verify voice exists
+        # Verify voice exists
         if not await self.get_voice(voice_id):
             raise ValueError(f"Voice not found: {voice_id}")
-            
+
         async with get_db_connection() as db:
             await db.execute(
                 """
@@ -398,18 +398,8 @@ class VoiceKitService:
                 VALUES (:story_id, :user_id, :role, :voice_id)
                 ON CONFLICT(story_id, user_id, role) DO UPDATE SET voice_id = :voice_id
                 """,
-                {
-                    "story_id": story_id,
-                    "user_id": user_id,
-                    "role": role,
-                    "voice_id": voice_id
-                }
+                {"story_id": story_id, "user_id": user_id, "role": role, "voice_id": voice_id},
             )
             await db.commit()
-            
-        return {
-            "story_id": story_id,
-            "user_id": user_id,
-            "role": role,
-            "voice_id": voice_id
-        }
+
+        return {"story_id": story_id, "user_id": user_id, "role": role, "voice_id": voice_id}

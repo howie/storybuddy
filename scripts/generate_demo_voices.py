@@ -37,7 +37,7 @@ VOICE_CHARACTERS = [
         "voice": "zh-TW-HsiaoChenNeural",
         "ssml_role": None,
         "ssml_style": None,
-        "preview_text": "大家好，我是故事姐姐，今天要講一個精彩的故事給你聽！"
+        "preview_text": "大家好，我是故事姐姐，今天要講一個精彩的故事給你聽！",
     },
     {
         "id": "narrator-male",
@@ -45,7 +45,7 @@ VOICE_CHARACTERS = [
         "voice": "zh-TW-YunJheNeural",
         "ssml_role": None,
         "ssml_style": None,
-        "preview_text": "嗨！我是故事哥哥，準備好聽故事了嗎？"
+        "preview_text": "嗨！我是故事哥哥，準備好聽故事了嗎？",
     },
     {
         "id": "child-girl",
@@ -53,7 +53,7 @@ VOICE_CHARACTERS = [
         "voice": "zh-TW-HsiaoChenNeural",
         "ssml_role": "Girl",
         "ssml_style": "cheerful",
-        "preview_text": "哈囉！我是小美，我們一起來冒險吧！"
+        "preview_text": "哈囉！我是小美，我們一起來冒險吧！",
     },
     {
         "id": "child-boy",
@@ -61,7 +61,7 @@ VOICE_CHARACTERS = [
         "voice": "zh-TW-YunJheNeural",
         "ssml_role": "Boy",
         "ssml_style": "cheerful",
-        "preview_text": "嘿！我是小明，今天會發生什麼有趣的事呢？"
+        "preview_text": "嘿！我是小明，今天會發生什麼有趣的事呢？",
     },
     {
         "id": "elder-female",
@@ -69,7 +69,7 @@ VOICE_CHARACTERS = [
         "voice": "zh-TW-HsiaoChenNeural",
         "ssml_role": "SeniorFemale",
         "ssml_style": "gentle",
-        "preview_text": "乖孫，阿嬤來講古早的故事給你聽..."
+        "preview_text": "乖孫，阿嬤來講古早的故事給你聽...",
     },
     {
         "id": "elder-male",
@@ -77,7 +77,7 @@ VOICE_CHARACTERS = [
         "voice": "zh-TW-YunJheNeural",
         "ssml_role": "SeniorMale",
         "ssml_style": "calm",
-        "preview_text": "來，阿公說一個很久很久以前的故事..."
+        "preview_text": "來，阿公說一個很久很久以前的故事...",
     },
 ]
 
@@ -111,20 +111,20 @@ def get_speech_config():
 def generate_ssml(text: str, voice: str, role: str = None, style: str = None) -> str:
     """Generate SSML markup for voice synthesis."""
     if role:
-        return f'''<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
+        return f"""<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
        xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="zh-TW">
     <voice name="{voice}">
-        <mstts:express-as role="{role}" style="{style or 'general'}">
+        <mstts:express-as role="{role}" style="{style or "general"}">
             {text}
         </mstts:express-as>
     </voice>
-</speak>'''
+</speak>"""
     else:
-        return f'''<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="zh-TW">
+        return f"""<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="zh-TW">
     <voice name="{voice}">
         {text}
     </voice>
-</speak>'''
+</speak>"""
 
 
 def synthesize_to_file(speech_config, ssml: str, output_path: Path) -> bool:
@@ -132,8 +132,7 @@ def synthesize_to_file(speech_config, ssml: str, output_path: Path) -> bool:
     audio_config = speechsdk.audio.AudioOutputConfig(filename=str(output_path))
 
     synthesizer = speechsdk.SpeechSynthesizer(
-        speech_config=speech_config,
-        audio_config=audio_config
+        speech_config=speech_config, audio_config=audio_config
     )
 
     result = synthesizer.speak_ssml_async(ssml).get()
@@ -178,10 +177,10 @@ def main():
         print(f"  Text: {char['preview_text'][:30]}...")
 
         ssml = generate_ssml(
-            text=char['preview_text'],
-            voice=char['voice'],
-            role=char['ssml_role'],
-            style=char['ssml_style']
+            text=char["preview_text"],
+            voice=char["voice"],
+            role=char["ssml_role"],
+            style=char["ssml_style"],
         )
 
         output_path = output_dir / f"{char['id']}_preview.mp3"
@@ -190,16 +189,13 @@ def main():
             print(f"  ✓ Saved: {output_path}")
             success_count += 1
         else:
-            print(f"  ✗ Failed to generate")
+            print("  ✗ Failed to generate")
 
     # Generate sample story with default narrator
     print("\n" + "-" * 40)
     print("\nGenerating sample story narration...")
 
-    story_ssml = generate_ssml(
-        text=SAMPLE_STORY,
-        voice="zh-TW-HsiaoChenNeural"
-    )
+    story_ssml = generate_ssml(text=SAMPLE_STORY, voice="zh-TW-HsiaoChenNeural")
 
     story_path = output_dir / "sample_story.mp3"
     if synthesize_to_file(speech_config, story_ssml, story_path):

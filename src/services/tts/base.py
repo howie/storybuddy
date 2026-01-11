@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.models.voice import TTSProvider as TTSProviderEnum
 
@@ -15,29 +15,26 @@ class TTSProvider(ABC):
 
     @abstractmethod
     async def synthesize(
-        self, 
-        text: str, 
-        voice_id: str,
-        options: Optional[Dict[str, Any]] = None
+        self, text: str, voice_id: str, options: dict[str, Any] | None = None
     ) -> bytes:
         """
         Synthesize text to audio.
-        
+
         Args:
             text: Text to synthesize
             voice_id: The provider-specific voice ID to use
             options: Optional SSML or other options
-            
+
         Returns:
             Audio data as bytes
         """
         pass
 
     @abstractmethod
-    async def get_voices(self) -> List[Dict[str, Any]]:
+    async def get_voices(self) -> list[dict[str, Any]]:
         """
         List available voices from this provider.
-        
+
         Returns:
             List of voice dictionaries (to be mapped to VoiceCharacter models)
         """

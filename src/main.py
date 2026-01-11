@@ -13,9 +13,10 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from src.api import parents, qa, questions, stories, voice, voice_routes
+from src.api import interaction, parents, qa, questions, stories, transcripts, voice, voice_routes
 from src.config import get_settings
 from src.db.init import init_database
+from src.services.interaction.retention_service import start_retention_service, stop_retention_service
 
 # Configure structured logging
 settings = get_settings()
@@ -86,12 +87,19 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     settings.ensure_directories()
     await init_database()
     logger.info("Database initialized")
+
+    # Start retention service for recording cleanup (T063)
+    await start_retention_service()
+    logger.info("Retention service started")
+
     logger.info(f"API running on {settings.api_host}:{settings.api_port}")
 
     yield
 
     # Shutdown
     logger.info("Shutting down StoryBuddy API...")
+    await stop_retention_service()
+    logger.info("Retention service stopped")
 
 
 app = FastAPI(
@@ -209,6 +217,10 @@ app.include_router(stories.router, prefix="/api/v1")
 app.include_router(qa.router, prefix="/api/v1")
 app.include_router(voice_routes.router, prefix="/api")
 app.include_router(questions.router, prefix="/api/v1")
+# 006-interactive-story-mode: WebSocket endpoint for real-time interaction
+app.include_router(interaction.router)
+# 006-interactive-story-mode: Interaction settings and transcripts API (T060)
+app.include_router(transcripts.router)
 
 
 if __name__ == "__main__":

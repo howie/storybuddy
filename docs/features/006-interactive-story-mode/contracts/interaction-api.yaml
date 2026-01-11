@@ -1,0 +1,546 @@
+openapi: 3.0.3
+info:
+  title: StoryBuddy Interactive Mode API
+  description: API for interactive storytelling mode with real-time voice interaction
+  version: 1.0.0
+  contact:
+    name: StoryBuddy Team
+
+servers:
+  - url: https://api.storybuddy.app/v1
+    description: Production server
+  - url: http://localhost:8000/v1
+    description: Development server
+
+tags:
+  - name: Interaction Sessions
+    description: Manage interaction sessions
+  - name: Transcripts
+    description: Interaction transcript management
+  - name: Settings
+    description: Interaction settings management
+  - name: WebSocket
+    description: Real-time WebSocket endpoints
+
+paths:
+  /interactions/sessions:
+    post:
+      tags:
+        - Interaction Sessions
+      summary: Start a new interaction session
+      description: Creates a new interaction session for a story. Returns session ID for WebSocket connection.
+      operationId: createInteractionSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionSession'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Story not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /interactions/sessions/{sessionId}:
+    get:
+      tags:
+        - Interaction Sessions
+      summary: Get session details
+      operationId: getInteractionSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionSession'
+        '404':
+          description: Session not found
+
+    patch:
+      tags:
+        - Interaction Sessions
+      summary: Update session status
+      description: Used to pause, resume, or end a session
+      operationId: updateInteractionSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSessionRequest'
+      responses:
+        '200':
+          description: Session updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionSession'
+        '400':
+          description: Invalid status transition
+
+  /interactions/sessions/{sessionId}/calibration:
+    post:
+      tags:
+        - Interaction Sessions
+      summary: Submit noise calibration data
+      operationId: submitNoiseCalibration
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoiseCalibrationRequest'
+      responses:
+        '200':
+          description: Calibration submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoiseCalibration'
+
+  /interactions/transcripts:
+    get:
+      tags:
+        - Transcripts
+      summary: List transcripts for parent
+      operationId: listTranscripts
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: storyId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by story
+      responses:
+        '200':
+          description: List of transcripts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptList'
+
+  /interactions/transcripts/{transcriptId}:
+    get:
+      tags:
+        - Transcripts
+      summary: Get transcript details
+      operationId: getTranscript
+      parameters:
+        - name: transcriptId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [plain, html]
+            default: plain
+          description: Response format
+      responses:
+        '200':
+          description: Transcript details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionTranscript'
+            text/html:
+              schema:
+                type: string
+
+  /interactions/transcripts/{transcriptId}/share:
+    post:
+      tags:
+        - Transcripts
+      summary: Share transcript via email
+      operationId: shareTranscript
+      parameters:
+        - name: transcriptId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareTranscriptRequest'
+      responses:
+        '200':
+          description: Email sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareTranscriptResponse'
+
+  /interactions/settings:
+    get:
+      tags:
+        - Settings
+      summary: Get interaction settings
+      operationId: getInteractionSettings
+      responses:
+        '200':
+          description: Current settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionSettings'
+
+    put:
+      tags:
+        - Settings
+      summary: Update interaction settings
+      operationId: updateInteractionSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSettingsRequest'
+      responses:
+        '200':
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionSettings'
+
+components:
+  schemas:
+    CreateSessionRequest:
+      type: object
+      required:
+        - storyId
+        - mode
+      properties:
+        storyId:
+          type: string
+          format: uuid
+          description: ID of the story to interact with
+        mode:
+          type: string
+          enum: [interactive, passive]
+          description: Session mode
+
+    UpdateSessionRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [active, paused, completed]
+          description: New session status
+
+    NoiseCalibrationRequest:
+      type: object
+      required:
+        - noiseFloorDb
+        - sampleCount
+        - percentile90
+        - calibrationDurationMs
+      properties:
+        noiseFloorDb:
+          type: number
+          format: float
+          description: Noise floor in dB
+        sampleCount:
+          type: integer
+          description: Number of samples collected
+        percentile90:
+          type: number
+          format: float
+          description: 90th percentile value
+        calibrationDurationMs:
+          type: integer
+          description: Calibration duration in milliseconds
+
+    InteractionSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        storyId:
+          type: string
+          format: uuid
+        parentId:
+          type: string
+          format: uuid
+        mode:
+          type: string
+          enum: [interactive, passive]
+        status:
+          type: string
+          enum: [calibrating, active, paused, completed, error]
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        noiseCalibration:
+          $ref: '#/components/schemas/NoiseCalibration'
+        websocketUrl:
+          type: string
+          description: WebSocket URL for this session
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    NoiseCalibration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        noiseFloorDb:
+          type: number
+          format: float
+        calibratedAt:
+          type: string
+          format: date-time
+        sampleCount:
+          type: integer
+        percentile90:
+          type: number
+          format: float
+        calibrationDurationMs:
+          type: integer
+
+    InteractionTranscript:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        storyTitle:
+          type: string
+        plainText:
+          type: string
+        htmlContent:
+          type: string
+        turnCount:
+          type: integer
+        totalDurationMs:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        emailSentAt:
+          type: string
+          format: date-time
+          nullable: true
+        turns:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversationTurn'
+
+    ConversationTurn:
+      type: object
+      properties:
+        sequence:
+          type: integer
+        speaker:
+          type: string
+          enum: [child, ai]
+        speakerName:
+          type: string
+        text:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        durationMs:
+          type: integer
+
+    TranscriptList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TranscriptSummary'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    TranscriptSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        storyTitle:
+          type: string
+        turnCount:
+          type: integer
+        totalDurationMs:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    ShareTranscriptRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address to send transcript to
+
+    ShareTranscriptResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        sentAt:
+          type: string
+          format: date-time
+        recipientEmail:
+          type: string
+          format: email
+
+    InteractionSettings:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        parentId:
+          type: string
+          format: uuid
+        recordingEnabled:
+          type: boolean
+          default: false
+        emailNotifications:
+          type: boolean
+          default: true
+        notificationEmail:
+          type: string
+          format: email
+          nullable: true
+        notificationFrequency:
+          type: string
+          enum: [instant, daily, weekly]
+          default: daily
+        interruptionThresholdMs:
+          type: integer
+          minimum: 200
+          maximum: 2000
+          default: 500
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdateSettingsRequest:
+      type: object
+      properties:
+        recordingEnabled:
+          type: boolean
+        emailNotifications:
+          type: boolean
+        notificationEmail:
+          type: string
+          format: email
+          nullable: true
+        notificationFrequency:
+          type: string
+          enum: [instant, daily, weekly]
+        interruptionThresholdMs:
+          type: integer
+          minimum: 200
+          maximum: 2000
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 import 'enums.dart';
+import 'tables/interaction_tables.dart';
 
 part 'database.g.dart';
 
@@ -130,6 +131,13 @@ class SyncOperations extends Table {
     QAMessages,
     PendingQuestions,
     SyncOperations,
+    // 006-interactive-story-mode tables
+    InteractionSessions,
+    VoiceSegments,
+    AIResponses,
+    InteractionTranscripts,
+    InteractionSettingsTable,
+    NoiseCalibrations,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -137,7 +145,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// Database schema version.
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   /// Migration strategy for database upgrades.
   @override
@@ -147,7 +155,15 @@ class AppDatabase extends _$AppDatabase {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {
-        // Future migrations go here
+        // Migration from version 1 to 2: add interaction tables
+        if (from < 2) {
+          await m.createTable(interactionSessions);
+          await m.createTable(voiceSegments);
+          await m.createTable(aIResponses);
+          await m.createTable(interactionTranscripts);
+          await m.createTable(interactionSettingsTable);
+          await m.createTable(noiseCalibrations);
+        }
       },
     );
   }

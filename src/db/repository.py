@@ -11,6 +11,28 @@ from src.models import (
     StorySource,
     VoiceProfileStatus,
 )
+from src.models.enums import (
+    NotificationFrequency,
+    SessionMode,
+    SessionStatus,
+    TriggerType,
+)
+from src.models.interaction import (
+    AIResponse,
+    AIResponseCreate,
+    InteractionSession,
+    InteractionSessionCreate,
+    InteractionSettings,
+    InteractionSettingsUpdate,
+    NoiseCalibration,
+    NoiseCalibrationCreate,
+    VoiceSegment,
+    VoiceSegmentCreate,
+)
+from src.models.transcript import (
+    InteractionTranscript,
+    InteractionTranscriptCreate,
+)
 from src.models.parent import Parent, ParentCreate, ParentUpdate
 from src.models.qa import (
     QAMessage,
@@ -1003,3 +1025,697 @@ class PendingQuestionRepository:
             )
             await db.commit()
             return cursor.rowcount > 0
+
+
+# =============================================================================
+# Interactive Story Mode Repositories (006-interactive-story-mode)
+# =============================================================================
+
+
+class InteractionSessionRepository:
+    """Repository for InteractionSession CRUD operations."""
+
+    @staticmethod
+    async def create(data: InteractionSessionCreate) -> InteractionSession:
+        """Create a new interaction session."""
+        session_id = str(uuid4())
+        now = datetime.utcnow().isoformat()
+
+        async with get_db_connection() as db:
+            await db.execute(
+                """
+                INSERT INTO interaction_sessions
+                (id, story_id, parent_id, started_at, mode, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    session_id,
+                    str(data.story_id),
+                    str(data.parent_id),
+                    now,
+                    data.mode.value,
+                    SessionStatus.CALIBRATING.value,
+                    now,
+                    now,
+                ),
+            )
+            await db.commit()
+
+            return InteractionSession(
+                id=UUID(session_id),
+                story_id=data.story_id,
+                parent_id=data.parent_id,
+                started_at=datetime.fromisoformat(now),
+                ended_at=None,
+                mode=data.mode,
+                status=SessionStatus.CALIBRATING,
+                created_at=datetime.fromisoformat(now),
+                updated_at=datetime.fromisoformat(now),
+            )
+
+    @staticmethod
+    async def get_by_id(session_id: UUID) -> InteractionSession | None:
+        """Get an interaction session by ID."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                "SELECT * FROM interaction_sessions WHERE id = ?",
+                (str(session_id),),
+            )
+            row = await cursor.fetchone()
+
+            if row is None:
+                return None
+
+            return InteractionSession(
+                id=UUID(row["id"]),
+                story_id=UUID(row["story_id"]),
+                parent_id=UUID(row["parent_id"]),
+                started_at=datetime.fromisoformat(row["started_at"]),
+                ended_at=(
+                    datetime.fromisoformat(row["ended_at"]) if row["ended_at"] else None
+                ),
+                mode=SessionMode(row["mode"]),
+                status=SessionStatus(row["status"]),
+                created_at=datetime.fromisoformat(row["created_at"]),
+                updated_at=datetime.fromisoformat(row["updated_at"]),
+            )
+
+    @staticmethod
+    async def update_status(
+        session_id: UUID, status: SessionStatus
+    ) -> InteractionSession | None:
+        """Update the status of an interaction session."""
+        now = datetime.utcnow().isoformat()
+
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                """
+                UPDATE interaction_sessions
+                SET status = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (status.value, now, str(session_id)),
+            )
+            await db.commit()
+
+            if cursor.rowcount == 0:
+                return None
+
+        return await InteractionSessionRepository.get_by_id(session_id)
+
+    @staticmethod
+    async def end_session(session_id: UUID) -> InteractionSession | None:
+        """End an interaction session."""
+        now = datetime.utcnow().isoformat()
+
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                """
+                UPDATE interaction_sessions
+                SET status = ?, ended_at = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (SessionStatus.COMPLETED.value, now, now, str(session_id)),
+            )
+            await db.commit()
+
+            if cursor.rowcount == 0:
+                return None
+
+        return await InteractionSessionRepository.get_by_id(session_id)
+
+    @staticmethod
+    async def get_by_story_id(story_id: UUID) -> list[InteractionSession]:
+        """Get all interaction sessions for a story."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                """
+                SELECT * FROM interaction_sessions
+                WHERE story_id = ?
+                ORDER BY created_at DESC
+                """,
+                (str(story_id),),
+            )
+            rows = await cursor.fetchall()
+
+            return [
+                InteractionSession(
+                    id=UUID(row["id"]),
+                    story_id=UUID(row["story_id"]),
+                    parent_id=UUID(row["parent_id"]),
+                    started_at=datetime.fromisoformat(row["started_at"]),
+                    ended_at=(
+                        datetime.fromisoformat(row["ended_at"])
+                        if row["ended_at"]
+                        else None
+                    ),
+                    mode=SessionMode(row["mode"]),
+                    status=SessionStatus(row["status"]),
+                    created_at=datetime.fromisoformat(row["created_at"]),
+                    updated_at=datetime.fromisoformat(row["updated_at"]),
+                )
+                for row in rows
+            ]
+
+
+class VoiceSegmentRepository:
+    """Repository for VoiceSegment CRUD operations."""
+
+    @staticmethod
+    async def create(data: VoiceSegmentCreate) -> VoiceSegment:
+        """Create a new voice segment."""
+        segment_id = str(uuid4())
+        now = datetime.utcnow().isoformat()
+        duration_ms = int(
+            (data.ended_at - data.started_at).total_seconds() * 1000
+        )
+
+        async with get_db_connection() as db:
+            await db.execute(
+                """
+                INSERT INTO voice_segments
+                (id, session_id, sequence, started_at, ended_at, is_recorded,
+                 audio_format, duration_ms, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    segment_id,
+                    str(data.session_id),
+                    data.sequence,
+                    data.started_at.isoformat(),
+                    data.ended_at.isoformat(),
+                    1 if data.is_recorded else 0,
+                    data.audio_format,
+                    duration_ms,
+                    now,
+                ),
+            )
+            await db.commit()
+
+            return VoiceSegment(
+                id=UUID(segment_id),
+                session_id=data.session_id,
+                sequence=data.sequence,
+                started_at=data.started_at,
+                ended_at=data.ended_at,
+                transcript=None,
+                audio_url=None,
+                is_recorded=data.is_recorded,
+                audio_format=data.audio_format,
+                duration_ms=duration_ms,
+                created_at=datetime.fromisoformat(now),
+            )
+
+    @staticmethod
+    async def update_transcript(
+        segment_id: UUID, transcript: str
+    ) -> VoiceSegment | None:
+        """Update the transcript of a voice segment."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                "UPDATE voice_segments SET transcript = ? WHERE id = ?",
+                (transcript, str(segment_id)),
+            )
+            await db.commit()
+
+            if cursor.rowcount == 0:
+                return None
+
+        return await VoiceSegmentRepository.get_by_id(segment_id)
+
+    @staticmethod
+    async def get_by_id(segment_id: UUID) -> VoiceSegment | None:
+        """Get a voice segment by ID."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                "SELECT * FROM voice_segments WHERE id = ?",
+                (str(segment_id),),
+            )
+            row = await cursor.fetchone()
+
+            if row is None:
+                return None
+
+            return VoiceSegment(
+                id=UUID(row["id"]),
+                session_id=UUID(row["session_id"]),
+                sequence=row["sequence"],
+                started_at=datetime.fromisoformat(row["started_at"]),
+                ended_at=datetime.fromisoformat(row["ended_at"]),
+                transcript=row["transcript"],
+                audio_url=row["audio_url"],
+                is_recorded=bool(row["is_recorded"]),
+                audio_format=row["audio_format"],
+                duration_ms=row["duration_ms"],
+                created_at=datetime.fromisoformat(row["created_at"]),
+            )
+
+    @staticmethod
+    async def get_by_session_id(session_id: UUID) -> list[VoiceSegment]:
+        """Get all voice segments for a session."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                """
+                SELECT * FROM voice_segments
+                WHERE session_id = ?
+                ORDER BY sequence ASC
+                """,
+                (str(session_id),),
+            )
+            rows = await cursor.fetchall()
+
+            return [
+                VoiceSegment(
+                    id=UUID(row["id"]),
+                    session_id=UUID(row["session_id"]),
+                    sequence=row["sequence"],
+                    started_at=datetime.fromisoformat(row["started_at"]),
+                    ended_at=datetime.fromisoformat(row["ended_at"]),
+                    transcript=row["transcript"],
+                    audio_url=row["audio_url"],
+                    is_recorded=bool(row["is_recorded"]),
+                    audio_format=row["audio_format"],
+                    duration_ms=row["duration_ms"],
+                    created_at=datetime.fromisoformat(row["created_at"]),
+                )
+                for row in rows
+            ]
+
+
+class AIResponseRepository:
+    """Repository for AIResponse CRUD operations."""
+
+    @staticmethod
+    async def create(data: AIResponseCreate) -> AIResponse:
+        """Create a new AI response."""
+        response_id = str(uuid4())
+        now = datetime.utcnow().isoformat()
+
+        async with get_db_connection() as db:
+            await db.execute(
+                """
+                INSERT INTO ai_responses
+                (id, session_id, voice_segment_id, text, trigger_type,
+                 was_interrupted, response_latency_ms, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    response_id,
+                    str(data.session_id),
+                    str(data.voice_segment_id) if data.voice_segment_id else None,
+                    data.text,
+                    data.trigger_type.value,
+                    0,  # was_interrupted default
+                    0,  # response_latency_ms placeholder
+                    now,
+                ),
+            )
+            await db.commit()
+
+            return AIResponse(
+                id=UUID(response_id),
+                session_id=data.session_id,
+                voice_segment_id=data.voice_segment_id,
+                text=data.text,
+                audio_url=None,
+                trigger_type=data.trigger_type,
+                was_interrupted=False,
+                interrupted_at_ms=None,
+                response_latency_ms=0,
+                created_at=datetime.fromisoformat(now),
+            )
+
+    @staticmethod
+    async def update_audio(
+        response_id: UUID, audio_url: str
+    ) -> AIResponse | None:
+        """Update the audio URL of an AI response."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                "UPDATE ai_responses SET audio_url = ? WHERE id = ?",
+                (audio_url, str(response_id)),
+            )
+            await db.commit()
+
+            if cursor.rowcount == 0:
+                return None
+
+        return await AIResponseRepository.get_by_id(response_id)
+
+    @staticmethod
+    async def mark_interrupted(
+        response_id: UUID, interrupted_at_ms: int
+    ) -> AIResponse | None:
+        """Mark an AI response as interrupted."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                """
+                UPDATE ai_responses
+                SET was_interrupted = 1, interrupted_at_ms = ?
+                WHERE id = ?
+                """,
+                (interrupted_at_ms, str(response_id)),
+            )
+            await db.commit()
+
+            if cursor.rowcount == 0:
+                return None
+
+        return await AIResponseRepository.get_by_id(response_id)
+
+    @staticmethod
+    async def get_by_id(response_id: UUID) -> AIResponse | None:
+        """Get an AI response by ID."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                "SELECT * FROM ai_responses WHERE id = ?",
+                (str(response_id),),
+            )
+            row = await cursor.fetchone()
+
+            if row is None:
+                return None
+
+            return AIResponse(
+                id=UUID(row["id"]),
+                session_id=UUID(row["session_id"]),
+                voice_segment_id=(
+                    UUID(row["voice_segment_id"]) if row["voice_segment_id"] else None
+                ),
+                text=row["text"],
+                audio_url=row["audio_url"],
+                trigger_type=TriggerType(row["trigger_type"]),
+                was_interrupted=bool(row["was_interrupted"]),
+                interrupted_at_ms=row["interrupted_at_ms"],
+                response_latency_ms=row["response_latency_ms"],
+                created_at=datetime.fromisoformat(row["created_at"]),
+            )
+
+    @staticmethod
+    async def get_by_session_id(session_id: UUID) -> list[AIResponse]:
+        """Get all AI responses for a session."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                """
+                SELECT * FROM ai_responses
+                WHERE session_id = ?
+                ORDER BY created_at ASC
+                """,
+                (str(session_id),),
+            )
+            rows = await cursor.fetchall()
+
+            return [
+                AIResponse(
+                    id=UUID(row["id"]),
+                    session_id=UUID(row["session_id"]),
+                    voice_segment_id=(
+                        UUID(row["voice_segment_id"])
+                        if row["voice_segment_id"]
+                        else None
+                    ),
+                    text=row["text"],
+                    audio_url=row["audio_url"],
+                    trigger_type=TriggerType(row["trigger_type"]),
+                    was_interrupted=bool(row["was_interrupted"]),
+                    interrupted_at_ms=row["interrupted_at_ms"],
+                    response_latency_ms=row["response_latency_ms"],
+                    created_at=datetime.fromisoformat(row["created_at"]),
+                )
+                for row in rows
+            ]
+
+
+class InteractionTranscriptRepository:
+    """Repository for InteractionTranscript CRUD operations."""
+
+    @staticmethod
+    async def create(data: InteractionTranscriptCreate) -> InteractionTranscript:
+        """Create a new interaction transcript."""
+        transcript_id = str(uuid4())
+        now = datetime.utcnow().isoformat()
+
+        async with get_db_connection() as db:
+            await db.execute(
+                """
+                INSERT INTO interaction_transcripts
+                (id, session_id, plain_text, html_content, turn_count,
+                 total_duration_ms, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    transcript_id,
+                    str(data.session_id),
+                    data.plain_text,
+                    data.html_content,
+                    data.turn_count,
+                    data.total_duration_ms,
+                    now,
+                ),
+            )
+            await db.commit()
+
+            return InteractionTranscript(
+                id=UUID(transcript_id),
+                session_id=data.session_id,
+                plain_text=data.plain_text,
+                html_content=data.html_content,
+                turn_count=data.turn_count,
+                total_duration_ms=data.total_duration_ms,
+                created_at=datetime.fromisoformat(now),
+                email_sent_at=None,
+            )
+
+    @staticmethod
+    async def get_by_session_id(session_id: UUID) -> InteractionTranscript | None:
+        """Get a transcript by session ID."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                "SELECT * FROM interaction_transcripts WHERE session_id = ?",
+                (str(session_id),),
+            )
+            row = await cursor.fetchone()
+
+            if row is None:
+                return None
+
+            return InteractionTranscript(
+                id=UUID(row["id"]),
+                session_id=UUID(row["session_id"]),
+                plain_text=row["plain_text"],
+                html_content=row["html_content"],
+                turn_count=row["turn_count"],
+                total_duration_ms=row["total_duration_ms"],
+                created_at=datetime.fromisoformat(row["created_at"]),
+                email_sent_at=(
+                    datetime.fromisoformat(row["email_sent_at"])
+                    if row["email_sent_at"]
+                    else None
+                ),
+            )
+
+    @staticmethod
+    async def mark_email_sent(transcript_id: UUID) -> InteractionTranscript | None:
+        """Mark that the transcript email has been sent."""
+        now = datetime.utcnow().isoformat()
+
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                "UPDATE interaction_transcripts SET email_sent_at = ? WHERE id = ?",
+                (now, str(transcript_id)),
+            )
+            await db.commit()
+
+            if cursor.rowcount == 0:
+                return None
+
+            # Fetch by ID
+            cursor = await db.execute(
+                "SELECT * FROM interaction_transcripts WHERE id = ?",
+                (str(transcript_id),),
+            )
+            row = await cursor.fetchone()
+
+            if row is None:
+                return None
+
+            return InteractionTranscript(
+                id=UUID(row["id"]),
+                session_id=UUID(row["session_id"]),
+                plain_text=row["plain_text"],
+                html_content=row["html_content"],
+                turn_count=row["turn_count"],
+                total_duration_ms=row["total_duration_ms"],
+                created_at=datetime.fromisoformat(row["created_at"]),
+                email_sent_at=(
+                    datetime.fromisoformat(row["email_sent_at"])
+                    if row["email_sent_at"]
+                    else None
+                ),
+            )
+
+
+class InteractionSettingsRepository:
+    """Repository for InteractionSettings CRUD operations."""
+
+    @staticmethod
+    async def get_or_create(parent_id: UUID) -> InteractionSettings:
+        """Get settings for a parent, creating defaults if not exists."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                "SELECT * FROM interaction_settings WHERE parent_id = ?",
+                (str(parent_id),),
+            )
+            row = await cursor.fetchone()
+
+            if row is not None:
+                return InteractionSettings(
+                    id=UUID(row["id"]),
+                    parent_id=UUID(row["parent_id"]),
+                    recording_enabled=bool(row["recording_enabled"]),
+                    email_notifications=bool(row["email_notifications"]),
+                    notification_email=row["notification_email"],
+                    notification_frequency=NotificationFrequency(
+                        row["notification_frequency"]
+                    ),
+                    interruption_threshold_ms=row["interruption_threshold_ms"],
+                    created_at=datetime.fromisoformat(row["created_at"]),
+                    updated_at=datetime.fromisoformat(row["updated_at"]),
+                )
+
+            # Create default settings
+            settings_id = str(uuid4())
+            now = datetime.utcnow().isoformat()
+
+            await db.execute(
+                """
+                INSERT INTO interaction_settings
+                (id, parent_id, recording_enabled, email_notifications,
+                 notification_frequency, interruption_threshold_ms,
+                 created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    settings_id,
+                    str(parent_id),
+                    0,  # recording_enabled default
+                    1,  # email_notifications default
+                    NotificationFrequency.DAILY.value,
+                    500,  # interruption_threshold_ms default
+                    now,
+                    now,
+                ),
+            )
+            await db.commit()
+
+            return InteractionSettings(
+                id=UUID(settings_id),
+                parent_id=parent_id,
+                recording_enabled=False,
+                email_notifications=True,
+                notification_email=None,
+                notification_frequency=NotificationFrequency.DAILY,
+                interruption_threshold_ms=500,
+                created_at=datetime.fromisoformat(now),
+                updated_at=datetime.fromisoformat(now),
+            )
+
+    @staticmethod
+    async def update(
+        parent_id: UUID, data: InteractionSettingsUpdate
+    ) -> InteractionSettings | None:
+        """Update interaction settings for a parent."""
+        # First ensure settings exist
+        settings = await InteractionSettingsRepository.get_or_create(parent_id)
+
+        update_fields: dict[str, str | int] = {}
+        if data.recording_enabled is not None:
+            update_fields["recording_enabled"] = 1 if data.recording_enabled else 0
+        if data.email_notifications is not None:
+            update_fields["email_notifications"] = 1 if data.email_notifications else 0
+        if data.notification_email is not None:
+            update_fields["notification_email"] = data.notification_email
+        if data.notification_frequency is not None:
+            update_fields["notification_frequency"] = data.notification_frequency.value
+        if data.interruption_threshold_ms is not None:
+            update_fields["interruption_threshold_ms"] = data.interruption_threshold_ms
+
+        if not update_fields:
+            return settings
+
+        update_fields["updated_at"] = datetime.utcnow().isoformat()
+
+        set_clause = ", ".join(f"{k} = ?" for k in update_fields)
+        values = list(update_fields.values()) + [str(parent_id)]
+
+        async with get_db_connection() as db:
+            await db.execute(
+                f"UPDATE interaction_settings SET {set_clause} WHERE parent_id = ?",
+                values,
+            )
+            await db.commit()
+
+        return await InteractionSettingsRepository.get_or_create(parent_id)
+
+
+class NoiseCalibrationRepository:
+    """Repository for NoiseCalibration CRUD operations."""
+
+    @staticmethod
+    async def create(data: NoiseCalibrationCreate) -> NoiseCalibration:
+        """Create a new noise calibration record."""
+        calibration_id = str(uuid4())
+        now = datetime.utcnow().isoformat()
+
+        async with get_db_connection() as db:
+            await db.execute(
+                """
+                INSERT INTO noise_calibrations
+                (id, session_id, noise_floor_db, calibrated_at, sample_count,
+                 percentile_90, calibration_duration_ms)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    calibration_id,
+                    str(data.session_id),
+                    data.noise_floor_db,
+                    now,
+                    data.sample_count,
+                    data.percentile_90,
+                    data.calibration_duration_ms,
+                ),
+            )
+            await db.commit()
+
+            return NoiseCalibration(
+                id=UUID(calibration_id),
+                session_id=data.session_id,
+                noise_floor_db=data.noise_floor_db,
+                calibrated_at=datetime.fromisoformat(now),
+                sample_count=data.sample_count,
+                percentile_90=data.percentile_90,
+                calibration_duration_ms=data.calibration_duration_ms,
+            )
+
+    @staticmethod
+    async def get_by_session_id(session_id: UUID) -> NoiseCalibration | None:
+        """Get noise calibration for a session."""
+        async with get_db_connection() as db:
+            cursor = await db.execute(
+                "SELECT * FROM noise_calibrations WHERE session_id = ?",
+                (str(session_id),),
+            )
+            row = await cursor.fetchone()
+
+            if row is None:
+                return None
+
+            return NoiseCalibration(
+                id=UUID(row["id"]),
+                session_id=UUID(row["session_id"]),
+                noise_floor_db=row["noise_floor_db"],
+                calibrated_at=datetime.fromisoformat(row["calibrated_at"]),
+                sample_count=row["sample_count"],
+                percentile_90=row["percentile_90"],
+                calibration_duration_ms=row["calibration_duration_ms"],
+            )

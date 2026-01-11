@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ story_title }} - 互動紀錄</title>
+    <style>
+        /* Reset styles for email clients */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 32px 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header .subtitle {
+            margin-top: 8px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 24px;
+        }
+
+        .meta-info {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .meta-row:last-child {
+            border-bottom: none;
+        }
+
+        .meta-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .meta-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .transcript-section {
+            margin-top: 24px;
+        }
+
+        .transcript-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #6366f1;
+        }
+
+        .transcript-entry {
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .entry-child {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+
+        .entry-ai {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+        .entry-system {
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .entry-speaker {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .entry-child .entry-speaker {
+            color: #2e7d32;
+        }
+
+        .entry-ai .entry-speaker {
+            color: #1565c0;
+        }
+
+        .entry-system .entry-speaker {
+            color: #e65100;
+        }
+
+        .entry-time {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .entry-text {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .interrupted-badge {
+            display: inline-block;
+            background-color: #ffebee;
+            color: #c62828;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        .footer {
+            background-color: #f8f9fa;
+            padding: 24px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .footer p {
+            margin: 0;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .footer a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+
+        .footer .logo {
+            margin-bottom: 12px;
+        }
+
+        .privacy-notice {
+            background-color: #fff3e0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 24px;
+            font-size: 13px;
+            color: #795548;
+        }
+
+        .privacy-notice strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Responsive styles */
+        @media screen and (max-width: 600px) {
+            .content {
+                padding: 16px;
+            }
+
+            .header {
+                padding: 24px 16px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📚 {{ story_title }}</h1>
+            <div class="subtitle">孩子的互動故事紀錄</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Meta Information -->
+            <div class="meta-info">
+                <div class="meta-row">
+                    <span class="meta-label">📅 日期</span>
+                    <span class="meta-value">{{ session_date }}</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">⏱️ 時長</span>
+                    <span class="meta-value">{{ duration_text }}</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">💬 對話回合</span>
+                    <span class="meta-value">{{ turn_count }} 回合</span>
+                </div>
+            </div>
+
+            <!-- Transcript Section -->
+            <div class="transcript-section">
+                <h2 class="transcript-title">對話紀錄</h2>
+
+                {% if entries %}
+                {% for entry in entries %}
+                <div class="transcript-entry entry-{{ entry.speaker_type }}">
+                    <div class="entry-header">
+                        <span class="entry-speaker">
+                            {% if entry.speaker_type == 'child' %}
+                            👧 孩子
+                            {% elif entry.speaker_type == 'ai' %}
+                            🤖 故事夥伴
+                            {% else %}
+                            📢 系統
+                            {% endif %}
+                            {% if entry.was_interrupted %}
+                            <span class="interrupted-badge">被打斷</span>
+                            {% endif %}
+                        </span>
+                        <span class="entry-time">{{ entry.timestamp }}</span>
+                    </div>
+                    <div class="entry-text">{{ entry.text }}</div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="transcript-entry entry-system">
+                    <div class="entry-text">（本次互動沒有對話紀錄）</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Privacy Notice -->
+            <div class="privacy-notice">
+                <strong>🔒 隱私說明</strong>
+                此紀錄僅供家長了解孩子的互動情況。如有任何疑問，請聯繫我們的支援團隊。
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="logo">
+                <img src="cid:logo" alt="StoryBuddy" width="120" height="auto" style="display: none;">
+                <strong style="font-size: 18px; color: #6366f1;">StoryBuddy</strong>
+            </div>
+            <p>
+                這封郵件由 StoryBuddy 自動發送<br>
+                <a href="{{ unsubscribe_url }}">管理郵件通知設定</a>
+            </p>
+            <p style="margin-top: 8px;">
+                © {{ current_year }} StoryBuddy. 保留所有權利。
+            </p>
+        </div>
+    </div>
+</body>
+</html>

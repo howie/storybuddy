@@ -177,12 +177,28 @@ class StoryDetailPage extends ConsumerWidget {
       );
     }
 
-    // If story has audio, show play button
+    // If story has audio, show play options
     if (story.hasAudio) {
-      return FloatingActionButton.extended(
-        onPressed: () => _navigateToPlayback(context),
-        icon: const Icon(Icons.play_arrow),
-        label: const Text('播放故事'),
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Interactive playback button
+          FloatingActionButton.small(
+            heroTag: 'interactive_play',
+            onPressed: () => _navigateToInteractivePlayback(context),
+            tooltip: '互動模式',
+            child: const Icon(Icons.mic),
+          ),
+          const SizedBox(height: 12),
+          // Standard playback button
+          FloatingActionButton.extended(
+            heroTag: 'standard_play',
+            onPressed: () => _navigateToPlayback(context),
+            icon: const Icon(Icons.play_arrow),
+            label: const Text('播放故事'),
+          ),
+        ],
       );
     }
 
@@ -409,6 +425,10 @@ class StoryDetailPage extends ConsumerWidget {
   }
 
   void _navigateToPlayback(BuildContext context) {
-    context.push('/playback/$storyId');
+    context.push('/stories/$storyId/play');
+  }
+
+  void _navigateToInteractivePlayback(BuildContext context) {
+    context.push('/stories/$storyId/play/interactive');
   }
 }

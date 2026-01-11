@@ -1,20 +1,22 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from elevenlabs.client import ElevenLabs
 from elevenlabs import VoiceSettings
+from elevenlabs.client import ElevenLabs
 
-from src.models.voice import TTSProvider as TTSProviderEnum, Gender
+from src.config import get_settings
+from src.models.voice import Gender
+from src.models.voice import TTSProvider as TTSProviderEnum
 from src.services.tts.base import TTSProvider
 from src.services.tts.cache import TTSCache
-from src.config import get_settings
+
 
 class ElevenLabsProvider(TTSProvider):
     def __init__(self):
         self.logger = logging.getLogger("storybuddy.services.tts.elevenlabs")
         self.settings = get_settings()
         self.cache = TTSCache()
-        
+
         if self.settings.elevenlabs_api_key:
             self.client = ElevenLabs(api_key=self.settings.elevenlabs_api_key)
         else:
@@ -37,28 +39,28 @@ class ElevenLabsProvider(TTSProvider):
             return False
 
     async def synthesize(
-        self, 
-        text: str, 
-        voice_id: str,
-        options: Optional[Dict[str, Any]] = None
+        self, text: str, voice_id: str, options: dict[str, Any] | None = None
     ) -> bytes:
         if not self.client:
-             raise RuntimeError("ElevenLabs client is not initialized.")
-        
+            raise RuntimeError("ElevenLabs client is not initialized.")
+
         options = options or {}
-        
+
         # Check cache
         cached = self.cache.get(text, voice_id, options)
         if cached:
-            self.logger.info(f"Returning cached audio for {voice_id}", extra={"voice_id": voice_id, "cached": True})
+            self.logger.info(
+                f"Returning cached audio for {voice_id}",
+                extra={"voice_id": voice_id, "cached": True},
+            )
             return cached
 
         # Model selection (Multilingual v2 for Chinese support)
         # Allows override via options
         model_id = options.get("model_id", "eleven_multilingual_v2")
-        
+
         self.logger.info(f"Synthesizing with ElevenLabs: {voice_id} (Model: {model_id})")
-        
+
         try:
             # ElevenLabs generate returns a generator of bytes (stream)
             # We consume it all for now.
@@ -70,26 +72,26 @@ class ElevenLabsProvider(TTSProvider):
                     stability=options.get("stability", 0.5),
                     similarity_boost=options.get("similarity_boost", 0.75),
                     style=options.get("style", 0.0),
-                    use_speaker_boost=True
-                )
+                    use_speaker_boost=True,
+                ),
             )
-            
+
             # consume generator
             audio_data = b"".join(audio_generator)
-            
+
             # Save to cache
             self.cache.set(text, voice_id, options, audio_data)
-            
+
             return audio_data
-            
+
         except Exception as e:
             self.logger.error(f"ElevenLabs synthesis failed: {e}")
             raise RuntimeError(f"ElevenLabs synthesis failed: {e}")
 
-    async def get_voices(self) -> List[Dict[str, Any]]:
+    async def get_voices(self) -> list[dict[str, Any]]:
         if not self.client:
             return []
-            
+
         try:
             response = self.client.voices.get_all()
             # response.voices is a list of Voice objects
@@ -100,13 +102,15 @@ class ElevenLabsProvider(TTSProvider):
                 gender_str = "neutral"
                 if voice.labels and "gender" in voice.labels:
                     gender_str = voice.labels["gender"]
-                
-                voices.append({
-                    "id": voice.voice_id,
-                    "name": voice.name,
-                    "gender": self._map_gender(gender_str),
-                    "language": "multilingual" # ElevenLabs voices are often multilingual
-                })
+
+                voices.append(
+                    {
+                        "id": voice.voice_id,
+                        "name": voice.name,
+                        "gender": self._map_gender(gender_str),
+                        "language": "multilingual",  # ElevenLabs voices are often multilingual
+                    }
+                )
             return voices
         except Exception as e:
             self.logger.error(f"Failed to list ElevenLabs voices: {e}")

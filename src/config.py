@@ -41,7 +41,7 @@ class Settings(BaseSettings):
 
     # Google Cloud TTS
     google_application_credentials: str | None = Field(
-         default=None, description="Path to Google Cloud Service Account JSON"
+        default=None, description="Path to Google Cloud Service Account JSON"
     )
 
     # Anthropic Claude (LLM)

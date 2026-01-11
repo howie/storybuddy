@@ -1,6 +1,7 @@
 import pytest
+
 from src.services.tts.azure_tts import AzureTTSProvider
-from src.config import get_settings
+
 
 @pytest.mark.asyncio
 class TestAzureTTS:

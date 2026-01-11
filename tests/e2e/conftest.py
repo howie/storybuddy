@@ -9,7 +9,6 @@ This module provides:
 
 import asyncio
 import io
-import struct
 import wave
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
@@ -22,7 +21,6 @@ from httpx import ASGITransport, AsyncClient
 
 from src.db.init import init_database, reset_database
 from src.main import app
-
 
 # =============================================================================
 # Event Loop & Database Fixtures
@@ -182,9 +180,7 @@ def sample_story_data_chinese() -> dict[str, Any]:
 
 
 @pytest_asyncio.fixture
-async def created_parent(
-    client: AsyncClient, sample_parent_data: dict[str, Any]
-) -> dict[str, Any]:
+async def created_parent(client: AsyncClient, sample_parent_data: dict[str, Any]) -> dict[str, Any]:
     """Create and return a parent for testing."""
     response = await client.post("/api/v1/parents", json=sample_parent_data)
     assert response.status_code == 201
@@ -238,23 +234,23 @@ async def ready_voice_profile(
         ),
     )
 
-    return {
-        "id": str(updated.id),
-        "parent_id": str(updated.parent_id),
-        "name": updated.name,
-        "status": updated.status.value,
-        "elevenlabs_voice_id": updated.elevenlabs_voice_id,
-    } if updated else {}
+    return (
+        {
+            "id": str(updated.id),
+            "parent_id": str(updated.parent_id),
+            "name": updated.name,
+            "status": updated.status.value,
+            "elevenlabs_voice_id": updated.elevenlabs_voice_id,
+        }
+        if updated
+        else {}
+    )
 
 
 @pytest_asyncio.fixture
-async def created_qa_session(
-    client: AsyncClient, created_story: dict[str, Any]
-) -> dict[str, Any]:
+async def created_qa_session(client: AsyncClient, created_story: dict[str, Any]) -> dict[str, Any]:
     """Create and return a Q&A session for testing."""
-    response = await client.post(
-        "/api/v1/qa/sessions", json={"story_id": created_story["id"]}
-    )
+    response = await client.post("/api/v1/qa/sessions", json={"story_id": created_story["id"]})
     assert response.status_code == 201
     return response.json()
 

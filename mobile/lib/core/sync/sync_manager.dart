@@ -119,12 +119,13 @@ class SyncManager {
       );
     }
 
-    _updateStatus(_status.copyWith(
-      state: SyncState.syncing,
-      lastError: null,
-    ));
+    _updateStatus(
+      _status.copyWith(
+        state: SyncState.syncing,
+      ),
+    );
 
-    int totalSynced = 0;
+    var totalSynced = 0;
     final errors = <String>[];
 
     for (final entry in _handlers.entries) {
@@ -139,11 +140,13 @@ class SyncManager {
     }
 
     final success = errors.isEmpty;
-    _updateStatus(_status.copyWith(
-      state: success ? SyncState.completed : SyncState.failed,
-      lastSyncAt: DateTime.now(),
-      lastError: errors.isNotEmpty ? errors.first : null,
-    ));
+    _updateStatus(
+      _status.copyWith(
+        state: success ? SyncState.completed : SyncState.failed,
+        lastSyncAt: DateTime.now(),
+        lastError: errors.isNotEmpty ? errors.first : null,
+      ),
+    );
 
     // Reset to idle after a short delay
     Future.delayed(const Duration(seconds: 2), () {
@@ -212,9 +215,7 @@ SyncManager syncManager(SyncManagerRef ref) {
   final connectivity = ref.watch(connectivityServiceProvider);
   final manager = SyncManager(connectivityService: connectivity);
 
-  ref.onDispose(() {
-    manager.dispose();
-  });
+  ref.onDispose(manager.dispose);
 
   return manager;
 }

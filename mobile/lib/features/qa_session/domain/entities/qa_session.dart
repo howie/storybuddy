@@ -14,14 +14,14 @@ class QASession with _$QASession {
     /// Story ID this session is for.
     required String storyId,
 
+    /// Session start timestamp.
+    required DateTime startedAt,
+
     /// Session status.
     @Default(QASessionStatus.active) QASessionStatus status,
 
     /// Number of messages in this session.
     @Default(0) int messageCount,
-
-    /// Session start timestamp.
-    required DateTime startedAt,
 
     /// Session end timestamp (if ended).
     DateTime? endedAt,
@@ -40,8 +40,6 @@ class QASession with _$QASession {
     return QASession(
       id: id,
       storyId: storyId,
-      status: QASessionStatus.active,
-      messageCount: 0,
       startedAt: DateTime.now(),
       syncStatus: SyncStatus.pendingSync,
     );
@@ -57,7 +55,8 @@ class QASession with _$QASession {
   bool get isActive => status == QASessionStatus.active;
 
   /// Returns true if the session has ended.
-  bool get isEnded => status == QASessionStatus.completed || status == QASessionStatus.timeout;
+  bool get isEnded =>
+      status == QASessionStatus.completed || status == QASessionStatus.timeout;
 
   /// Returns true if the message limit has been reached.
   bool get hasReachedLimit => messageCount >= maxMessages;
@@ -67,7 +66,8 @@ class QASession with _$QASession {
       messageCount >= warningThreshold && messageCount < maxMessages;
 
   /// Returns the number of remaining messages.
-  int get remainingMessages => (maxMessages - messageCount).clamp(0, maxMessages);
+  int get remainingMessages =>
+      (maxMessages - messageCount).clamp(0, maxMessages);
 
   /// Returns true if the session has pending local changes.
   bool get hasPendingChanges => syncStatus == SyncStatus.pendingSync;

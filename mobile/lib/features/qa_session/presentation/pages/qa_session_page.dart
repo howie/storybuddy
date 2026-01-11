@@ -149,8 +149,8 @@ class _QASessionPageState extends ConsumerState<QASessionPage> {
               : ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  itemCount: sessionState.messages.length +
-                      (isProcessing ? 1 : 0),
+                  itemCount:
+                      sessionState.messages.length + (isProcessing ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == sessionState.messages.length && isProcessing) {
                       return const TypingIndicator();
@@ -191,7 +191,7 @@ class _QASessionPageState extends ConsumerState<QASessionPage> {
               color: theme.colorScheme.primary.withOpacity(0.5),
             ),
             const SizedBox(height: 24),
-            Text(
+            const Text(
               '故事聽完了！',
               style: AppTextStyles.headlineMedium,
               textAlign: TextAlign.center,
@@ -300,7 +300,7 @@ class _QASessionPageState extends ConsumerState<QASessionPage> {
           color: theme.colorScheme.tertiary,
         ),
         const SizedBox(height: 16),
-        Text(
+        const Text(
           '今天的問答時間結束了！',
           style: AppTextStyles.headlineSmall,
           textAlign: TextAlign.center,
@@ -342,7 +342,7 @@ class _QASessionPageState extends ConsumerState<QASessionPage> {
               color: theme.colorScheme.tertiary,
             ),
             const SizedBox(height: 24),
-            Text(
+            const Text(
               '問答結束了！',
               style: AppTextStyles.headlineMedium,
             ),
@@ -375,7 +375,9 @@ class _QASessionPageState extends ConsumerState<QASessionPage> {
           children: [
             Text('狀態：${session.statusLabel}'),
             const SizedBox(height: 8),
-            Text('已問問題：${session.messageCount ~/ 2} / ${QASession.maxMessages ~/ 2}'),
+            Text(
+              '已問問題：${session.messageCount ~/ 2} / ${QASession.maxMessages ~/ 2}',
+            ),
             const SizedBox(height: 8),
             Text('開始時間：${_formatTime(session.startedAt)}'),
           ],

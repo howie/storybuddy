@@ -64,9 +64,6 @@ class AudioRecordingService {
 
     // Configure recording
     const config = RecordConfig(
-      encoder: AudioEncoder.aacLc,
-      sampleRate: 44100,
-      bitRate: 128000,
       numChannels: 1,
     );
 
@@ -186,8 +183,8 @@ class AudioRecordingService {
     const minDb = -60.0;
     const maxDb = 0.0;
 
-    if (dB < minDb) return 0.0;
-    if (dB > maxDb) return 1.0;
+    if (dB < minDb) return 0;
+    if (dB > maxDb) return 1;
 
     return (dB - minDb) / (maxDb - minDb);
   }

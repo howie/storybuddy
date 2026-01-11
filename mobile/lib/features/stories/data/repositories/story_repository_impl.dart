@@ -101,6 +101,7 @@ class StoryRepositoryImpl implements StoryRepository {
 
   @override
   Future<Story> generateStory({
+    required String parentId,
     required List<String> keywords,
   }) async {
     // AI generation requires online connection
@@ -108,7 +109,10 @@ class StoryRepositoryImpl implements StoryRepository {
       throw Exception('網路連線需要才能使用 AI 生成故事');
     }
 
-    final remoteModel = await remoteDataSource.generateStory(keywords: keywords);
+    final remoteModel = await remoteDataSource.generateStory(
+      parentId: parentId,
+      keywords: keywords,
+    );
     final story = remoteModel.toEntity();
 
     // Cache locally

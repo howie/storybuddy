@@ -16,6 +16,7 @@ abstract class StoryRepository {
 
   /// Creates a new story from AI generation.
   Future<Story> generateStory({
+    required String parentId,
     required List<String> keywords,
   });
 

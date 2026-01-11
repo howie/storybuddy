@@ -135,8 +135,7 @@ class StoryLocalDataSourceImpl implements StoryLocalDataSource {
 
   @override
   Stream<entity.Story?> watchStory(String id) {
-    return (database.select(database.stories)
-          ..where((t) => t.id.equals(id)))
+    return (database.select(database.stories)..where((t) => t.id.equals(id)))
         .watchSingleOrNull()
         .map((row) => row != null ? _storyFromRow(row) : null);
   }

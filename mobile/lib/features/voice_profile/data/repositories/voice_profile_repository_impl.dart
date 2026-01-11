@@ -85,7 +85,10 @@ class VoiceProfileRepositoryImpl implements VoiceProfileRepository {
   }
 
   @override
-  Future<VoiceProfile> uploadVoiceProfile(String id) async {
+  Future<VoiceProfile> uploadVoiceProfile(
+    String id, {
+    void Function(int, int)? onSendProgress,
+  }) async {
     final profile = await localDataSource.getVoiceProfile(id);
     if (profile == null) {
       throw Exception('Voice profile not found');
@@ -110,6 +113,7 @@ class VoiceProfileRepositoryImpl implements VoiceProfileRepository {
         name: profile.name,
         audioFilePath: profile.localAudioPath!,
         sampleDurationSeconds: profile.sampleDurationSeconds ?? 0,
+        onSendProgress: onSendProgress,
       );
 
       final uploadedProfile = remoteModel.toEntity(

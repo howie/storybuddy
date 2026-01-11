@@ -18,11 +18,8 @@ void main() {
     });
 
     Widget createTestWidget() {
-      return ProviderScope(
-        overrides: [
-          // Override providers as needed for testing
-        ],
-        child: const MaterialApp(
+      return const ProviderScope(
+        child: MaterialApp(
           home: SettingsPage(),
         ),
       );

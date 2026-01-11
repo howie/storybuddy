@@ -16,7 +16,10 @@ abstract class VoiceProfileRepository {
   });
 
   /// Uploads a pending voice profile to the server.
-  Future<VoiceProfile> uploadVoiceProfile(String id);
+  Future<VoiceProfile> uploadVoiceProfile(
+    String id, {
+    void Function(int, int)? onSendProgress,
+  });
 
   /// Updates voice profile status from the server.
   Future<VoiceProfile> refreshStatus(String id);

@@ -5,9 +5,9 @@ import 'package:storybuddy/features/voice_kits/presentation/providers/voice_kit_
 import 'package:storybuddy/models/voice_kit.dart';
 
 class VoiceConfigurationPage extends ConsumerWidget {
-  final String storyId;
 
-  const VoiceConfigurationPage({Key? key, required this.storyId}) : super(key: key);
+  const VoiceConfigurationPage({required this.storyId, super.key});
+  final String storyId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -16,14 +16,15 @@ class VoiceConfigurationPage extends ConsumerWidget {
 
     if (userId == null) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()), // Or error/login prompt
+        body:
+            Center(child: CircularProgressIndicator()), // Or error/login prompt
       );
     }
 
     final voiceKitsAsync = ref.watch(voiceKitsProvider);
     final mappingsAsync = ref.watch(storyVoiceMappingsProvider(
       StoryVoiceMappingParams(userId, storyId),
-    ));
+    ),);
 
     return Scaffold(
       appBar: AppBar(
@@ -47,7 +48,7 @@ class VoiceConfigurationPage extends ConsumerWidget {
               }
 
               // Mock roles for now
-              final roles = ['Narrator', 'Character 1']; 
+              final roles = ['Narrator', 'Character 1'];
 
               return ListView.builder(
                 itemCount: roles.length,
@@ -59,18 +60,20 @@ class VoiceConfigurationPage extends ConsumerWidget {
                     title: Text(role),
                     subtitle: Text(
                       currentVoiceId != null
-                          ? allVoices.firstWhere(
-                              (v) => v.id == currentVoiceId,
-                              orElse: () => VoiceCharacter(
-                                id: 'unknown',
-                                kitId: 'unknown',
-                                name: 'Unknown Voice',
-                                providerVoiceId: '',
-                                gender: 'unknown',
-                                ageGroup: 'unknown',
-                                style: 'unknown',
-                              ),
-                            ).name
+                          ? allVoices
+                              .firstWhere(
+                                (v) => v.id == currentVoiceId,
+                                orElse: () => VoiceCharacter(
+                                  id: 'unknown',
+                                  kitId: 'unknown',
+                                  name: 'Unknown Voice',
+                                  providerVoiceId: '',
+                                  gender: 'unknown',
+                                  ageGroup: 'unknown',
+                                  style: 'unknown',
+                                ),
+                              )
+                              .name
                           : 'Default',
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios),
@@ -125,16 +128,18 @@ class VoiceConfigurationPage extends ConsumerWidget {
               onTap: () async {
                 Navigator.pop(context); // Close dialog
                 // Update mapping
-                await ref.read(storyVoiceMapControllerProvider.notifier).updateMapping(
-                  userId,
-                  storyId,
-                  role,
-                  voice.id,
-                );
+                await ref
+                    .read(storyVoiceMapControllerProvider.notifier)
+                    .updateMapping(
+                      userId,
+                      storyId,
+                      role,
+                      voice.id,
+                    );
                 // Refresh mappings
                 ref.refresh(storyVoiceMappingsProvider(
                   StoryVoiceMappingParams(userId, storyId),
-                ));
+                ),);
               },
             );
           },

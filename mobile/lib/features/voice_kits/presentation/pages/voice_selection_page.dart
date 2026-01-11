@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../providers/voice_kit_provider.dart';
+
+import '../../../../core/constants/app_colors.dart';
 import '../../../../models/voice_kit.dart';
-import '../../../../core/constants/app_colors.dart'; 
+import '../providers/voice_kit_provider.dart';
 
 class VoiceSelectionPage extends ConsumerWidget {
   const VoiceSelectionPage({super.key});
@@ -29,7 +30,7 @@ class VoiceSelectionPage extends ConsumerWidget {
             itemBuilder: (context, index) {
               if (index == voices.length) {
                 return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  padding: EdgeInsets.symmetric(vertical: 20),
                   child: Center(
                     child: Text(
                       'Powered by Microsoft Azure Cognitive Services',
@@ -46,31 +47,38 @@ class VoiceSelectionPage extends ConsumerWidget {
                 elevation: isSelected ? 4 : 1,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: isSelected 
-                    ? BorderSide(color: Theme.of(context).primaryColor, width: 2)
-                    : BorderSide.none,
+                  side: isSelected
+                      ? BorderSide(
+                          color: Theme.of(context).primaryColor, width: 2,)
+                      : BorderSide.none,
                 ),
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: isSelected 
-                        ? Theme.of(context).primaryColor.withOpacity(0.1) 
+                    backgroundColor: isSelected
+                        ? Theme.of(context).primaryColor.withOpacity(0.1)
                         : Colors.grey.shade200,
                     child: Icon(
                       voice.gender == Gender.female ? Icons.face_3 : Icons.face,
-                      color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
+                      color: isSelected
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey,
                     ),
                   ),
                   title: Text(voice.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(voice.previewText ?? "點擊試聽"),
+                      style: const TextStyle(fontWeight: FontWeight.bold),),
+                  subtitle: Text(voice.previewText ?? '點擊試聽'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                       IconButton(
+                      IconButton(
                         icon: Icon(
-                          isPreviewing ? Icons.stop_circle : Icons.play_circle_fill,
-                          color: isPreviewing ? Colors.red : Theme.of(context).primaryColor,
+                          isPreviewing
+                              ? Icons.stop_circle
+                              : Icons.play_circle_fill,
+                          color: isPreviewing
+                              ? Colors.red
+                              : Theme.of(context).primaryColor,
                           size: 32,
                         ),
                         onPressed: () {
@@ -80,21 +88,24 @@ class VoiceSelectionPage extends ConsumerWidget {
                             // Construct preview URL
                             // Assuming base URL logic needed or full URL returned
                             // Just passing raw URL for now or constructing relative
-                             // Use local preview implementation or call provider
-                             // For now assuming backend returns absolute or relative path that just_audio handles
-                             // But wait, backend returns audio bytes for preview endpoint usually?
-                             // No, GET /api/voices/{id}/preview returns bytes directly.
-                             // AudioPlayer needs a URL.
-                             // We should construct the URL: BASE_URL/api/voices/{id}/preview
-                             
-                             // Hack: Get API Host from config (not avail here easily) or hardcode relative
-                             // But AudioPlayer needs absolute URL usually
-                             // pass: "http://localhost:8000/api/voices/${voice.id}/preview"
-                             // In real app need config.
-                             
-                             final url = "http://10.0.2.2:8000/api/voices/${voice.id}/preview"; // Android emulator
-                             // For now let's use a placeholder or assume config is available
-                             ref.read(voicePreviewProvider.notifier).playPreview(url, voice.id);
+                            // Use local preview implementation or call provider
+                            // For now assuming backend returns absolute or relative path that just_audio handles
+                            // But wait, backend returns audio bytes for preview endpoint usually?
+                            // No, GET /api/voices/{id}/preview returns bytes directly.
+                            // AudioPlayer needs a URL.
+                            // We should construct the URL: BASE_URL/api/voices/{id}/preview
+
+                            // Hack: Get API Host from config (not avail here easily) or hardcode relative
+                            // But AudioPlayer needs absolute URL usually
+                            // pass: "http://localhost:8000/api/voices/${voice.id}/preview"
+                            // In real app need config.
+
+                            final url =
+                                'http://10.0.2.2:8000/api/voices/${voice.id}/preview'; // Android emulator
+                            // For now let's use a placeholder or assume config is available
+                            ref
+                                .read(voicePreviewProvider.notifier)
+                                .playPreview(url, voice.id);
                           }
                         },
                       ),
@@ -114,14 +125,14 @@ class VoiceSelectionPage extends ConsumerWidget {
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: ElevatedButton(
-          onPressed: selectedVoiceId == null 
-            ? null 
-            : () {
-                // Confirm selection
-                context.pop(selectedVoiceId);
-              },
+          onPressed: selectedVoiceId == null
+              ? null
+              : () {
+                  // Confirm selection
+                  context.pop(selectedVoiceId);
+                },
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 50),
           ),

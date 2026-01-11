@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/connectivity_service.dart';
+import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../shared/providers/database_provider.dart';
 import '../../data/datasources/voice_profile_local_datasource.dart';
 import '../../data/datasources/voice_profile_remote_datasource.dart';
@@ -18,7 +19,7 @@ part 'voice_profile_provider.g.dart';
 @riverpod
 AudioRecordingService audioRecordingService(AudioRecordingServiceRef ref) {
   final service = AudioRecordingService();
-  ref.onDispose(() => service.dispose());
+  ref.onDispose(service.dispose);
   return service;
 }
 
@@ -28,7 +29,11 @@ VoiceProfileRemoteDataSource voiceProfileRemoteDataSource(
   VoiceProfileRemoteDataSourceRef ref,
 ) {
   final apiClient = ref.watch(apiClientProvider);
-  return VoiceProfileRemoteDataSourceImpl(apiClient: apiClient);
+  final secureStorage = ref.watch(secureStorageServiceProvider);
+  return VoiceProfileRemoteDataSourceImpl(
+    apiClient: apiClient,
+    secureStorage: secureStorage,
+  );
 }
 
 /// Provider for [VoiceProfileLocalDataSource].
@@ -128,6 +133,7 @@ class VoiceRecordingState {
     this.recordingPath,
     this.uploadedProfileId,
     this.errorMessage,
+    this.uploadProgress = 0.0,
   });
 
   final RecordingState state;
@@ -135,6 +141,7 @@ class VoiceRecordingState {
   final String? recordingPath;
   final String? uploadedProfileId;
   final String? errorMessage;
+  final double uploadProgress;
 
   VoiceRecordingState copyWith({
     RecordingState? state,
@@ -142,6 +149,7 @@ class VoiceRecordingState {
     String? recordingPath,
     String? uploadedProfileId,
     String? errorMessage,
+    double? uploadProgress,
   }) {
     return VoiceRecordingState(
       state: state ?? this.state,
@@ -149,12 +157,13 @@ class VoiceRecordingState {
       recordingPath: recordingPath ?? this.recordingPath,
       uploadedProfileId: uploadedProfileId ?? this.uploadedProfileId,
       errorMessage: errorMessage ?? this.errorMessage,
+      uploadProgress: uploadProgress ?? this.uploadProgress,
     );
   }
 }
 
 /// Notifier for voice recording state.
-@riverpod
+@Riverpod(keepAlive: true)
 class VoiceRecordingNotifier extends _$VoiceRecordingNotifier {
   @override
   VoiceRecordingState build() {
@@ -213,7 +222,13 @@ class VoiceRecordingNotifier extends _$VoiceRecordingNotifier {
 
   /// Uploads the recording.
   Future<void> uploadRecording({required String name}) async {
+    print('VoiceRecordingNotifier: uploadRecording called with name: $name');
+    print(
+      'VoiceRecordingNotifier: Current recordingPath: ${state.recordingPath}',
+    );
+
     if (state.recordingPath == null) {
+      print('VoiceRecordingNotifier: Error - recordingPath is null');
       state = state.copyWith(
         state: RecordingState.error,
         errorMessage: '沒有錄音可上傳',
@@ -221,33 +236,55 @@ class VoiceRecordingNotifier extends _$VoiceRecordingNotifier {
       return;
     }
 
-    state = state.copyWith(state: RecordingState.uploading);
+    state = state.copyWith(
+      state: RecordingState.uploading,
+      uploadProgress: 0,
+    );
+    print('VoiceRecordingNotifier: State updated to uploading');
 
     try {
       final recordUseCase = ref.read(recordVoiceUseCaseProvider);
       final uploadUseCase = ref.read(uploadVoiceUseCaseProvider);
 
+      print('VoiceRecordingNotifier: Calling recordUseCase...');
       // Create local profile
       final profile = await recordUseCase.call(
         name: name,
         localAudioPath: state.recordingPath!,
         sampleDurationSeconds: state.elapsedSeconds,
       );
+      print('VoiceRecordingNotifier: Profile created locally: ${profile.id}');
 
+      print('VoiceRecordingNotifier: Calling uploadUseCase...');
       // Upload to server
-      await uploadUseCase.call(profile.id);
+      await uploadUseCase.call(
+        profile.id,
+        onSendProgress: (sent, total) {
+          if (total <= 0) return;
+          final progress = sent / total;
+          print('VoiceRecordingNotifier: Upload progress: $progress');
+          state = state.copyWith(uploadProgress: progress);
+        },
+      );
+      print('VoiceRecordingNotifier: Upload completed successfully');
 
       state = state.copyWith(
         state: RecordingState.uploaded,
         uploadedProfileId: profile.id,
+        uploadProgress: 1,
+      );
+      print(
+        'VoiceRecordingNotifier: State updated to uploaded. ProfileId: ${profile.id}',
       );
 
       // Refresh list
       ref.invalidate(voiceProfileListNotifierProvider);
-    } catch (e) {
+    } catch (e, stack) {
+      print('VoiceRecordingNotifier: Error during upload: $e');
+      print('VoiceRecordingNotifier: Stack trace: $stack');
       state = state.copyWith(
         state: RecordingState.error,
-        errorMessage: e.toString(),
+        errorMessage: '上傳失敗: $e',
       );
     }
   }

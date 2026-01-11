@@ -8,7 +8,10 @@ class UploadVoiceUseCase {
   final VoiceProfileRepository repository;
 
   /// Uploads a voice profile to the server for processing.
-  Future<VoiceProfile> call(String profileId) async {
+  Future<VoiceProfile> call(
+    String profileId, {
+    void Function(int, int)? onSendProgress,
+  }) async {
     // Get the profile first
     final profile = await repository.getVoiceProfile(profileId);
     if (profile == null) {
@@ -21,7 +24,10 @@ class UploadVoiceUseCase {
     }
 
     // Upload to server
-    return repository.uploadVoiceProfile(profileId);
+    return repository.uploadVoiceProfile(
+      profileId,
+      onSendProgress: onSendProgress,
+    );
   }
 
   /// Refreshes the status of a voice profile from the server.

@@ -293,7 +293,8 @@ class _VoiceProfileStatusPageState
           mainAxisSize: MainAxisSize.min,
           children: [
             FilledButton.icon(
-              onPressed: () => context.pushReplacement('/voice-profiles/record'),
+              onPressed: () =>
+                  context.pushReplacement('/voice-profiles/record'),
               icon: const Icon(Icons.refresh),
               label: const Text('重新錄製'),
             ),

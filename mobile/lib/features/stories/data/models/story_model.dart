@@ -14,12 +14,12 @@ class StoryModel {
     required this.title,
     required this.content,
     required this.source,
-    this.keywords,
     required this.wordCount,
-    this.estimatedDurationMinutes,
-    this.audioUrl,
     required this.createdAt,
     required this.updatedAt,
+    this.keywords,
+    this.estimatedDurationMinutes,
+    this.audioUrl,
   });
 
   factory StoryModel.fromJson(Map<String, dynamic> json) =>
@@ -110,8 +110,12 @@ class ImportStoryRequest {
 @JsonSerializable(createFactory: false)
 class GenerateStoryRequest {
   GenerateStoryRequest({
+    required this.parentId,
     required this.keywords,
   });
+
+  @JsonKey(name: 'parent_id')
+  final String parentId;
 
   final List<String> keywords;
 

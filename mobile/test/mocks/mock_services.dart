@@ -39,9 +39,11 @@ class MockStoryRepositoryImpl extends Mock implements StoryRepositoryImpl {}
 class MockVoiceProfileRepositoryImpl extends Mock
     implements VoiceProfileRepositoryImpl {}
 
-class MockPlaybackRepositoryImpl extends Mock implements PlaybackRepositoryImpl {}
+class MockPlaybackRepositoryImpl extends Mock
+    implements PlaybackRepositoryImpl {}
 
-class MockQASessionRepositoryImpl extends Mock implements QASessionRepositoryImpl {}
+class MockQASessionRepositoryImpl extends Mock
+    implements QASessionRepositoryImpl {}
 
 class MockPendingQuestionRepositoryImpl extends Mock
     implements PendingQuestionRepositoryImpl {}

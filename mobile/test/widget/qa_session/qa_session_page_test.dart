@@ -6,6 +6,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:storybuddy/features/qa_session/presentation/pages/qa_session_page.dart';
 
 class MockQASessionRepository extends Mock {}
+
 class MockVoiceInputService extends Mock {}
 
 void main() {
@@ -20,9 +21,6 @@ void main() {
 
     Widget createTestWidget({required String storyId}) {
       return ProviderScope(
-        overrides: [
-          // Override providers as needed for testing
-        ],
         child: MaterialApp(
           home: QASessionPage(storyId: storyId),
         ),

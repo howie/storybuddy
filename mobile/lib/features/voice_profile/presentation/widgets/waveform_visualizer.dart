@@ -39,7 +39,7 @@ class _WaveformVisualizerState extends State<WaveformVisualizer>
   @override
   void initState() {
     super.initState();
-    _amplitudes = List.filled(widget.barCount, 0.0);
+    _amplitudes = List.filled(widget.barCount, 0);
 
     _animationController = AnimationController(
       vsync: this,
@@ -72,7 +72,7 @@ class _WaveformVisualizerState extends State<WaveformVisualizer>
     }
     if (!widget.isRecording) {
       // Fade out bars when not recording
-      _amplitudes = List.filled(widget.barCount, 0.0);
+      _amplitudes = List.filled(widget.barCount, 0);
     }
   }
 
@@ -93,7 +93,6 @@ class _WaveformVisualizerState extends State<WaveformVisualizer>
       height: widget.maxBarHeight,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: List.generate(widget.barCount, (index) {
           final amplitude = _amplitudes[index];
           final barHeight = widget.minBarHeight +
@@ -154,7 +153,6 @@ class StaticWaveform extends StatelessWidget {
       height: maxBarHeight,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: List.generate(barCount, (index) {
           final amplitude = resampledAmplitudes[index];
           final barHeight =
@@ -177,7 +175,7 @@ class StaticWaveform extends StatelessWidget {
 
   List<double> _resampleAmplitudes(List<double> source, int targetCount) {
     if (source.isEmpty) {
-      return List.filled(targetCount, 0.0);
+      return List.filled(targetCount, 0);
     }
 
     if (source.length == targetCount) {
@@ -192,7 +190,7 @@ class StaticWaveform extends StatelessWidget {
       final endIndex = math.min(((i + 1) * ratio).floor(), source.length);
 
       if (startIndex >= source.length) {
-        result.add(0.0);
+        result.add(0);
       } else {
         // Average amplitude in this segment
         var sum = 0.0;

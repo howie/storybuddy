@@ -51,7 +51,7 @@ class _PendingQuestionsPageState extends ConsumerState<PendingQuestionsPage> {
         ],
       ),
       body: questionsAsync.when(
-        data: (questions) => _buildContent(questions),
+        data: _buildContent,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _buildErrorState(error),
       ),
@@ -73,8 +73,10 @@ class _PendingQuestionsPageState extends ConsumerState<PendingQuestionsPage> {
     return RefreshIndicator(
       onRefresh: () async {
         await ref
-            .read(pendingQuestionsNotifierProvider(storyId: widget.storyId)
-                .notifier)
+            .read(
+              pendingQuestionsNotifierProvider(storyId: widget.storyId)
+                  .notifier,
+            )
             .refresh();
       },
       child: ListView.builder(
@@ -128,9 +130,11 @@ class _PendingQuestionsPageState extends ConsumerState<PendingQuestionsPage> {
             FilledButton.icon(
               onPressed: () {
                 ref
-                    .read(pendingQuestionsNotifierProvider(
-                            storyId: widget.storyId)
-                        .notifier)
+                    .read(
+                      pendingQuestionsNotifierProvider(
+                        storyId: widget.storyId,
+                      ).notifier,
+                    )
                     .refresh();
               },
               icon: const Icon(Icons.refresh),
@@ -167,8 +171,9 @@ class _PendingQuestionsPageState extends ConsumerState<PendingQuestionsPage> {
         onAnswered: () {
           ref
               .read(
-                  pendingQuestionsNotifierProvider(storyId: widget.storyId)
-                      .notifier)
+                pendingQuestionsNotifierProvider(storyId: widget.storyId)
+                    .notifier,
+              )
               .refresh();
         },
       ),
@@ -206,12 +211,11 @@ class _QuestionDetailSheet extends StatelessWidget {
     final isAnswered = question.status == PendingQuestionStatus.answered;
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.5,
       minChildSize: 0.3,
       maxChildSize: 0.9,
       expand: false,
       builder: (context, scrollController) {
-        return Container(
+        return DecoratedBox(
           decoration: BoxDecoration(
             color: theme.colorScheme.surface,
             borderRadius: const BorderRadius.vertical(

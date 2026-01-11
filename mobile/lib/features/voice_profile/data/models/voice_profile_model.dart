@@ -13,11 +13,11 @@ class VoiceProfileModel {
     required this.parentId,
     required this.name,
     required this.status,
+    required this.createdAt,
+    required this.updatedAt,
     this.sampleDurationSeconds,
     this.remoteVoiceModelUrl,
     this.errorMessage,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory VoiceProfileModel.fromJson(Map<String, dynamic> json) =>

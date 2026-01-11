@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme.dart';
+import '../../../../core/database/enums.dart';
 import '../../../../shared/widgets/error_widget.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
+import '../../../playback/presentation/providers/playback_provider.dart';
+import '../../../voice_profile/domain/entities/voice_profile.dart';
+import '../../../voice_profile/presentation/providers/voice_profile_provider.dart';
 import '../../domain/entities/story.dart';
 import '../providers/story_provider.dart';
 
@@ -20,6 +24,11 @@ class StoryDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final storyAsync = ref.watch(storyDetailNotifierProvider(storyId));
+    final voiceProfilesAsync = ref.watch(voiceProfileListNotifierProvider);
+    final playbackState = ref.watch(playbackNotifierProvider);
+
+    // Get the latest ready voice profile
+    final readyVoiceProfile = _getReadyVoiceProfile(voiceProfilesAsync);
 
     return Scaffold(
       body: storyAsync.when(
@@ -114,17 +123,123 @@ class StoryDetailPage extends ConsumerWidget {
         loading: () => null,
         error: (_, __) => null,
         data: (story) {
-          if (story == null || !story.hasAudio) {
-            return null;
-          }
-          return FloatingActionButton.extended(
-            onPressed: () => _navigateToPlayback(context),
-            icon: const Icon(Icons.play_arrow),
-            label: const Text('播放故事'),
+          if (story == null) return null;
+
+          return _buildFAB(
+            context,
+            ref,
+            story,
+            readyVoiceProfile,
+            playbackState.isLoading,
           );
         },
       ),
     );
+  }
+
+  /// Gets the latest ready voice profile from the async value.
+  VoiceProfile? _getReadyVoiceProfile(
+    AsyncValue<List<VoiceProfile>> voiceProfilesAsync,
+  ) {
+    final profiles = voiceProfilesAsync.valueOrNull;
+    if (profiles == null || profiles.isEmpty) return null;
+
+    final readyProfiles =
+        profiles.where((p) => p.status == VoiceProfileStatus.ready).toList();
+    if (readyProfiles.isEmpty) return null;
+
+    // Return the most recently created ready profile
+    readyProfiles.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return readyProfiles.first;
+  }
+
+  /// Builds the appropriate FAB based on story and voice profile state.
+  Widget? _buildFAB(
+    BuildContext context,
+    WidgetRef ref,
+    Story story,
+    VoiceProfile? readyVoiceProfile,
+    bool isGenerating,
+  ) {
+    // Show loading indicator when generating audio
+    if (isGenerating) {
+      return const FloatingActionButton.extended(
+        onPressed: null,
+        icon: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.white,
+          ),
+        ),
+        label: Text('生成中...'),
+      );
+    }
+
+    // If story has audio, show play button
+    if (story.hasAudio) {
+      return FloatingActionButton.extended(
+        onPressed: () => _navigateToPlayback(context),
+        icon: const Icon(Icons.play_arrow),
+        label: const Text('播放故事'),
+      );
+    }
+
+    // If has ready voice profile, show generate button
+    if (readyVoiceProfile != null) {
+      return FloatingActionButton.extended(
+        onPressed: () => _generateAudio(context, ref, readyVoiceProfile.id),
+        icon: const Icon(Icons.record_voice_over),
+        label: const Text('生成語音'),
+      );
+    }
+
+    // No voice profile, show record button
+    return FloatingActionButton.extended(
+      onPressed: () => _navigateToVoiceRecording(context),
+      icon: const Icon(Icons.mic),
+      label: const Text('錄製聲音'),
+    );
+  }
+
+  Future<void> _generateAudio(
+    BuildContext context,
+    WidgetRef ref,
+    String voiceProfileId,
+  ) async {
+    try {
+      await ref.read(playbackNotifierProvider.notifier).generateAudio(
+            storyId: storyId,
+            voiceProfileId: voiceProfileId,
+          );
+
+      // Refresh story to get updated audio URL
+      ref.invalidate(storyDetailNotifierProvider(storyId));
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('語音生成完成！'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } on Exception catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('語音生成失敗：$e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  void _navigateToVoiceRecording(BuildContext context) {
+    context.push('/voice-profile');
   }
 
   Widget _buildMetaInfo(BuildContext context, Story story) {
@@ -204,7 +319,7 @@ class StoryDetailPage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           '故事內容',
           style: AppTextStyles.headlineSmall,
         ),
@@ -233,7 +348,7 @@ class StoryDetailPage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           '關鍵字',
           style: AppTextStyles.headlineSmall,
         ),

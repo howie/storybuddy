@@ -20,7 +20,7 @@ part 'qa_session_provider.g.dart';
 VoiceInputService voiceInputService(VoiceInputServiceRef ref) {
   final apiClient = ref.watch(apiClientProvider);
   final service = VoiceInputService(apiClient: apiClient);
-  ref.onDispose(() => service.dispose());
+  ref.onDispose(service.dispose);
   return service;
 }
 
@@ -216,7 +216,11 @@ class QASessionNotifier extends _$QASessionNotifier {
       state = state.copyWith(
         state: QASessionState.active,
         session: response.session,
-        messages: [...state.messages, response.childMessage, response.aiMessage],
+        messages: [
+          ...state.messages,
+          response.childMessage,
+          response.aiMessage,
+        ],
         isNearLimit: response.isNearLimit,
         hasReachedLimit: response.hasReachedLimit,
       );
@@ -263,7 +267,11 @@ class QASessionNotifier extends _$QASessionNotifier {
       state = state.copyWith(
         state: QASessionState.active,
         session: response.session,
-        messages: [...state.messages, response.childMessage, response.aiMessage],
+        messages: [
+          ...state.messages,
+          response.childMessage,
+          response.aiMessage,
+        ],
         isNearLimit: response.isNearLimit,
         hasReachedLimit: response.hasReachedLimit,
       );
@@ -295,7 +303,7 @@ class QASessionNotifier extends _$QASessionNotifier {
 
   /// Clears any error message.
   void clearError() {
-    state = state.copyWith(errorMessage: null);
+    state = state.copyWith();
   }
 
   /// Watches for message updates.

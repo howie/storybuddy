@@ -75,7 +75,7 @@ class _PlaybackPageState extends ConsumerState<PlaybackPage> {
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
-                  background: Container(
+                  background: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,

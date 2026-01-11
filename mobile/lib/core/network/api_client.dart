@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,9 +14,9 @@ class ApiClient {
   }) {
     _dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl ?? Env.apiBaseUrl,
-        connectTimeout: Duration(seconds: Env.connectTimeoutSeconds),
-        receiveTimeout: Duration(seconds: Env.receiveTimeoutSeconds),
+        baseUrl: _getPlatformBaseUrl(baseUrl ?? Env.apiBaseUrl),
+        connectTimeout: const Duration(seconds: Env.connectTimeoutSeconds),
+        receiveTimeout: const Duration(seconds: Env.receiveTimeoutSeconds),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -55,6 +56,7 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
+    ProgressCallback? onSendProgress,
   }) {
     return _dio.post<T>(
       path,
@@ -62,6 +64,7 @@ class ApiClient {
       queryParameters: queryParameters,
       options: options,
       cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
     );
   }
 
@@ -170,3 +173,10 @@ final apiClientProvider = Provider<ApiClient>((ref) {
     ],
   );
 });
+
+String _getPlatformBaseUrl(String baseUrl) {
+  if (Platform.isAndroid && baseUrl.contains('localhost')) {
+    return baseUrl.replaceFirst('localhost', '10.0.2.2');
+  }
+  return baseUrl;
+}

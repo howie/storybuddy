@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme.dart';
+import '../../../auth/presentation/providers/parent_provider.dart';
 import '../../domain/entities/story.dart';
 import '../../domain/usecases/generate_story.dart';
 import '../providers/story_provider.dart';
@@ -51,9 +52,17 @@ class _GenerateStoryPageState extends ConsumerState<GenerateStoryPage> {
     });
 
     try {
-      final story = await ref
-          .read(storyListNotifierProvider.notifier)
-          .generateStory(keywords: _keywords);
+      // Get the current parent ID
+      final parent = await ref.read(currentParentProvider.future);
+      if (parent == null) {
+        throw Exception('請先設定家長資料');
+      }
+
+      final story =
+          await ref.read(storyListNotifierProvider.notifier).generateStory(
+                parentId: parent.id,
+                keywords: _keywords,
+              );
 
       setState(() {
         _generatedStory = story;
@@ -120,7 +129,7 @@ class _GenerateStoryPageState extends ConsumerState<GenerateStoryPage> {
         const SizedBox(height: 24),
 
         // Keyword input
-        Text(
+        const Text(
           '輸入關鍵字',
           style: AppTextStyles.headlineSmall,
         ),

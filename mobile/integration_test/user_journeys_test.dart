@@ -15,19 +15,26 @@ void main() {
         (tester) async {
       // Start the app
       app.main();
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+      await tester.pumpAndSettle(const Duration(seconds: 10));
 
-      // Step 1: Open add story menu
+      // Step 1: Navigate to import page
+      // When list is empty, use empty state button; otherwise use FAB + bottom sheet
       final fab = find.byType(FloatingActionButton);
-      expect(fab, findsOneWidget);
-      await tester.tap(fab);
-      await tester.pumpAndSettle();
-
-      // Step 2: Select import option
-      final importOption = find.text('匯入故事');
-      expect(importOption, findsOneWidget);
-      await tester.tap(importOption);
-      await tester.pumpAndSettle();
+      if (fab.evaluate().isNotEmpty) {
+        // Story list has items, use FAB to open bottom sheet
+        await tester.tap(fab);
+        await tester.pumpAndSettle();
+        final importOption = find.text('匯入故事');
+        expect(importOption, findsOneWidget);
+        await tester.tap(importOption);
+        await tester.pumpAndSettle();
+      } else {
+        // Empty state - use the "匯入故事" button directly
+        final importButton = find.text('匯入故事');
+        expect(importButton, findsOneWidget);
+        await tester.tap(importButton);
+        await tester.pumpAndSettle();
+      }
 
       // Step 3: Fill in story details
       final textFields = find.byType(TextField);
@@ -250,47 +257,58 @@ void main() {
   group('User Journey: Story Generation Flow', () {
     testWidgets('user can access AI story generation', (tester) async {
       app.main();
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+      await tester.pumpAndSettle(const Duration(seconds: 10));
 
-      // Open add story menu
+      // Navigate to AI generation page
+      // When list is empty, use empty state button; otherwise use FAB + bottom sheet
       final fab = find.byType(FloatingActionButton);
       if (fab.evaluate().isNotEmpty) {
+        // Story list has items, use FAB to open bottom sheet
         await tester.tap(fab);
         await tester.pumpAndSettle();
-
-        // Select AI generate option
         final generateOption = find.text('AI 生成');
         expect(generateOption, findsOneWidget);
         await tester.tap(generateOption);
         await tester.pumpAndSettle();
-
-        // Verify generation page has keyword input
-        expect(find.byType(TextField), findsWidgets);
+      } else {
+        // Empty state - use the "AI 生成" button directly
+        final generateButton = find.text('AI 生成');
+        expect(generateButton, findsOneWidget);
+        await tester.tap(generateButton);
+        await tester.pumpAndSettle();
       }
+
+      // Verify generation page has keyword input
+      expect(find.byType(TextField), findsWidgets);
     });
 
     testWidgets('user can enter keywords for story generation', (tester) async {
       app.main();
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+      await tester.pumpAndSettle(const Duration(seconds: 10));
 
       // Navigate to generation page
+      // When list is empty, use empty state button; otherwise use FAB + bottom sheet
       final fab = find.byType(FloatingActionButton);
       if (fab.evaluate().isNotEmpty) {
+        // Story list has items, use FAB to open bottom sheet
         await tester.tap(fab);
         await tester.pumpAndSettle();
-
         await tester.tap(find.text('AI 生成'));
         await tester.pumpAndSettle();
+      } else {
+        // Empty state - use the "AI 生成" button directly
+        await tester.tap(find.text('AI 生成'));
+        await tester.pumpAndSettle();
+      }
 
-        // Enter keywords
-        final keywordField = find.byType(TextField);
-        if (keywordField.evaluate().isNotEmpty) {
-          await tester.enterText(keywordField.first, '小熊 森林 冒險');
-          await tester.pumpAndSettle();
+      // Enter keywords
+      final keywordField = find.byType(TextField);
+      if (keywordField.evaluate().isNotEmpty) {
+        await tester.enterText(keywordField.first, '小熊 森林 冒險');
+        await tester.pumpAndSettle();
 
-          // Verify keywords were entered
-          expect(find.text('小熊 森林 冒險'), findsOneWidget);
-        }
+        // Verify keywords were entered
+        expect(find.text('小熊 森林 冒險'), findsOneWidget);
       }
     });
   });

@@ -39,6 +39,8 @@ Apache License 2.0
 - Dart 3.x / Flutter 3.x (latest stable) (001-flutter-mobile-app)
 - Dart 3.x / Flutter 3.x (latest stable) + flutter_riverpod, go_router, dio, just_audio, audio_service, record, drift, flutter_secure_storage (001-flutter-mobile-app)
 - SQLite (Drift) for local data, encrypted file cache for audio (001-flutter-mobile-app)
+- Dart 3.x / Flutter 3.x (latest stable) + flutter_riverpod, go_router, dio, just_audio, record, drif (002-full-app-ui-flow)
+- SQLite (Drift) for local data, flutter_secure_storage for sensitive data (002-full-app-ui-flow)
 
 ## Recent Changes
 - 000-StoryBuddy-mvp: Added Python 3.11

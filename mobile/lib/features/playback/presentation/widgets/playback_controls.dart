@@ -41,9 +41,8 @@ class PlaybackControls extends StatelessWidget {
 
         // Seek backward button
         IconButton(
-          onPressed: playbackState.state != PlaybackState.idle
-              ? onSeekBackward
-              : null,
+          onPressed:
+              playbackState.state != PlaybackState.idle ? onSeekBackward : null,
           icon: const Icon(Icons.replay_10),
           iconSize: 36,
           color: theme.colorScheme.onSurface,
@@ -65,9 +64,8 @@ class PlaybackControls extends StatelessWidget {
 
         // Seek forward button
         IconButton(
-          onPressed: playbackState.state != PlaybackState.idle
-              ? onSeekForward
-              : null,
+          onPressed:
+              playbackState.state != PlaybackState.idle ? onSeekForward : null,
           icon: const Icon(Icons.forward_10),
           iconSize: 36,
           color: theme.colorScheme.onSurface,
@@ -77,8 +75,7 @@ class PlaybackControls extends StatelessWidget {
 
         // Stop button
         IconButton(
-          onPressed:
-              playbackState.state != PlaybackState.idle ? onStop : null,
+          onPressed: playbackState.state != PlaybackState.idle ? onStop : null,
           icon: const Icon(Icons.stop),
           iconSize: 32,
           color: theme.colorScheme.onSurfaceVariant,
@@ -165,15 +162,17 @@ class _SpeedButton extends StatelessWidget {
       initialValue: speed,
       onSelected: onSpeedChange,
       itemBuilder: (context) => _speeds
-          .map((s) => PopupMenuItem(
-                value: s,
-                child: Text(
-                  '${s}x',
-                  style: TextStyle(
-                    fontWeight: s == speed ? FontWeight.bold : FontWeight.normal,
-                  ),
+          .map(
+            (s) => PopupMenuItem(
+              value: s,
+              child: Text(
+                '${s}x',
+                style: TextStyle(
+                  fontWeight: s == speed ? FontWeight.bold : FontWeight.normal,
                 ),
-              ))
+              ),
+            ),
+          )
           .toList(),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

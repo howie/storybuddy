@@ -6,6 +6,7 @@ import '../../../../core/network/connectivity_service.dart';
 import '../../../../shared/widgets/error_widget.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../providers/story_provider.dart';
+import '../widgets/app_drawer.dart';
 import '../widgets/story_card.dart';
 import '../widgets/story_empty_state.dart';
 
@@ -18,9 +19,19 @@ class StoryListPage extends ConsumerWidget {
     final storiesAsync = ref.watch(storyListNotifierProvider);
     final isOnline = ref.watch(connectivityStatusProvider).valueOrNull ?? true;
 
+    // Determine if story list is empty (for conditional FAB display)
+    final hasStories = storiesAsync.valueOrNull?.isNotEmpty ?? false;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('我的故事'),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+            tooltip: '選單',
+          ),
+        ),
         actions: [
           if (!isOnline)
             const Padding(
@@ -29,6 +40,7 @@ class StoryListPage extends ConsumerWidget {
             ),
         ],
       ),
+      drawer: const AppDrawer(),
       body: RefreshIndicator(
         onRefresh: () async {
           await ref.read(storyListNotifierProvider.notifier).refresh();
@@ -67,11 +79,14 @@ class StoryListPage extends ConsumerWidget {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddOptions(context),
-        icon: const Icon(Icons.add),
-        label: const Text('新增故事'),
-      ),
+      // Hide FAB when empty state is shown (empty state has its own action buttons)
+      floatingActionButton: hasStories
+          ? FloatingActionButton.extended(
+              onPressed: () => _showAddOptions(context),
+              icon: const Icon(Icons.add),
+              label: const Text('新增故事'),
+            )
+          : null,
     );
   }
 

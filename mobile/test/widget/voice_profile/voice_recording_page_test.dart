@@ -1,92 +1,159 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
-
+import 'package:storybuddy/core/database/enums.dart';
+import 'package:storybuddy/features/voice_profile/data/services/audio_recording_service.dart';
+import 'package:storybuddy/features/voice_profile/domain/entities/voice_profile.dart';
+import 'package:storybuddy/features/voice_profile/domain/usecases/record_voice.dart';
+import 'package:storybuddy/features/voice_profile/domain/usecases/upload_voice.dart';
 import 'package:storybuddy/features/voice_profile/presentation/pages/voice_recording_page.dart';
+import 'package:storybuddy/features/voice_profile/presentation/providers/voice_profile_provider.dart';
 
-class MockVoiceProfileRepository extends Mock {}
-class MockAudioRecordingService extends Mock {}
+// Mocks
+class MockAudioRecordingService extends Mock implements AudioRecordingService {}
+
+class MockRecordVoiceUseCase extends Mock implements RecordVoiceUseCase {}
+
+class MockUploadVoiceUseCase extends Mock implements UploadVoiceUseCase {}
+
+// Fake VoiceProfile for return values
+final _fakeProfile = VoiceProfile(
+  id: 'test-profile-id',
+  parentId: 'parent-id',
+  name: 'Test Voice',
+  status: VoiceProfileStatus.processing,
+  createdAt: DateTime.now(),
+  updatedAt: DateTime.now(),
+);
 
 void main() {
-  group('VoiceRecordingPage', () {
-    late MockVoiceProfileRepository mockRepository;
+  group('VoiceRecordingPage Integration Test', () {
     late MockAudioRecordingService mockRecordingService;
+    late MockRecordVoiceUseCase mockRecordUseCase;
+    late MockUploadVoiceUseCase mockUploadUseCase;
+    late StreamController<double> amplitudeController;
 
     setUp(() {
-      mockRepository = MockVoiceProfileRepository();
       mockRecordingService = MockAudioRecordingService();
-    });
+      mockRecordUseCase = MockRecordVoiceUseCase();
+      mockUploadUseCase = MockUploadVoiceUseCase();
+      amplitudeController = StreamController<double>.broadcast();
 
-    Widget createTestWidget() {
-      return ProviderScope(
-        overrides: [
-          // Override providers as needed for testing
-        ],
-        child: const MaterialApp(
-          home: VoiceRecordingPage(),
+      // Default behaviors
+      when(() => mockRecordingService.hasPermission())
+          .thenAnswer((_) async => true);
+      when(() => mockRecordingService.amplitudeStream)
+          .thenAnswer((_) => amplitudeController.stream);
+      when(() => mockRecordingService.startRecording())
+          .thenAnswer((_) async => '/tmp/audio.wav');
+
+      when(() => mockRecordingService.stopRecording()).thenAnswer(
+        (_) async => RecordingResult(
+          path: '/tmp/audio.wav',
+          durationSeconds: 45,
+          fileSizeBytes: 1024,
         ),
       );
-    }
 
-    testWidgets('displays record button initially', (tester) async {
-      // TODO: Implement when VoiceRecordingPage is created
-      // This test should verify that the record button is shown initially
-      expect(true, isTrue); // Placeholder
+      when(
+        () => mockRecordUseCase.call(
+          name: any(named: 'name'),
+          localAudioPath: any(named: 'localAudioPath'),
+          sampleDurationSeconds: any(named: 'sampleDurationSeconds'),
+        ),
+      ).thenAnswer((_) async => _fakeProfile);
+
+      when(
+        () => mockUploadUseCase.call(
+          any(),
+          onSendProgress: any(named: 'onSendProgress'),
+        ),
+      ).thenAnswer((invocation) async {
+        final progressCallback =
+            invocation.namedArguments[const Symbol('onSendProgress')] as void
+                Function(int, int)?;
+        if (progressCallback != null) {
+          progressCallback(50, 100);
+        }
+        return _fakeProfile;
+      });
     });
 
-    testWidgets('shows privacy consent dialog before recording', (tester) async {
-      // TODO: Implement when VoiceRecordingPage is created
-      // This test should verify that privacy consent is shown before recording
-      expect(true, isTrue); // Placeholder
+    tearDown(() {
+      amplitudeController.close();
     });
 
-    testWidgets('displays recording timer when recording', (tester) async {
-      // TODO: Implement when VoiceRecordingPage is created
-      // This test should verify that a timer is shown during recording
-      expect(true, isTrue); // Placeholder
-    });
+    testWidgets('Full flow: Record -> Stop -> Upload -> Navigate',
+        (tester) async {
+      // Setup Router
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const VoiceRecordingPage(),
+          ),
+          GoRoute(
+            path: '/voice-profile/status/:id',
+            builder: (context, state) => Scaffold(
+              body: Text('Status Page: ${state.pathParameters["id"]}'),
+            ),
+          ),
+        ],
+      );
 
-    testWidgets('displays waveform visualization when recording', (tester) async {
-      // TODO: Implement when VoiceRecordingPage is created
-      // This test should verify that waveform is shown during recording
-      expect(true, isTrue); // Placeholder
-    });
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            audioRecordingServiceProvider
+                .overrideWithValue(mockRecordingService),
+            recordVoiceUseCaseProvider.overrideWithValue(mockRecordUseCase),
+            uploadVoiceUseCaseProvider.overrideWithValue(mockUploadUseCase),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+          ),
+        ),
+      );
 
-    testWidgets('shows minimum duration warning if too short', (tester) async {
-      // TODO: Implement when VoiceRecordingPage is created
-      // This test should verify warning when recording < 30 seconds
-      expect(true, isTrue); // Placeholder
-    });
+      await tester.pumpAndSettle(); // Wait for privacy dialog
 
-    testWidgets('enables preview after stopping recording', (tester) async {
-      // TODO: Implement when VoiceRecordingPage is created
-      // This test should verify preview is available after recording
-      expect(true, isTrue); // Placeholder
-    });
+      // 1. Handle Privacy Consent
+      expect(find.text('隱私聲明'), findsOneWidget);
+      await tester.tap(find.text('同意'));
+      await tester.pumpAndSettle();
 
-    testWidgets('shows upload button after recording', (tester) async {
-      // TODO: Implement when VoiceRecordingPage is created
-      // This test should verify upload button appears after recording
-      expect(true, isTrue); // Placeholder
-    });
+      // 2. Start Recording
+      await tester.tap(find.byIcon(Icons.mic));
+      await tester.pump();
 
-    testWidgets('displays progress during upload', (tester) async {
-      // TODO: Implement when VoiceRecordingPage is created
-      // This test should verify progress indicator during upload
-      expect(true, isTrue); // Placeholder
-    });
+      verify(() => mockRecordingService.startRecording()).called(1);
 
-    testWidgets('navigates to status page after successful upload', (tester) async {
-      // TODO: Implement when VoiceRecordingPage is created
-      // This test should verify navigation to status page after upload
-      expect(true, isTrue); // Placeholder
-    });
+      // 3. Stop Recording
+      await tester.pump(const Duration(seconds: 35));
+      await tester.tap(find.byIcon(Icons.stop));
+      await tester.pumpAndSettle();
 
-    testWidgets('displays error on upload failure', (tester) async {
-      // TODO: Implement when VoiceRecordingPage is created
-      // This test should verify error handling on upload failure
-      expect(true, isTrue); // Placeholder
+      verify(() => mockRecordingService.stopRecording()).called(1);
+
+      // 4. Upload
+      await tester.tap(find.text('上傳'));
+
+      // Verification of upload flow
+      await tester.pump(); // Initiate upload
+      await tester.pump(); // Process upload future
+
+      // 5. Verify Navigation
+      await tester.pumpAndSettle();
+
+      // Check if router location updated
+      // Since we can't easily access router.location property (private/protected in some versions or just not refreshed?)
+      // We can check if the new page is in the tree.
+      expect(find.text('Status Page: ${_fakeProfile.id}'), findsOneWidget);
     });
   });
 }

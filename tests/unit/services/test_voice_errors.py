@@ -36,13 +36,27 @@ async def test_azure_tts_cancellation_error():
 @pytest.mark.asyncio
 async def test_voice_kit_service_handles_provider_error():
     """Test that service propagates errors."""
+    from src.models.voice import TTSProvider, VoiceKit
+
     service = VoiceKitService()
     service.azure_provider = MagicMock()
     service.azure_provider.synthesize.side_effect = RuntimeError("Provider Error")
 
-    # Mock get_voice to return a voice so validation passes
-    with patch.object(
-        service, "get_voice", return_value=MagicMock(provider_voice_id="pid", ssml_options={})
-    ):
+    # Add a test kit to match the mock voice's kit_id
+    test_kit = VoiceKit(
+        id="test-kit",
+        name="Test Kit",
+        description="Test kit for error handling",
+        provider=TTSProvider.AZURE,
+        version="1.0.0",
+        is_builtin=True,
+        is_downloaded=True,
+        voices=[],
+    )
+    service._kits.append(test_kit)
+
+    # Mock get_voice to return a voice with kit_id so validation passes
+    mock_voice = MagicMock(provider_voice_id="pid", ssml_options={}, kit_id="test-kit")
+    with patch.object(service, "get_voice", return_value=mock_voice):
         with pytest.raises(RuntimeError, match="Provider Error"):
             await service.generate_story_audio("story-id", "voice-id")

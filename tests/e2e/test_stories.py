@@ -4,6 +4,7 @@ Test Cases:
 - ST-001 ~ ST-028: Story CRUD, import, generate, and audio operations
 """
 
+import os
 from typing import Any
 
 import pytest
@@ -462,14 +463,18 @@ class TestGenerateStory:
     # ST-021: Generate story with keywords
     # =========================================================================
 
+    @pytest.mark.skipif(
+        not os.environ.get("ANTHROPIC_API_KEY"),
+        reason="Anthropic API key not configured",
+    )
     async def test_generate_story_success(
         self, client: AsyncClient, created_parent: dict[str, Any]
     ) -> None:
         """ST-021: Generate story with keywords."""
         response = await client.post(
             "/api/v1/stories/generate",
-            headers={"X-Parent-ID": created_parent["id"]},
             json={
+                "parent_id": created_parent["id"],
                 "keywords": ["adventure", "friendship", "magic"],
             },
         )
@@ -490,8 +495,8 @@ class TestGenerateStory:
         """ST-022: Generate story with > 5 keywords fails."""
         response = await client.post(
             "/api/v1/stories/generate",
-            headers={"X-Parent-ID": created_parent["id"]},
             json={
+                "parent_id": created_parent["id"],
                 "keywords": ["one", "two", "three", "four", "five", "six"],
             },
         )
@@ -508,8 +513,8 @@ class TestGenerateStory:
         """ST-023: Generate story with 0 keywords fails."""
         response = await client.post(
             "/api/v1/stories/generate",
-            headers={"X-Parent-ID": created_parent["id"]},
             json={
+                "parent_id": created_parent["id"],
                 "keywords": [],
             },
         )

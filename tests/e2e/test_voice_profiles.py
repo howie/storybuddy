@@ -4,6 +4,7 @@ Test Cases:
 - VP-001 ~ VP-022: Voice profile CRUD, upload, and preview operations
 """
 
+import os
 from typing import Any
 from uuid import uuid4
 
@@ -331,6 +332,10 @@ class TestVoicePreview:
     # VP-019: Preview voice with valid text
     # =========================================================================
 
+    @pytest.mark.skipif(
+        not os.environ.get("ELEVENLABS_API_KEY"),
+        reason="ElevenLabs API key not configured",
+    )
     async def test_preview_voice_ready_profile(
         self,
         client: AsyncClient,
